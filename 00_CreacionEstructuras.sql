@@ -8,7 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Piñero, Agustín                             --
+-- PiÃ±ero, AgustÃ­n                             --
 -- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
@@ -20,7 +20,7 @@
 -------------------------------------------------
 
 -- Se verifica si la base de datos ya existe para evitar errores de ejecucion
-IF DB_ID('Com3900G07') IS NULL
+IF DB_ID('Com5600G07') IS NULL
 BEGIN
     PRINT 'Creando base de datos Com5600G07...';
     CREATE DATABASE Com5600G07
@@ -209,7 +209,7 @@ BEGIN
         nroExpensa INT NOT NULL,
         Detalle NVARCHAR(100) NOT NULL,
         ImporteTotal DECIMAL(12,2) NOT NULL CHECK (ImporteTotal > 0),
-        Cuotas BIT NOT NULL, -- 1 = Sí, 0 = No
+        Cuotas BIT NOT NULL, -- 1 = SÃ­, 0 = No
         ImporteCuota DECIMAL(12,2) CHECK (ImporteCuota >= 0),
         CuotaActual TINYINT CHECK (CuotaActual >= 1),
         TotalCuotas TINYINT,
@@ -334,3 +334,4 @@ BEGIN
     );
 END
 GO
+
