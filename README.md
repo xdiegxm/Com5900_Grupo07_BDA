@@ -2,7 +2,7 @@
 ## Trabajo Práctico Integrador - BDA<br>
 
 - Mendoza, Diego Emanuel - **xdiegxm**<br>
-- Vázquez, Isaac Benjamín - **[nick]**<br>
+- Vázquez, Isaac Benjamín - **zstarback**<br>
 - Pizarro Dorgan, Fabricio Alejandro - **[nick]**<br>
 - Piñero, Agustín - **Aguntinp96**<br>
 - Nardelli Rosales, Cecilia Anahi - **cecinardelli**<br> 
