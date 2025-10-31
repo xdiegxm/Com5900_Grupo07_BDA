@@ -45,24 +45,30 @@ GO
 -------------------------------------------------
 
 -- Esquema creado para las tablas de Consorcio, Unidad Funcional, Persona, Ocupacion, Cochera y Baulera.
-CREATE SCHEMA consorcio
-GO
-
+IF SCHEMA_ID('consorcio') IS NULL
+BEGIN
+	EXEC('CREATE SCHEMA consorcio'); 
+END
 -- Esquema creado para las tablas de Gasto Ordinario, Gasto Extraordinario, Gastos Generales, Seguros, Honorarios, Limpieza y Mantenimiento.
-CREATE SCHEMA gastos
-GO
-
+IF SCHEMA_ID('gastos') IS NULL
+BEGIN
+	EXEC('CREATE SCHEMA gastos'); 
+END
 -- Esquema creado para las tablas de Expensa, Prorrateo y Estado Financiero.
-CREATE SCHEMA expensas
-GO
-
+IF SCHEMA_ID('expensas') IS NULL
+BEGIN
+	EXEC('CREATE SCHEMA expensas'); 
+END
 -- Esquema creado para la tabla de Pago
-CREATE SCHEMA Pago
-GO
-
+IF SCHEMA_ID('Pago') IS NULL
+BEGIN
+	EXEC('CREATE SCHEMA Pago'); 
+END
 --Esquema creado para la tabla Empleado y Empresa
-CREATE SCHEMA Externos
-GO
+IF SCHEMA_ID('Externos') IS NULL
+BEGIN
+	EXEC('Externos');
+END
 -------------------------------------------------
 --											   --
 --			CREACION DE LAS TABLAS	           --
@@ -232,7 +238,9 @@ BEGIN
     );       
 END
 
-CREATE TABLE gastos.Generales (
+IF OBJECT_ID ('gastos.Generales','U') IS NULL
+BEGIN
+    CREATE TABLE gastos.Generales (
     nroFactura VARCHAR(15),
     IdGO INT NOT NULL,
     Tipo CHAR(1) NOT NULL CHECK (Tipo = 'O'),
@@ -242,6 +250,8 @@ CREATE TABLE gastos.Generales (
     PRIMARY KEY (nroFactura, IdGO),
     FOREIGN KEY (IdGO, Tipo) REFERENCES gastos.GastoOrdinario(IdGO, Tipo)
 );
+END
+
 
 IF OBJECT_ID ('gastos.Seguros','U') IS NULL
 BEGIN
