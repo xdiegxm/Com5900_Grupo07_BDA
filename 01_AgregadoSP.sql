@@ -8,7 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Piñero, Agustín                             --
+-- PiÃ±ero, AgustÃ­n                             --
 -- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
@@ -40,7 +40,7 @@ BEGIN
     BEGIN TRY
         SET NOCOUNT ON;
             DECLARE @id INT;
-            -- Validamos que no exista un consorcio con el mismo nombre y dirección
+            -- Validamos que no exista un consorcio con el mismo nombre y direcciÃ³n
             SELECT @id = IdConsorcio
             FROM consorcio.Consorcio
             WHERE NombreConsorcio = @nombreconsorcio AND Direccion = @direccion;
@@ -67,7 +67,7 @@ BEGIN
             END
             SET @direccion = TRIM(@direccion);
              
-            -- Validaciones numéricas
+            -- Validaciones numÃ©ricas
             IF @superficie_total IS NULL OR @superficie_total <=0
             BEGIN
                 PRINT('La superficie total debe ser mayor a 0.');
@@ -121,14 +121,15 @@ CREATE OR ALTER PROCEDURE consorcio.sp_agrPersona
     @Apellido VARCHAR(30),
     @Email VARCHAR(40),
     @Telefono VARCHAR(15),
-    @CVU CHAR(22)
+    @CVU CHAR(22),
+    @idUF INT = NULL  -- Nuevo parÃ¡metro opcional
 AS
 BEGIN
     BEGIN TRY
         SET NOCOUNT ON;
         DECLARE @ExisteDNI VARCHAR(10);
 
-        --validamos que no exista una persona con el mismo DNI
+        -- Validamos que no exista una persona con el mismo DNI
         SELECT @ExisteDNI = DNI
         FROM consorcio.Persona
         WHERE DNI = @DNI;
@@ -139,8 +140,8 @@ BEGIN
             RETURN;
         END
 
-        --validacion y limpieza de campos
-        --DNI
+        -- ValidaciÃ³n y limpieza de campos
+        -- DNI
         IF @DNI = '' OR @DNI LIKE '%[^0-9]%' OR LEN(@DNI)>10
         BEGIN
             PRINT('El DNI no es valido.');
@@ -148,7 +149,7 @@ BEGIN
         END
         SET @DNI=TRIM(@DNI);
 
-        --nombre
+        -- Nombre
         IF @Nombre='' OR @Nombre LIKE '%[^a-zA-Z ]%' OR LEN(@Nombre)>30
         BEGIN
             PRINT('Nombre ingresado no valido.');
@@ -156,7 +157,7 @@ BEGIN
         END
         SET @Nombre = TRIM(@Nombre);
 
-        --apellido
+        -- Apellido
         IF @Apellido='' OR @Apellido LIKE '%[^a-zA-Z ]%' OR LEN(@Apellido) >30
         BEGIN
             PRINT('Apellido ingresado no valido.');
@@ -164,18 +165,18 @@ BEGIN
         END
         SET @Apellido = TRIM(@Apellido);
 
-        --email
+        -- Email
         IF @Email IS NOT NULL AND @Email <> ''
         BEGIN
             IF @Email NOT LIKE '%@%.%' OR LEN(@Email) > 40
             BEGIN
-                PRINT('El correo electrónico no es valido.');
+                PRINT('El correo electrÃ³nico no es valido.');
                 RAISERROR('.', 16, 1);
             END
             SET @Email = TRIM(@Email);
         END
 
-        --telefono
+        -- Telefono
         IF @Telefono IS NOT NULL AND @Telefono <> ''
         BEGIN
             IF @Telefono LIKE '%[^0-9]%' OR LEN(@Telefono) > 15
@@ -191,12 +192,22 @@ BEGIN
         BEGIN
             IF @CVU LIKE '%[^0-9]%' OR LEN(@CVU) <> 22
             BEGIN
-                PRINT('El CVU debe tener exactamente 22 dígitos numericos.');
+                PRINT('El CVU debe tener exactamente 22 dÃ­gitos numericos.');
                 RAISERROR('.', 16, 1);
             END
         END
-    END TRY
 
+        --IdUF
+        IF @idUF IS NOT NULL
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM consorcio.UnidadFuncional WHERE IdUF = @idUF)
+            BEGIN
+                PRINT('El IdUF proporcionado no existe en la tabla UnidadFuncional.');
+                RAISERROR('.', 16, 1);
+            END
+        END
+
+    END TRY
     BEGIN CATCH
         IF ERROR_SEVERITY()>10
         BEGIN
@@ -205,11 +216,14 @@ BEGIN
         END
     END CATCH
 
-    --insercion del registro 
-    INSERT INTO consorcio.Persona (DNI, Nombre, Apellido, Email, Telefono, CVU)
-    VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, @CVU);
+    -- InserciÃ³n del registro 
+    INSERT INTO consorcio.Persona (DNI, Nombre, Apellido, Email, Telefono, CVU, idUF)
+    VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, @CVU, @idUF);
+    
+    PRINT 'Persona insertada correctamente: ' + @DNI;
 END 
 GO
+
 
 -------------------------------------------------
 --											   --
@@ -496,7 +510,7 @@ AS BEGIN
 
         IF @Anio < 2000
         BEGIN
-            RAISERROR('Año invalido',16,1);
+            RAISERROR('AÃ±o invalido',16,1);
         END
 
         IF @FechaEmision IS NULL OR @Vencimiento IS NULL OR @Vencimiento < @FechaEmision
@@ -570,7 +584,7 @@ BEGIN
 
         IF @NroExpensa IS NULL OR @NroExpensa <= 0
         BEGIN
-            PRINT('Número de expensa invalido.');
+            PRINT('NÃºmero de expensa invalido.');
             RAISERROR('.',16,1);
         END
 
@@ -594,7 +608,7 @@ BEGIN
 
         IF @InteresMora IS NULL OR @InteresMora < 0
         BEGIN
-            PRINT('Interés por mora invalido.');
+            PRINT('InterÃ©s por mora invalido.');
             RAISERROR('.',16,1);
         END
 
@@ -651,7 +665,7 @@ BEGIN
         IF ERROR_SEVERITY() > 10
         BEGIN
             DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-            PRINT('Ocurrió un error al registrar el prorrateo.');
+            PRINT('OcurriÃ³ un error al registrar el prorrateo.');
             RAISERROR(@ErrorMessage,16,1);
             RETURN;
         END
@@ -678,21 +692,21 @@ BEGIN
 
         DECLARE @IdFinanzas INT;
 
-        --validación de Tipo
+        --validaciÃ³n de Tipo
         IF @Tipo NOT IN ('O','E')
         BEGIN
             PRINT('Tipo invalido. Debe ser "O" (Ordinaria) o "E" (Extraordinaria).');
             RAISERROR('.',16,1);
         END
 
-        --validación de NroExpensa
+        --validaciÃ³n de NroExpensa
         IF @NroExpensa IS NULL OR @NroExpensa <= 0
         BEGIN
             PRINT('Numero de expensa invalido.');
             RAISERROR('.',16,1);
         END
 
-        --validaciones numéricas
+        --validaciones numÃ©ricas
         IF @SaldoAnterior IS NULL OR @SaldoAnterior < 0
         BEGIN
             PRINT('El saldo anterior no puede ser negativo ni nulo.');
@@ -784,7 +798,7 @@ BEGIN
         --validaciones de nroexpensa
         IF @NroExpensa IS NULL OR @NroExpensa <=0
             BEGIN
-            PRINT('El número de expensa debe ser mayor a 0.');
+            PRINT('El nÃºmero de expensa debe ser mayor a 0.');
             RAISERROR('.',16,1);
         END
 
@@ -1096,7 +1110,7 @@ BEGIN
         --validacion de nroFactura
         IF @NroFactura IS NULL OR LTRIM(RTRIM(@NroFactura)) = '' OR LEN(@NroFactura) > 15
         BEGIN
-            PRINT('Número de factura no valido.');
+            PRINT('NÃºmero de factura no valido.');
             RAISERROR('.',16,1);
         END
         SET @NroFactura = TRIM(@NroFactura);
@@ -1171,7 +1185,7 @@ BEGIN
     BEGIN CATCH
         IF ERROR_SEVERITY() > 10
         BEGIN
-            RAISERROR('Ocurrió un error al registrar el gasto de limpieza.',16,1);
+            RAISERROR('OcurriÃ³ un error al registrar el gasto de limpieza.',16,1);
             RETURN;
         END
     END CATCH
@@ -1215,7 +1229,7 @@ BEGIN
             RAISERROR('.',16,1);
         END
 
-        --validar cuenta bancaria (solo números y longitud 22)
+        --validar cuenta bancaria (solo nÃºmeros y longitud 22)
         IF @CuentaBancaria IS NULL OR LEN(@CuentaBancaria) <> 22 OR @CuentaBancaria LIKE '%[^0-9]%'
         BEGIN
             PRINT('La cuenta bancaria debe tener 22 digitos numericos.');
@@ -1276,7 +1290,7 @@ BEGIN
         --validar numero de factura
         IF @nroFactura IS NULL OR LTRIM(RTRIM(@nroFactura)) = ''
         BEGIN
-            PRINT('El número de factura no puede estar vacio.');
+            PRINT('El nÃºmero de factura no puede estar vacio.');
             RAISERROR('.',16,1);
         END
 
@@ -1476,3 +1490,4 @@ BEGIN
     RETURN @IdPago;
 END
 GO
+
