@@ -1383,8 +1383,6 @@ CREATE OR ALTER PROCEDURE Pago.sp_agrPago
     @Fecha DATE,
     @Importe DECIMAL(12,2),
     @CuentaOrigen CHAR(22),
-    @CuentaDestino CHAR(22),
-    @Estado VARCHAR(20),
     @IdUF INT
 AS
 BEGIN
@@ -1397,8 +1395,6 @@ BEGIN
         FROM Pago.Pago
         WHERE Fecha = @Fecha 
           AND Importe = @Importe
-          AND CuentaOrigen = @CuentaOrigen
-          AND CuentaDestino = @CuentaDestino
           AND IdUF = @IdUF;
 
         IF @IdPago IS NOT NULL
@@ -1429,27 +1425,6 @@ BEGIN
         END
         SET @CuentaOrigen = TRIM(@CuentaOrigen);
 
-        IF @CuentaDestino IS NULL OR LTRIM(RTRIM(@CuentaDestino)) = '' OR LEN(@CuentaDestino) != 22
-        BEGIN
-            PRINT('La cuenta de destino no es valida (debe tener 22 caracteres).');
-            RAISERROR('.',16,1);
-        END
-        SET @CuentaDestino = TRIM(@CuentaDestino);
-
-        --evitar que origen y destino sean iguales
-        IF @CuentaOrigen = @CuentaDestino
-        BEGIN
-            PRINT('La cuenta de origen y destino no pueden ser iguales.');
-            RAISERROR('.',16,1);
-        END
-
-        --validar estado (permitir NULL o valores validos)
-        IF @Estado IS NOT NULL AND @Estado NOT IN ('Pendiente','Confirmado','Rechazado')
-        BEGIN
-            PRINT('El estado debe ser Pendiente, Confirmado o Rechazado.');
-            RAISERROR('.',16,1);
-        END
-
         --validar existencia de la unidad funcional
         IF NOT EXISTS (SELECT 1 FROM consorcio.UnidadFuncional WHERE IdUF = @IdUF)
         BEGIN
@@ -1467,13 +1442,14 @@ BEGIN
     END CATCH
 
     --insercion del registro
-    INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, CuentaDestino, Estado, IdUF)
-    VALUES (@Fecha, @Importe, @CuentaOrigen, @CuentaDestino, @Estado, @IdUF);
+    INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, IdUF)
+    VALUES (@Fecha, @Importe, @CuentaOrigen, @IdUF);
 
     SET @IdPago = SCOPE_IDENTITY();
 
     RETURN @IdPago;
 END
 GO
+
 
 
