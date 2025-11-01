@@ -32,6 +32,7 @@ CREATE OR ALTER PROCEDURE consorcio.sp_agrConsorcio
 	@nombreconsorcio VARCHAR(40),
     @direccion NVARCHAR(100),
     @superficie_total DECIMAL(10,2),
+    @cant_unidades_funcionales int,
     @moraprimervto DECIMAL(5,2),
     @moraproxvto DECIMAL(5,2)
 AS
@@ -73,6 +74,12 @@ BEGIN
                 RAISERROR('.',16,1);
             END
 
+             IF @cant_unidades_funcionales IS NULL OR @cant_unidades_funcionales <=0
+            BEGIN
+                PRINT('La cantidad de unidades funcionales debe ser mayor a 0.');
+                RAISERROR('.',16,1);
+            END
+
             IF @moraprimervto IS NULL OR @moraprimervto<0
             BEGIN
                 PRINT('La mora del primer vencimiento no puede ser negativa.');
@@ -95,8 +102,8 @@ BEGIN
     END CATCH
 
     -- Insercion
-    INSERT INTO consorcio.Consorcio (NombreConsorcio, Direccion, Superficie_Total, MoraPrimerVTO, MoraProxVTO)
-    VALUES (@NombreConsorcio, @Direccion, @Superficie_Total, @MoraPrimerVTO, @MoraProxVTO);
+    INSERT INTO consorcio.Consorcio (NombreConsorcio, Direccion, Superficie_Total, CantidadUnidadesFunc,MoraPrimerVTO, MoraProxVTO)
+    VALUES (@NombreConsorcio, @Direccion, @Superficie_Total, @cant_unidades_funcionales, @MoraPrimerVTO, @MoraProxVTO);
 
     SET @id = SCOPE_IDENTITY();
     RETURN @id;

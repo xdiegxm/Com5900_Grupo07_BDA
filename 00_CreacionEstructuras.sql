@@ -67,7 +67,7 @@ END
 --Esquema creado para la tabla Empleado y Empresa
 IF SCHEMA_ID('Externos') IS NULL
 BEGIN
-	EXEC('Externos');
+	EXEC('CREATE SCHEMA Externos');
 END
 -------------------------------------------------
 --											   --
@@ -346,3 +346,95 @@ END
 GO
 
 
+
+DECLARE @i INT = 1;
+DECLARE @max INT;
+
+-------------------------------------------------
+--        ELIMINACIÓN DE LAS TABLAS            --
+-------------------------------------------------
+
+
+-------------------------------------------------
+--        ELIMINACIÓN DE LAS TABLAS            --
+-------------------------------------------------
+
+--Tablas del esquema Pago
+IF OBJECT_ID('Pago.Pago','U') IS NOT NULL
+    DROP TABLE Pago.Pago;
+GO
+
+--Tablas del esquema Externos
+IF OBJECT_ID('Externos.Empresa','U') IS NOT NULL
+    DROP TABLE Externos.Empresa;
+GO
+
+IF OBJECT_ID('Externos.Empleado','U') IS NOT NULL
+    DROP TABLE Externos.Empleado;
+GO
+
+--Tablas del esquema gastos
+IF OBJECT_ID('gastos.Mantenimiento','U') IS NOT NULL
+    DROP TABLE gastos.Mantenimiento;
+GO
+
+IF OBJECT_ID('gastos.Limpieza','U') IS NOT NULL
+    DROP TABLE gastos.Limpieza;
+GO
+
+IF OBJECT_ID('gastos.Honorarios','U') IS NOT NULL
+    DROP TABLE gastos.Honorarios;
+GO
+
+IF OBJECT_ID('gastos.Seguros','U') IS NOT NULL
+    DROP TABLE gastos.Seguros;
+GO
+
+IF OBJECT_ID('gastos.Generales','U') IS NOT NULL
+    DROP TABLE gastos.Generales;
+GO
+
+IF OBJECT_ID('gastos.GastoOrdinario','U') IS NOT NULL
+    DROP TABLE gastos.GastoOrdinario;
+GO
+IF OBJECT_ID('gastos.GastoExtraordinario','U') IS NOT NULL
+    DROP TABLE gastos.GastoExtraordinario;
+GO
+
+--Tablas del esquema expensas
+IF OBJECT_ID('expensas.EstadoFinanciero','U') IS NOT NULL
+    DROP TABLE expensas.EstadoFinanciero;
+GO
+
+IF OBJECT_ID('expensas.Prorrateo','U') IS NOT NULL
+    DROP TABLE expensas.Prorrateo;
+GO
+
+IF OBJECT_ID('expensas.Expensa','U') IS NOT NULL
+    DROP TABLE expensas.Expensa;
+GO
+
+--Tablas del esquema consorcio
+IF OBJECT_ID('consorcio.Cochera','U') IS NOT NULL
+    DROP TABLE consorcio.Cochera;
+GO
+
+IF OBJECT_ID('consorcio.Baulera','U') IS NOT NULL
+    DROP TABLE consorcio.Baulera;
+GO
+
+IF OBJECT_ID('consorcio.Ocupacion','U') IS NOT NULL
+    DROP TABLE consorcio.Ocupacion;
+GO
+
+IF OBJECT_ID('consorcio.UnidadFuncional','U') IS NOT NULL
+    DROP TABLE consorcio.UnidadFuncional;
+GO
+
+IF OBJECT_ID('consorcio.Persona','U') IS NOT NULL
+    DROP TABLE consorcio.Persona;
+GO
+
+IF OBJECT_ID('consorcio.Consorcio','U') IS NOT NULL
+    DROP TABLE consorcio.Consorcio;
+GO
