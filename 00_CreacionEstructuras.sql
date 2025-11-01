@@ -111,11 +111,11 @@ BEGIN
         Apellido VARCHAR(30) NOT NULL,
         Email VARCHAR(40),
         Telefono VARCHAR(15),
-        CVU CHAR(22)
+        CVU CHAR(22), 
+        idUF int,
+        FOREIGN KEY(idUF) REFERENCES consorcio.UnidadFuncional(IdUF)
     );
 END
-    
-
     
 IF OBJECT_ID('consorcio.Ocupacion','U') IS NULL
 BEGIN 
