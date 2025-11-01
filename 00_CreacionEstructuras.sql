@@ -126,7 +126,6 @@ BEGIN
         DNI VARCHAR(10) NOT NULL,
         FOREIGN KEY(IdUF) REFERENCES consorcio.UnidadFuncional(IdUF),
         FOREIGN KEY(DNI) REFERENCES consorcio.Persona(DNI),
-        CONSTRAINT CK_Ocupacion_Fechas CHECK (FechaFin IS NULL OR FechaFin > FechaInicio)
     );
 END
 
@@ -435,4 +434,5 @@ IF OBJECT_ID('consorcio.Consorcio','U') IS NOT NULL
     DROP TABLE consorcio.Consorcio;
 
 GO
+
 
