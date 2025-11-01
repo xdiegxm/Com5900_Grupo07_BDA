@@ -316,8 +316,6 @@ GO
 -------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.sp_agrOcupacion
     @Rol CHAR(11),
-    @FechaInicio DATE,
-    @FechaFin DATE = NULL,
     @iduf INT,
     @DNI VARCHAR(10)
 AS
@@ -357,19 +355,6 @@ BEGIN
             PRINT('El rol debe ser Propietario o Inquilino');
             RAISERROR('.',16,1);
         END
-
-        --validacion de fechas
-        IF @FechaInicio IS NULL
-        BEGIN
-            PRINT('La fecha de inicio es obligatoria.');
-            RAISERROR('.', 16, 1);
-        END
-
-        IF @FechaFin IS NOT NULL AND @FechaFin <= @FechaInicio
-        BEGIN
-            PRINT('La fecha de fin debe ser mayor que la fecha de inicio.');
-            RAISERROR('.', 16, 1);
-        END
     END TRY
      BEGIN CATCH
         IF ERROR_SEVERITY() > 10
@@ -380,8 +365,8 @@ BEGIN
     END CATCH
 
     -- insertar ocupacion
-    INSERT INTO consorcio.Ocupacion (Rol, FechaInicio, FechaFin, IdUF, DNI)
-    VALUES (@Rol, @FechaInicio, @FechaFin, @IdUF, @DNI);
+    INSERT INTO consorcio.Ocupacion (Rol, IdUF, DNI)
+    VALUES (@Rol, @IdUF, @DNI);
 END
 GO
 
@@ -1490,4 +1475,5 @@ BEGIN
     RETURN @IdPago;
 END
 GO
+
 
