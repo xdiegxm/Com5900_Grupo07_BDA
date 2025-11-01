@@ -101,8 +101,8 @@ BEGIN
                 EXEC consorcio.sp_agrConsorcio 
                     @NombreConsorcio,
                     @Direccion,
-                    @CantUnidades,
                     @SuperficieTotal,
+                    @CantUnidades,
                     2.00,  -- MoraPrimerVTO
                     5.00;  -- MoraProxVTO
 
