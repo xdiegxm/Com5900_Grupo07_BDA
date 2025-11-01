@@ -23,7 +23,11 @@ USE master
 USE Com5600G07
 GO
 
--- Tabla Consorcio
+-------------------------------------------------
+--											   --
+--		        TABLA CONSORCIO                --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.sp_agrConsorcio
 	@nombreconsorcio VARCHAR(40),
     @direccion NVARCHAR(100),
@@ -99,8 +103,11 @@ BEGIN
 END 
 GO
 
-    
---Tabla Persona
+-------------------------------------------------
+--											   --
+--		        TABLA PERSONA                  --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.sp_agrPersona
     @DNI VARCHAR(10),
     @Nombre VARCHAR(30),
@@ -114,7 +121,7 @@ BEGIN
         SET NOCOUNT ON;
         DECLARE @ExisteDNI VARCHAR(10);
 
-        -- Validamos que no exista una persona con el mismo DNI
+        --validamos que no exista una persona con el mismo DNI
         SELECT @ExisteDNI = DNI
         FROM consorcio.Persona
         WHERE DNI = @DNI;
@@ -125,7 +132,7 @@ BEGIN
             RETURN;
         END
 
-        -- Validación y limpieza de campos
+        --validacion y limpieza de campos
         --DNI
         IF @DNI = '' OR @DNI LIKE '%[^0-9]%' OR LEN(@DNI)>10
         BEGIN
@@ -134,7 +141,7 @@ BEGIN
         END
         SET @DNI=TRIM(@DNI);
 
-        --Nombre
+        --nombre
         IF @Nombre='' OR @Nombre LIKE '%[^a-zA-Z ]%' OR LEN(@Nombre)>30
         BEGIN
             PRINT('Nombre ingresado no valido.');
@@ -142,7 +149,7 @@ BEGIN
         END
         SET @Nombre = TRIM(@Nombre);
 
-        --Apellido
+        --apellido
         IF @Apellido='' OR @Apellido LIKE '%[^a-zA-Z ]%' OR LEN(@Apellido) >30
         BEGIN
             PRINT('Apellido ingresado no valido.');
@@ -150,23 +157,23 @@ BEGIN
         END
         SET @Apellido = TRIM(@Apellido);
 
-        -- Email
+        --email
         IF @Email IS NOT NULL AND @Email <> ''
         BEGIN
             IF @Email NOT LIKE '%@%.%' OR LEN(@Email) > 40
             BEGIN
-                PRINT('El correo electrónico no es válido.');
+                PRINT('El correo electrónico no es valido.');
                 RAISERROR('.', 16, 1);
             END
             SET @Email = TRIM(@Email);
         END
 
-        -- Teléfono
+        --telefono
         IF @Telefono IS NOT NULL AND @Telefono <> ''
         BEGIN
             IF @Telefono LIKE '%[^0-9]%' OR LEN(@Telefono) > 15
             BEGIN
-                PRINT('El teléfono no es válido.');
+                PRINT('El telefono no es valido.');
                 RAISERROR('.', 16, 1);
             END
             SET @Telefono = TRIM(@Telefono);
@@ -177,7 +184,7 @@ BEGIN
         BEGIN
             IF @CVU LIKE '%[^0-9]%' OR LEN(@CVU) <> 22
             BEGIN
-                PRINT('El CVU debe tener exactamente 22 dígitos numéricos.');
+                PRINT('El CVU debe tener exactamente 22 dígitos numericos.');
                 RAISERROR('.', 16, 1);
             END
         END
@@ -191,28 +198,17 @@ BEGIN
         END
     END CATCH
 
-    -- Inserción del registro --
+    --insercion del registro 
     INSERT INTO consorcio.Persona (DNI, Nombre, Apellido, Email, Telefono, CVU)
     VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, @CVU);
 END 
 GO
 
-IF OBJECT_ID('consorcio.UnidadFuncional','U') IS NULL
-BEGIN
-    CREATE TABLE consorcio.UnidadFuncional(
-        IdUF INT IDENTITY(1,1) PRIMARY KEY,
-        Piso NVARCHAR(10) NOT NULL,
-        Depto NVARCHAR(10) NOT NULL,
-        Superficie DECIMAL(6,2) NOT NULL CHECK(Superficie>0),
-        Coeficiente DECIMAL(5,2) NOT NULL CHECK(Coeficiente>0 AND Coeficiente<=100),
-        IdConsorcio INT NOT NULL,
-        Propietario VARCHAR(10) NOT NULL,
-        FOREIGN KEY(Propietario) REFERENCES consorcio.Persona(DNI),
-        FOREIGN KEY(IdConsorcio) REFERENCES consorcio.Consorcio(IdConsorcio)
-    );
-END
-
---Tabla Unidad Funcional
+-------------------------------------------------
+--											   --
+--		     TABLA UNIDAD FUNCIONAL            --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.so_agrUnidadFuncional
     @Piso NVARCHAR(10),
     @Depto NVARCHAR(10),
@@ -304,7 +300,11 @@ BEGIN
 END
 GO
 
---Tabla Ocupacion 
+-------------------------------------------------
+--											   --
+--		        TABLA OCUPACION                --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.sp_agrOcupacion
     @Rol CHAR(11),
     @FechaInicio DATE,
@@ -370,13 +370,17 @@ BEGIN
         END
     END CATCH
 
-    -- Insertar ocupación
+    -- insertar ocupacion
     INSERT INTO consorcio.Ocupacion (Rol, FechaInicio, FechaFin, IdUF, DNI)
     VALUES (@Rol, @FechaInicio, @FechaFin, @IdUF, @DNI);
 END
 GO
 
---Tabla baulera
+-------------------------------------------------
+--											   --
+--		        TABLA BAULERA                  --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.sp_agrBaulera
     @Tamanio DECIMAL(10,2),
     @IdUF INT
@@ -387,7 +391,7 @@ BEGIN
 
         DECLARE @ExisteUF INT;
 
-        -- Validar que el IdUF exista
+        --validar que el IdUF exista
         SELECT @ExisteUF = IdUF
         FROM consorcio.UnidadFuncional
         WHERE IdUF = @IdUF;
@@ -398,10 +402,10 @@ BEGIN
             RAISERROR('.', 16, 1);
         END
 
-        -- Validar tamaño
+        --validar tamanio
         IF @Tamanio IS NULL OR @Tamanio <= 0
         BEGIN
-            PRINT('El tamaño debe ser mayor a cero.');
+            PRINT('El tamanio debe ser mayor a cero.');
             RAISERROR('.', 16, 1);
         END
 
@@ -414,7 +418,7 @@ BEGIN
         END
     END CATCH
 
-    -- Insertar baulera
+    --insertar baulera
     INSERT INTO consorcio.Baulera (Tamanio, IdUF)
     VALUES (@Tamanio, @IdUF);
 
@@ -422,7 +426,11 @@ BEGIN
 END
 GO
 
---Tabla cochera
+-------------------------------------------------
+--											   --
+--		        TABLA COCHERA                  --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE consorcio.sp_agrCochera
     @Tamanio DECIMAL(10,2),
     @IdUF INT
@@ -431,21 +439,21 @@ BEGIN
     BEGIN TRY
         DECLARE @IdCochera INT;
 
-        -- Validación de tamanio
+        --validacion de tamanio
         IF @Tamanio <= 0
         BEGIN
             PRINT('El tamanio de la cochera debe ser mayor a 0');
             RAISERROR('Tamanio invalido',16,1);
         END
 
-        -- Verificación de existencia de la Unidad Funcional
+        --verificacion de existencia de la Unidad Funcional
         IF NOT EXISTS (SELECT 1 FROM consorcio.UnidadFuncional WHERE IdUF = @IdUF)
         BEGIN
             PRINT('La Unidad Funcional indicada no existe');
             RAISERROR('Unidad Funcional invalida',16,1);
         END
 
-        -- Inserción
+        --insercion
         INSERT INTO consorcio.Cochera (Tamanio, IdUF)
         VALUES (@Tamanio, @IdUF);
         SET @IdCochera = SCOPE_IDENTITY();
@@ -453,7 +461,7 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        PRINT('Ocurrió un error al registrar la cochera');
+        PRINT('Ocurrio un error al registrar la cochera');
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage,16,1);
         RETURN;
@@ -461,7 +469,11 @@ BEGIN
 END
 GO
 
---tabla Expensa
+-------------------------------------------------
+--											   --
+--		        TABLA EXPENSA                  --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE expensas.sp_agrExpensa
     @Tipo CHAR(1),
     @NroExpensa INT,
@@ -520,7 +532,7 @@ AS BEGIN
         VALUES
             (@Tipo, @NroExpensa, @Mes, @Anio, @FechaEmision, @Vencimiento, @Total, @EstadoEnvio, @MetodoEnvio, @DestinoEnvio, @IdConsorcio);
 
-        -- Retornar datos insertados
+        --retornar datos insertados
         SELECT Tipo, NroExpensa
         FROM expensas.Expensa
         WHERE Tipo=@Tipo AND NroExpensa=@NroExpensa;
@@ -533,3 +545,939 @@ AS BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		       TABLA PRORRATEO                 --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE expensas.sp_agrProrrateo
+    @Tipo CHAR(1),
+    @NroExpensa INT,
+    @IdUF INT,
+    @SaldoAnterior DECIMAL(12,2),
+    @PagosRecibidos DECIMAL(12,2),
+    @InteresMora DECIMAL(12,2),
+    @ExpensaOrdinaria DECIMAL(12,2) = NULL,
+    @ExpensaExtraordinaria DECIMAL(12,2) = NULL,
+    @Total DECIMAL(12,2),
+    @Deuda DECIMAL(12,2)
+AS
+BEGIN 
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdProrrateo INT;
+
+        IF @Tipo NOT IN ('O','E')
+        BEGIN 
+            PRINT('Tipo debe ser O (Ordinaria) o E (Extraordinaria)');
+            RAISERROR('.',16,1);
+        END
+
+        IF @NroExpensa IS NULL OR @NroExpensa <= 0
+        BEGIN
+            PRINT('Número de expensa invalido.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @IdUF IS NULL OR @IdUF <= 0
+        BEGIN
+            PRINT('El IdUF no es valido.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @SaldoAnterior IS NULL OR @SaldoAnterior < 0
+        BEGIN
+            PRINT('Saldo anterior invalido.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @PagosRecibidos IS NULL OR @PagosRecibidos < 0
+        BEGIN
+            PRINT('Pagos recibidos invalidos.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @InteresMora IS NULL OR @InteresMora < 0
+        BEGIN
+            PRINT('Interés por mora invalido.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @ExpensaOrdinaria IS NOT NULL AND @ExpensaOrdinaria < 0
+        BEGIN
+            PRINT('El valor de Expensa Ordinaria no puede ser negativo.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @ExpensaExtraordinaria IS NOT NULL AND @ExpensaExtraordinaria < 0
+        BEGIN
+            PRINT('El valor de Expensa Extraordinaria no puede ser negativo.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @Total IS NULL OR @Total < 0
+        BEGIN
+            PRINT('El total no puede ser negativo.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @Deuda IS NULL OR @Deuda < 0
+        BEGIN
+            PRINT('La deuda no puede ser negativa.');
+            RAISERROR('.',16,1);
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM expensas.Expensa WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa)
+        BEGIN
+            PRINT('No existe una Expensa asociada con ese Tipo y NroExpensa.');
+            RAISERROR('.',16,1);
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM consorcio.UnidadFuncional WHERE IdUF = @IdUF)
+        BEGIN
+            PRINT('La Unidad Funcional indicada no existe.');
+            RAISERROR('.',16,1);
+        END
+
+        IF EXISTS (SELECT 1 FROM expensas.Prorrateo WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF)
+        BEGIN
+            PRINT('Ya existe un prorrateo con ese Tipo, NroExpensa e IdUF.');
+            RAISERROR('.',16,1);
+        END
+
+        -- insercion
+        INSERT INTO expensas.Prorrateo (Tipo, NroExpensa, IdUF, SaldoAnterior, PagosRecibidos, InteresMora,ExpensaOrdinaria, ExpensaExtraordinaria, Total, Deuda)
+        VALUES (@Tipo, @NroExpensa, @IdUF, @SaldoAnterior, @PagosRecibidos, @InteresMora, @ExpensaOrdinaria, @ExpensaExtraordinaria, @Total, @Deuda);
+        
+        SET @IdProrrateo = SCOPE_IDENTITY();
+        RETURN @IdProrrateo;
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+            PRINT('Ocurrió un error al registrar el prorrateo.');
+            RAISERROR(@ErrorMessage,16,1);
+            RETURN;
+        END
+    END CATCH
+END;
+GO
+
+-------------------------------------------------
+--											   --
+--		    TABLA ESTADO FINANCIERO            --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE expensas.sp_agrEstadoFinanciero
+    @SaldoAnterior DECIMAL(12,2),
+    @Ingresos DECIMAL(12,2),
+    @Egresos DECIMAL(12,2),
+    @SaldoCierre DECIMAL(12,2),
+    @Tipo CHAR(1),
+    @NroExpensa INT
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+
+        DECLARE @IdFinanzas INT;
+
+        --validación de Tipo
+        IF @Tipo NOT IN ('O','E')
+        BEGIN
+            PRINT('Tipo invalido. Debe ser "O" (Ordinaria) o "E" (Extraordinaria).');
+            RAISERROR('.',16,1);
+        END
+
+        --validación de NroExpensa
+        IF @NroExpensa IS NULL OR @NroExpensa <= 0
+        BEGIN
+            PRINT('Numero de expensa invalido.');
+            RAISERROR('.',16,1);
+        END
+
+        --validaciones numéricas
+        IF @SaldoAnterior IS NULL OR @SaldoAnterior < 0
+        BEGIN
+            PRINT('El saldo anterior no puede ser negativo ni nulo.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @Ingresos IS NULL OR @Ingresos < 0
+        BEGIN
+            PRINT('Los ingresos no pueden ser negativos ni nulos.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @Egresos IS NULL OR @Egresos < 0
+        BEGIN
+            PRINT('Los egresos no pueden ser negativos ni nulos.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @SaldoCierre IS NULL OR @SaldoCierre < 0
+        BEGIN
+            PRINT('El saldo de cierre no puede ser negativo ni nulo.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar existencia de Expensa
+        IF NOT EXISTS (SELECT 1 FROM expensas.Expensa WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa)
+        BEGIN
+            PRINT('No existe una Expensa asociada con el Tipo y NroExpensa indicados.');
+            RAISERROR('.',16,1);
+        END
+
+        --evitar duplicados
+        IF EXISTS (
+            SELECT 1 FROM expensas.EstadoFinanciero
+            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa
+        )
+        BEGIN
+            PRINT('Ya existe un Estado Financiero para esta Expensa.');
+            RAISERROR('.',16,1);
+        END
+
+        --insercion
+        INSERT INTO expensas.EstadoFinanciero (SaldoAnterior, Ingresos, Egresos, SaldoCierre, Tipo, NroExpensa)
+        VALUES (@SaldoAnterior, @Ingresos, @Egresos, @SaldoCierre, @Tipo, @NroExpensa);
+
+        SET @IdFinanzas = SCOPE_IDENTITY();
+        RETURN @IdFinanzas;
+
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+            PRINT('Ocurrio un error al registrar el estado financiero.');
+            RAISERROR(@ErrorMessage,16,1);
+            RETURN;
+        END
+    END CATCH
+END;
+GO
+
+-------------------------------------------------
+--											   --
+--		   TABLA GASTO EXTRAORDINARIO          --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrGastoExtraordinario
+    @Tipo CHAR(1),
+    @NroExpensa INT,
+    @Detalle NVARCHAR(100),
+    @ImporteTotal DECIMAL(12,2),
+    @Cuotas BIT,
+    @ImporteCuota DECIMAL(12,2) = NULL,
+    @CuotaActual TINYINT = NULL,
+    @TotalCuotas TINYINT = NULL
+AS 
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdGE INT;
+
+        --validacion de tipo
+        IF @Tipo IS NULL OR @Tipo <> 'E'
+        BEGIN
+            PRINT('El tipo debe ser "E" para gasto extraordinario.');
+            RAISERROR('.',16,1);
+        END
+
+        --validaciones de nroexpensa
+        IF @NroExpensa IS NULL OR @NroExpensa <=0
+            BEGIN
+            PRINT('El número de expensa debe ser mayor a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --validacion de detalle 
+        IF @Detalle IS NULL OR LTRIM(RTRIM(@Detalle)) = '' OR LEN(@Detalle) > 100
+        BEGIN
+            PRINT('El detalle no es valido (vacio o supera los 100 caracteres).');
+            RAISERROR('.',16,1);
+        END
+        SET @Detalle = TRIM(@Detalle);
+
+        --validacion de importe
+        IF @ImporteTotal IS NULL OR @ImporteTotal <= 0
+        BEGIN
+            PRINT('El importe total debe ser mayor que 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --validacion de cuotas
+        IF @Cuotas NOT IN (0,1)
+        BEGIN
+            PRINT('El valor de "Cuotas" debe ser 0 o 1.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @Cuotas = 1
+        BEGIN
+            IF @ImporteCuota IS NULL OR @ImporteCuota <= 0
+            BEGIN
+                PRINT('Debe especificar un importe de cuota valido.');
+                RAISERROR('.',16,1);
+            END
+
+            IF @CuotaActual IS NULL OR @CuotaActual < 1
+            BEGIN
+                PRINT('Debe indicar una cuota actual valida (>=1).');
+                RAISERROR('.',16,1);
+            END
+
+            IF @TotalCuotas IS NULL OR @TotalCuotas < @CuotaActual
+            BEGIN
+                PRINT('El total de cuotas debe ser mayor o igual a la cuota actual.');
+                RAISERROR('.',16,1);
+            END
+        END
+        ELSE
+        BEGIN
+            -- Si no tiene cuotas, los campos relacionados deben ser NULL
+            SET @ImporteCuota = NULL;
+            SET @CuotaActual = NULL;
+            SET @TotalCuotas = NULL;
+        END
+    END TRY
+    
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Error al registrar el gasto extraordinario.',16,1);
+            RETURN;
+        END
+    END CATCH
+
+    --insercion
+    INSERT INTO gastos.GastoExtraordinario (Tipo, nroExpensa, Detalle, ImporteTotal, Cuotas, ImporteCuota, CuotaActual, TotalCuotas)
+    VALUES (@Tipo, @NroExpensa, @Detalle, @ImporteTotal, @Cuotas, @ImporteCuota, @CuotaActual, @TotalCuotas);
+
+    SET @IdGE=SCOPE_IDENTITY();
+    RETURN @IdGE;
+END
+GO
+
+-------------------------------------------------
+--											   --
+--		     TABLA GASTO ORDINARIO             --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrGastoOrdinario
+    @Tipo CHAR(1),
+    @Descripcion VARCHAR(50),
+    @Importe DECIMAL(12,2),
+    @NroFactura VARCHAR(15),
+    @NroExpensa INT
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+
+        DECLARE @IdGO INT;
+
+        --validaciones
+         IF @Tipo IS NULL OR @Tipo <> 'O'
+        BEGIN
+            PRINT('El tipo debe ser "O" para gasto ordinario.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @Descripcion IS NULL OR LTRIM(RTRIM(@Descripcion)) = '' OR LEN(@Descripcion) > 50
+        BEGIN
+            PRINT('La descripcion no es valida (vacia o supera los 50 caracteres).');
+            RAISERROR('.',16,1);
+        END
+        SET @Descripcion = TRIM(@Descripcion);
+
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('El importe debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @NroFactura IS NULL OR LTRIM(RTRIM(@NroFactura)) = '' OR LEN(@NroFactura) > 15
+        BEGIN
+            PRINT('El numero de factura no es valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @NroFactura = TRIM(@NroFactura);
+
+        IF @NroExpensa IS NULL OR @NroExpensa <= 0
+        BEGIN
+            PRINT('El numero de expensa no es valido.');
+            RAISERROR('.',16,1);
+        END
+
+        --verificar existencia de la expensa
+        IF NOT EXISTS (SELECT 1 FROM expensas.Expensa WHERE Tipo='O' AND NroExpensa=@NroExpensa)
+        BEGIN
+            PRINT('La expensa ordinaria indicada no existe.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Error al registrar el gasto ordinario.',16,1);
+            RETURN;
+        END
+    END CATCH
+
+    --insercion
+    INSERT INTO gastos.GastoOrdinario (Tipo, Descripcion, Importe, NroFactura, nroExpensa)
+    VALUES (@Tipo, @Descripcion, @Importe, @NroFactura, @NroExpensa);
+    SET @IdGO = SCOPE_IDENTITY();
+    RETURN @IdGO;
+END 
+GO
+
+-------------------------------------------------
+--											   --
+--		       TABLA GENERALES                 --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrGenerales
+    @NroFactura VARCHAR(15),
+    @IdGO INT,
+    @Tipo CHAR(1),
+    @TipoGasto VARCHAR(20),
+    @NombreEmpresa VARCHAR(30),
+    @Importe DECIMAL(12,2)
+AS
+BEGIN 
+    BEGIN TRY
+       SET NOCOUNT ON;
+
+        --validaciones
+        IF @Tipo IS NULL OR @Tipo <> 'O'
+        BEGIN
+            PRINT('El tipo debe ser "O" para gastos generales.');
+            RAISERROR('.',16,1);
+        END 
+
+        IF @NroFactura IS NULL OR LTRIM(RTRIM(@NroFactura)) = '' OR LEN(@NroFactura) > 15
+        BEGIN
+            PRINT('Numero de factura no valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @NroFactura = TRIM(@NroFactura);
+
+        IF @TipoGasto IS NULL OR LTRIM(RTRIM(@TipoGasto)) = '' OR LEN(@TipoGasto) > 20
+        BEGIN
+            PRINT('Tipo de gasto no valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @TipoGasto = TRIM(@TipoGasto);
+
+        IF @NombreEmpresa IS NULL OR LTRIM(RTRIM(@NombreEmpresa)) = '' OR LEN(@NombreEmpresa) > 30
+        BEGIN
+            PRINT('Nombre de empresa no valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @NombreEmpresa = TRIM(@NombreEmpresa);
+
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('Importe debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM gastos.GastoOrdinario WHERE IdGO=@IdGO AND Tipo='O')
+        BEGIN
+            PRINT('El gasto ordinario padre indicado no existe.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Error al registrar el gasto general.',16,1);
+            RETURN;
+        END
+    END CATCH
+    
+    INSERT INTO gastos.Generales (nroFactura, IdGO, Tipo, TipoGasto, NombreEmpresa, Importe)
+    VALUES (@NroFactura, @IdGO, @Tipo, @TipoGasto, @NombreEmpresa, @Importe);
+    SELECT nroFactura, IdGO, Tipo, TipoGasto, NombreEmpresa, Importe
+    FROM gastos.Generales
+    WHERE nroFactura=@NroFactura AND IdGO=@IdGO;
+END
+GO
+
+
+-------------------------------------------------
+--											   --
+--		        TABLA SEGUROS                  --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrSeguros
+    @NroFactura VARCHAR(15),
+    @IdGO INT,
+    @Tipo CHAR(1),
+    @NombreEmpresa VARCHAR(30),
+    @Importe DECIMAL(12,2)
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        --validaciones
+        IF @Tipo IS NULL OR @Tipo <> 'O'
+        BEGIN
+            PRINT('El tipo debe ser "O" para seguros.');
+            RAISERROR('.',16,1);
+        END
+
+        IF @NroFactura IS NULL OR LTRIM(RTRIM(@NroFactura)) = '' OR LEN(@NroFactura) > 15
+        BEGIN
+            PRINT('Numero de factura no valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @NroFactura = TRIM(@NroFactura);
+
+        IF @NombreEmpresa IS NULL OR LTRIM(RTRIM(@NombreEmpresa)) = '' OR LEN(@NombreEmpresa) > 30
+        BEGIN
+            PRINT('Nombre de empresa no valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @NombreEmpresa = TRIM(@NombreEmpresa);
+
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('Importe debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --verificar existencia del gasto ordinario padre
+        IF NOT EXISTS (SELECT 1 FROM gastos.GastoOrdinario WHERE IdGO=@IdGO AND Tipo='O')
+        BEGIN
+            PRINT('El gasto ordinario padre indicado no existe.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Error al registrar el seguro.',16,1);
+            RETURN;
+        END
+    END CATCH
+
+    --insercion
+    INSERT INTO gastos.Seguros (nroFactura, IdGO, Tipo, NombreEmpresa, Importe)
+    VALUES (@NroFactura, @IdGO, @Tipo, @NombreEmpresa, @Importe);
+    SELECT nroFactura, IdGO, Tipo, NombreEmpresa, Importe
+    FROM gastos.Seguros
+    WHERE nroFactura=@NroFactura AND IdGO=@IdGO;
+END
+GO
+
+
+-------------------------------------------------
+--											   --
+--		      TABLA HONORARIOS                 --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrHonorarios
+    @NroFactura VARCHAR(15),
+    @IdGO INT,
+    @Tipo CHAR(1),
+    @Importe DECIMAL(12,2)
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+
+        --validacion del tipo
+        IF @Tipo IS NULL OR @Tipo <> 'O'
+        BEGIN
+            PRINT('El tipo debe ser "O" para honorarios.');
+            RAISERROR('.',16,1);
+        END
+
+        --validacion de nroFactura
+        IF @NroFactura IS NULL OR LTRIM(RTRIM(@NroFactura)) = '' OR LEN(@NroFactura) > 15
+        BEGIN
+            PRINT('Número de factura no valido.');
+            RAISERROR('.',16,1);
+        END
+        SET @NroFactura = TRIM(@NroFactura);
+
+        --validacion del importe
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('Importe debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --validacion de existencia del gasto ordinario
+        IF NOT EXISTS (SELECT 1 FROM gastos.GastoOrdinario WHERE IdGO=@IdGO AND Tipo='O')
+        BEGIN
+            PRINT('El gasto ordinario padre indicado no existe.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Error al registrar el honorario.',16,1);
+            RETURN;
+        END
+    END CATCH
+
+    --insercion
+    INSERT INTO gastos.Honorarios (nroFactura, IdGO, Tipo, Importe)
+    VALUES (@NroFactura, @IdGO, @Tipo, @Importe);
+    SELECT nroFactura, IdGO, Tipo, Importe
+    FROM gastos.Honorarios
+    WHERE nroFactura=@NroFactura AND IdGO=@IdGO;
+END
+GO
+
+-------------------------------------------------
+--											   --
+--		        TABLA LIMPIEZA                 --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrLimpieza
+    @IdGO INT,
+    @Tipo CHAR(1),
+    @Importe DECIMAL(12,2)
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdLimpieza INT;
+
+        --validar tipo
+        IF @Tipo IS NULL OR @Tipo <> 'O'
+        BEGIN
+            PRINT('El tipo debe ser "O" para limpieza.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar importe
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('El importe debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --verificar existencia del gasto ordinario
+        IF NOT EXISTS (SELECT 1 FROM gastos.GastoOrdinario WHERE IdGO = @IdGO AND Tipo = 'O')
+        BEGIN
+            PRINT('El gasto ordinario indicado no existe.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Ocurrió un error al registrar el gasto de limpieza.',16,1);
+            RETURN;
+        END
+    END CATCH
+    INSERT INTO gastos.Limpieza (IdGO, Tipo, Importe)
+    VALUES (@IdGO, @Tipo, @Importe);
+
+    SET @IdLimpieza = SCOPE_IDENTITY();
+
+    --retornar el ID generado
+    SELECT @IdLimpieza AS IdLimpieza, @IdGO AS IdGO, @Tipo AS Tipo, @Importe AS Importe;
+END
+GO
+
+-------------------------------------------------
+--											   --
+--		      TABLA MANTENIMIENTO              --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE gastos.sp_agrMantenimiento
+    @IdGO INT,
+    @Tipo CHAR(1),
+    @Importe DECIMAL(12,2),
+    @CuentaBancaria CHAR(22)
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdMantenimiento INT;
+
+        --validar tipo
+        IF @Tipo IS NULL OR @Tipo <> 'O'
+        BEGIN
+            PRINT('El tipo debe ser "O" para gastos de mantenimiento.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar importe
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('El importe debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar cuenta bancaria (solo números y longitud 22)
+        IF @CuentaBancaria IS NULL OR LEN(@CuentaBancaria) <> 22 OR @CuentaBancaria LIKE '%[^0-9]%'
+        BEGIN
+            PRINT('La cuenta bancaria debe tener 22 digitos numericos.');
+            RAISERROR('.',16,1);
+        END
+
+        --verificar existencia del gasto ordinario
+        IF NOT EXISTS (SELECT 1 FROM gastos.GastoOrdinario WHERE IdGO = @IdGO AND Tipo = 'O')
+        BEGIN
+            PRINT('El gasto ordinario indicado no existe.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Ocurrio un error al registrar el gasto de mantenimiento.',16,1);
+            RETURN;
+        END
+    END CATCH
+    
+    INSERT INTO gastos.Mantenimiento (IdGO, Tipo, Importe, CuentaBancaria)
+    VALUES (@IdGO, @Tipo, @Importe, @CuentaBancaria);
+    SET @IdMantenimiento = SCOPE_IDENTITY();
+
+    SELECT 
+        @IdMantenimiento AS IdMantenimiento,
+        @IdGO AS IdGO,
+        @Tipo AS Tipo,
+        @Importe AS Importe,
+        @CuentaBancaria AS CuentaBancaria;
+END
+GO
+
+-------------------------------------------------
+--											   --
+--		        TABLA EMPLEADO                 --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE Externos.sp_agrEmpleado
+    @IdLimpieza INT,
+    @IdGO INT,
+    @Sueldo DECIMAL(10,2),
+    @nroFactura VARCHAR(15)
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdEmpleado INT;
+
+        --validar sueldo
+        IF @Sueldo IS NULL OR @Sueldo < 0
+        BEGIN
+            PRINT('El sueldo debe ser un valor mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END   
+
+        --validar numero de factura
+        IF @nroFactura IS NULL OR LTRIM(RTRIM(@nroFactura)) = ''
+        BEGIN
+            PRINT('El número de factura no puede estar vacio.');
+            RAISERROR('.',16,1);
+        END
+
+        --verificar existencia del registro en gastos.Limpieza
+        IF NOT EXISTS (SELECT 1 FROM gastos.Limpieza WHERE IdLimpieza = @IdLimpieza AND IdGO = @IdGO)
+        BEGIN
+            PRINT('El registro de limpieza indicado no existe.');
+            RAISERROR('.',16,1);
+        END
+
+        --insercion del empleado
+        INSERT INTO Externos.Empleado (IdLimpieza, IdGO, Sueldo, nroFactura)
+        VALUES (@IdLimpieza, @IdGO, @Sueldo, @nroFactura);
+
+        SET @IdEmpleado = SCOPE_IDENTITY();
+
+        SELECT 
+            @IdEmpleado AS IdEmpleado,
+            @IdLimpieza AS IdLimpieza,
+            @IdGO AS IdGO,
+            @Sueldo AS Sueldo,
+            @nroFactura AS nroFactura;
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Ocurrio un error al registrar el empleado externo.',16,1);
+            RETURN;
+        END
+    END CATCH
+END
+GO
+
+-------------------------------------------------
+--											   --
+--		        TABLA EMPRESA                  --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE Externos.sp_agrEmpresa
+    @IdLimpieza INT,
+    @IdGO INT,
+    @nroFactura VARCHAR(15),
+    @ImpFactura DECIMAL(12,2)
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdEmpresa INT;
+
+        --validar existencia de la relacion Limpieza - Gasto Ordinario
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM gastos.Limpieza 
+            WHERE IdLimpieza = @IdLimpieza AND IdGO = @IdGO
+        )
+        BEGIN
+            PRINT('La combinacion de Limpieza e IdGO no existe.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar numero de factura
+        IF @nroFactura IS NULL OR LTRIM(RTRIM(@nroFactura)) = ''
+        BEGIN
+            PRINT('El numero de factura no puede estar vacio.');
+            RAISERROR('.',16,1);
+        END
+
+        IF LEN(@nroFactura) > 15
+        BEGIN
+            PRINT('El numero de factura no puede superar los 15 caracteres.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar importe
+        IF @ImpFactura IS NULL OR @ImpFactura < 0
+        BEGIN
+            PRINT('El importe de la factura debe ser mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+    END TRY
+
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Ocurrio un error al registrar la empresa.',16,1);
+            RETURN;
+        END
+    END CATCH
+
+    INSERT INTO Externos.Empresa (IdLimpieza, IdGO, nroFactura, ImpFactura)
+    VALUES (@IdLimpieza, @IdGO, @nroFactura, @ImpFactura);
+
+    --obtener el ID generado
+    SET @IdEmpresa = SCOPE_IDENTITY();
+    RETURN @IdEmpresa;
+END
+GO
+
+-------------------------------------------------
+--											   --
+--		        TABLA GASTOS                   --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE Pago.sp_agrPago
+    @Fecha DATE,
+    @Importe DECIMAL(12,2),
+    @CuentaOrigen CHAR(22),
+    @CuentaDestino CHAR(22),
+    @Estado VARCHAR(20),
+    @IdUF INT
+AS
+BEGIN
+    BEGIN TRY
+        SET NOCOUNT ON;
+        DECLARE @IdPago INT;
+
+        --validar que no exista un pago igual (mismo origen, destino, importe y fecha)
+        SELECT @IdPago = IdPago
+        FROM Pago.Pago
+        WHERE Fecha = @Fecha 
+          AND Importe = @Importe
+          AND CuentaOrigen = @CuentaOrigen
+          AND CuentaDestino = @CuentaDestino
+          AND IdUF = @IdUF;
+
+        IF @IdPago IS NOT NULL
+        BEGIN
+            PRINT('Ya existe un pago con los mismos datos.');
+            RETURN @IdPago;
+        END
+
+        --validar fecha
+        IF @Fecha IS NULL
+        BEGIN
+            PRINT('La fecha del pago no puede estar vacia.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar importe
+        IF @Importe IS NULL OR @Importe < 0
+        BEGIN
+            PRINT('El importe debe ser un valor mayor o igual a 0.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar cuentas
+        IF @CuentaOrigen IS NULL OR LTRIM(RTRIM(@CuentaOrigen)) = '' OR LEN(@CuentaOrigen) != 22
+        BEGIN
+            PRINT('La cuenta de origen no es valida (debe tener 22 caracteres).');
+            RAISERROR('.',16,1);
+        END
+        SET @CuentaOrigen = TRIM(@CuentaOrigen);
+
+        IF @CuentaDestino IS NULL OR LTRIM(RTRIM(@CuentaDestino)) = '' OR LEN(@CuentaDestino) != 22
+        BEGIN
+            PRINT('La cuenta de destino no es valida (debe tener 22 caracteres).');
+            RAISERROR('.',16,1);
+        END
+        SET @CuentaDestino = TRIM(@CuentaDestino);
+
+        --evitar que origen y destino sean iguales
+        IF @CuentaOrigen = @CuentaDestino
+        BEGIN
+            PRINT('La cuenta de origen y destino no pueden ser iguales.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar estado (permitir NULL o valores validos)
+        IF @Estado IS NOT NULL AND @Estado NOT IN ('Pendiente','Confirmado','Rechazado')
+        BEGIN
+            PRINT('El estado debe ser Pendiente, Confirmado o Rechazado.');
+            RAISERROR('.',16,1);
+        END
+
+        --validar existencia de la unidad funcional
+        IF NOT EXISTS (SELECT 1 FROM consorcio.UnidadFuncional WHERE IdUF = @IdUF)
+        BEGIN
+            PRINT('La unidad funcional indicada no existe.');
+            RAISERROR('.',16,1);
+        END
+
+    END TRY
+    BEGIN CATCH
+        IF ERROR_SEVERITY() > 10
+        BEGIN
+            RAISERROR('Algo salio mal en el registro del pago.',16,1);
+            RETURN;
+        END
+    END CATCH
+
+    --insercion del registro
+    INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, CuentaDestino, Estado, IdUF)
+    VALUES (@Fecha, @Importe, @CuentaOrigen, @CuentaDestino, @Estado, @IdUF);
+
+    SET @IdPago = SCOPE_IDENTITY();
+
+    RETURN @IdPago;
+END
+GO
