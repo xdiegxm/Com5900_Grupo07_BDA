@@ -221,8 +221,7 @@ CREATE OR ALTER PROCEDURE consorcio.so_agrUnidadFuncional
     @Depto NVARCHAR(10),
     @Superficie DECIMAL(6,2),
     @Coeficiente DECIMAL(5,2),
-    @IdConsorcio INT,
-    @Propietario VARCHAR(10)
+    @IdConsorcio INT
 AS
 BEGIN
     BEGIN TRY
@@ -251,17 +250,6 @@ BEGIN
         IF @ExisteConsorcio IS NULL
         BEGIN
             PRINT('El consorcio indicado no existe.');
-            RAISERROR('.', 16, 1);
-        END
-
-        --validamos que exista el propietario
-        SELECT @ExistePropietario = DNI
-        FROM consorcio.Persona
-        WHERE DNI = @Propietario;
-
-        IF @ExistePropietario IS NULL
-        BEGIN
-            PRINT('El propietario indicado no existe.');
             RAISERROR('.', 16, 1);
         END
 
@@ -303,7 +291,7 @@ BEGIN
 
     --insercion de la nueva unidad funcional
     INSERT INTO consorcio.UnidadFuncional (Piso, Depto, Superficie, Coeficiente, IdConsorcio, Propietario)
-    VALUES (@Piso, @Depto, @Superficie, @Coeficiente, @IdConsorcio, @Propietario);
+    VALUES (@Piso, @Depto, @Superficie, @Coeficiente, @IdConsorcio);
 END
 GO
 

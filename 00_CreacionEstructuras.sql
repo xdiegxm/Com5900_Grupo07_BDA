@@ -90,6 +90,19 @@ BEGIN
     );
 END
 
+IF OBJECT_ID('consorcio.UnidadFuncional','U') IS NULL
+BEGIN
+    CREATE TABLE consorcio.UnidadFuncional(
+        IdUF INT IDENTITY(1,1) PRIMARY KEY,
+        Piso NVARCHAR(10) NOT NULL,
+        Depto NVARCHAR(10) NOT NULL,
+        Superficie DECIMAL(6,2) NOT NULL CHECK(Superficie>0),
+        Coeficiente DECIMAL(5,2) NOT NULL CHECK(Coeficiente>0 AND Coeficiente<=100),
+        IdConsorcio INT NOT NULL,
+        FOREIGN KEY(IdConsorcio) REFERENCES consorcio.Consorcio(IdConsorcio)
+    );
+END
+
 IF OBJECT_ID('consorcio.Persona','U') IS NULL 
 BEGIN
     CREATE TABLE consorcio.Persona(
@@ -102,20 +115,7 @@ BEGIN
     );
 END
     
-IF OBJECT_ID('consorcio.UnidadFuncional','U') IS NULL
-BEGIN
-    CREATE TABLE consorcio.UnidadFuncional(
-        IdUF INT IDENTITY(1,1) PRIMARY KEY,
-        Piso NVARCHAR(10) NOT NULL,
-        Depto NVARCHAR(10) NOT NULL,
-        Superficie DECIMAL(6,2) NOT NULL CHECK(Superficie>0),
-        Coeficiente DECIMAL(5,2) NOT NULL CHECK(Coeficiente>0 AND Coeficiente<=100),
-        IdConsorcio INT NOT NULL,
-        Propietario VARCHAR(10) NOT NULL,
-        FOREIGN KEY(Propietario) REFERENCES consorcio.Persona(DNI),
-        FOREIGN KEY(IdConsorcio) REFERENCES consorcio.Consorcio(IdConsorcio)
-    );
-END
+
     
 IF OBJECT_ID('consorcio.Ocupacion','U') IS NULL
 BEGIN 
