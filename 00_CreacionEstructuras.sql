@@ -122,8 +122,6 @@ BEGIN
     CREATE TABLE consorcio.Ocupacion(
         Id_Ocupacion INT IDENTITY(1,1) PRIMARY KEY,
         Rol CHAR(11) NOT NULL CHECK (Rol IN ('Propietario','Inquilino')),
-        FechaInicio DATE NOT NULL,
-        FechaFin DATE NULL,
         IdUF INT NOT NULL,
         DNI VARCHAR(10) NOT NULL,
         FOREIGN KEY(IdUF) REFERENCES consorcio.UnidadFuncional(IdUF),
@@ -437,4 +435,5 @@ GO
 
 IF OBJECT_ID('consorcio.Consorcio','U') IS NOT NULL
     DROP TABLE consorcio.Consorcio;
+
 GO
