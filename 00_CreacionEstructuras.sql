@@ -37,7 +37,7 @@ GO
 
 USE Com5600G07
 GO
-
+ 
 -------------------------------------------------
 --											   --
 --			CREACION DE LOS ESQUEMAS	       --
@@ -83,6 +83,7 @@ BEGIN
         IdConsorcio INT IDENTITY(1,1) PRIMARY KEY,
         NombreConsorcio VARCHAR(40) NOT NULL,
         Direccion NVARCHAR(100) NOT NULL,
+        CantidadUnidadesFunc int,
         Superficie_Total DECIMAL(10,2) NOT NULL CHECK (Superficie_Total>0),
         MoraPrimerVTO DECIMAL(5,2) NOT NULL CHECK (MoraPrimerVTO>=0),
         MoraProxVTO DECIMAL(5,2) NOT NULL CHECK (MoraProxVTO>=0)
