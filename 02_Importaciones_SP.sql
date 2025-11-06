@@ -727,6 +727,217 @@ exec pago.sp_importarPagosDesdeCSV @rutaArchivo = 'C:\Archivos_para_el_tp\pagos_
 
 select * from Pago.Pago
 
+
+-------------------------------------------------
+--											   --
+--			     ESQUEMA GASTOS       	       --
+--											   --
+-------------------------------------------------
+
+CREATE OR ALTER PROCEDURE gastos.sp_importarGastosMensuales
+    @RutaArchivoJSON NVARCHAR(MAX),
+    @RutaArchivoXLSX NVARCHAR(MAX),
+    @HojaProveedores NVARCHAR(100),
+    @NroExpensa INT,
+    @TipoExpensa CHAR(1) = 'O'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+
+    DECLARE @Contador INT = 1, @TotalRows INT;
+    DECLARE @NombreConsorcio VARCHAR(100), @Mes VARCHAR(20), @IdConsorcio INT;
+    DECLARE @IdGO INT, @IdLimpieza INT;
+    DECLARE @Importe DECIMAL(12,2), @NroFactura VARCHAR(15);
+    DECLARE @Proveedor VARCHAR(100), @DatoProveedor VARCHAR(100);
+    DECLARE @DescripcionGasto VARCHAR(100);
+
+    BEGIN TRY
+        -- ===================================================================
+        -- PASO 1: Cargar el XLSX 
+        -- ===================================================================
+        -- Limpieza preventiva
+        IF OBJECT_ID('tempdb..##RawProveedores') IS NOT NULL DROP TABLE ##RawProveedores;
+        IF OBJECT_ID('tempdb..#TempProveedores') IS NOT NULL DROP TABLE #TempProveedores;
+
+        -- 1.a. Intentamos leer con HDR=YES. 
+        -- Si la Fila 1 es ",,,,", el driver podría asignar nombres F1, F2, F3... automáticamente.
+        -- Usamos SELECT * INTO ##Global para que agarre lo que encuentre.
+        DECLARE @sqlXLSX NVARCHAR(MAX) = N'
+        SELECT *
+        INTO ##RawProveedores
+        FROM OPENROWSET(
+            ''Microsoft.ACE.OLEDB.16.0'', 
+            ''Excel 12.0 Xml;HDR=YES;IMEX=1;Database=' + REPLACE(@RutaArchivoXLSX, '''', '''''') + ''', 
+            ''SELECT * FROM [' + @HojaProveedores + '$]''
+        )';
+        
+        PRINT 'Intentando leer archivo XLSX (con extensión .csv)...';
+        EXEC sp_executesql @sqlXLSX;
+        
+        -- Intentamos una selección genérica basada en la estructura probable que vimos antes.
+        -- Si F1 falla, probá reemplazar F1, F2... con los nombres reales si te da error de columna.
+        SELECT 
+            -- Casteamos todo a VARCHAR para evitar problemas de tipos
+            COALESCE(CAST(F2 AS VARCHAR(100)), '') AS TipoGasto,       -- Col B
+            COALESCE(CAST(F3 AS VARCHAR(100)), '') AS Detalle,         -- Col C
+            COALESCE(CAST(F4 AS VARCHAR(100)), '') AS DatoProveedor,   -- Col D
+            COALESCE(CAST(F5 AS VARCHAR(100)), '') AS NombreConsorcio  -- Col E
+        INTO #TempProveedores
+        FROM ##RawProveedores
+        WHERE F5 IS NOT NULL 
+          AND CAST(F5 AS VARCHAR(100)) <> 'Nombre del consorcio';
+
+        DROP TABLE ##RawProveedores;
+        PRINT 'Proveedores cargados. Registros válidos: ' + CAST(@@ROWCOUNT AS VARCHAR);
+
+        -- ===================================================================
+        -- PASO 2: Cargar JSON 
+        -- ===================================================================
+        IF OBJECT_ID('tempdb..#TempJSON') IS NOT NULL DROP TABLE #TempJSON;
+        DECLARE @JsonData NVARCHAR(MAX);
+        DECLARE @sqlJson NVARCHAR(MAX) = N'
+        SELECT @JsonContentOUT = BulkColumn
+        FROM OPENROWSET (BULK ''' + REPLACE(@RutaArchivoJSON, '''', '''''') + ''', SINGLE_CLOB) as j';
+        EXEC sp_executesql @sqlJson, N'@JsonContentOUT NVARCHAR(MAX) OUTPUT', @JsonContentOUT = @JsonData OUTPUT;
+
+        SELECT * INTO #TempJSON FROM OPENJSON(@JsonData) WITH (
+            [Nombre del consorcio] VARCHAR(100), Mes VARCHAR(20), BANCARIOS VARCHAR(50),
+            LIMPIEZA VARCHAR(50), ADMINISTRACION VARCHAR(50), SEGUROS VARCHAR(50),
+            [GASTOS GENERALES] VARCHAR(50), [SERVICIOS PUBLICOS-Agua] VARCHAR(50),
+            [SERVICIOS PUBLICOS-Luz] VARCHAR(50)
+        );
+        ALTER TABLE #TempJSON ADD ID INT IDENTITY(1,1);
+        SELECT @TotalRows = COUNT(*) FROM #TempJSON;
+
+        -- ===================================================================
+        -- PASO 3: Procesar Gastos
+        -- ===================================================================
+        WHILE @Contador <= @TotalRows
+        BEGIN
+            SELECT @NombreConsorcio = LTRIM(RTRIM([Nombre del consorcio])), @Mes = LTRIM(RTRIM(Mes)) 
+            FROM #TempJSON WHERE ID = @Contador;
+            SELECT @IdConsorcio = IdConsorcio FROM consorcio.Consorcio WHERE NombreConsorcio = @NombreConsorcio;
+
+            IF NOT EXISTS (SELECT 1 FROM expensas.Expensa WHERE IdConsorcio=@IdConsorcio AND NroExpensa=@NroExpensa AND Tipo=@TipoExpensa)
+            BEGIN
+                SET @Contador = @Contador + 1; CONTINUE;
+            END
+            PRINT 'Procesando: ' + @NombreConsorcio;
+
+            -- (A) GASTOS BANCARIOS
+
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT BANCARIOS FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                SELECT TOP 1 @DatoProveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND TipoGasto LIKE '%BANCARIOS%';
+                SET @NroFactura = 'NC-BANC-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Gastos Bancarios', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                EXEC gastos.sp_agrMantenimiento @IdGO=@IdGO, @Tipo=@TipoExpensa, @Importe=@Importe, @CuentaBancaria=@DatoProveedor;
+            END
+
+            -- (B) ADMINISTRACION
+
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT ADMINISTRACION FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                SET @NroFactura = 'F-ADM-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Honorarios Administracion', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                EXEC gastos.sp_agrHonorarios @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @Importe=@Importe;
+            END
+
+            -- (C) LIMPIEZA
+
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT LIMPIEZA FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                SELECT TOP 1 @Proveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND TipoGasto LIKE '%LIMPIEZA%';
+                SET @NroFactura = 'F-LIMP-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                SET @DescripcionGasto = 'Servicio Limpieza (' + ISNULL(@Proveedor, '?') + ')';
+                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion=@DescripcionGasto, @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                EXEC @IdLimpieza = gastos.sp_agrLimpieza @IdGO=@IdGO, @Tipo=@TipoExpensa, @Importe=@Importe;
+                EXEC Externos.sp_agrEmpresa @IdLimpieza=@IdLimpieza, @IdGO=@IdGO, @nroFactura=@NroFactura, @ImpFactura=@Importe;
+            END
+
+            -- (D) SEGUROS
+
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT SEGUROS FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                SELECT TOP 1 @Proveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND TipoGasto LIKE 'SEGUROS%';
+                SET @NroFactura = 'POL-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                SET @DescripcionGasto = 'Seguro (' + ISNULL(@Proveedor, '?') + ')';
+                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion=@DescripcionGasto, @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                EXEC gastos.sp_agrSeguros @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @NombreEmpresa=@Proveedor, @Importe=@Importe;
+            END
+
+            -- (E) GENERALES
+
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT [GASTOS GENERALES] FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                 SET @NroFactura = 'F-GEN-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                 EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Gastos Generales Varios', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                 EXEC gastos.sp_agrGenerales @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @TipoGasto='Varios', @NombreEmpresa='Proveedores Varios', @Importe=@Importe;
+            END
+
+            -- (F) SERVICIOS
+
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT [SERVICIOS PUBLICOS-Agua] FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                SELECT TOP 1 @Proveedor = 'AYSA', @DatoProveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND Detalle LIKE '%AYSA%';
+                SET @NroFactura = 'F-AGUA-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Servicio Agua', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                EXEC gastos.sp_agrGenerales @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @TipoGasto='Servicio', @NombreEmpresa=@Proveedor, @Importe=@Importe;
+            END
+            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT [SERVICIOS PUBLICOS-Luz] FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
+            IF @Importe > 0
+            BEGIN
+                SELECT TOP 1 @Proveedor = 'EDENOR', @DatoProveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND Detalle LIKE '%EDENOR%';
+                SET @NroFactura = 'F-LUZ-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
+                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Servicio Luz', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
+                EXEC gastos.sp_agrGenerales @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @TipoGasto='Servicio Luz', @NombreEmpresa=@Proveedor, @Importe=@Importe;
+            END
+
+            SET @Contador = @Contador + 1;
+        END
+
+        COMMIT TRANSACTION;
+        PRINT '=== Importación FINALIZADA con éxito ===';
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+
+        -- Si falla, intentamos limpiar la global
+        IF OBJECT_ID('tempdb..##RawProveedores') IS NOT NULL DROP TABLE ##RawProveedores;
+        PRINT 'ERROR GRAVE: ' + ERROR_MESSAGE();
+        THROW;
+
+    END CATCH
+
+END
+GO
+
+
+-- 1. Crear Expensa Padre (Total 0)
+EXEC expensas.sp_agrExpensa @Tipo='O', @NroExpensa=1, @Mes=4, @Anio=2025, @IdConsorcio=1, @Total=0.00, @FechaEmision='2025-05-01', @Vencimiento='2025-05-10';
+
+-- 2. Ejecutar Importación
+-- Asegurate de que las rutas sean las correctas en tu pc.
+
+EXEC gastos.sp_importarGastosMensuales
+    @RutaArchivoJSON = 'C:\Archivos_para_el_TP\Servicios.Servicios.json',
+    @RutaArchivoXLSX = 'C:\Archivos_para_el_TP\datos varios.xlsx',          --ESTO ES LO QUE FALLA, ACA EL OLE DB NO PUEDE ACCEDER AL .XLSX
+    @HojaProveedores = 'Proveedores',
+    @NroExpensa = 1,
+    @TipoExpensa = 'O';
+
+-- 3. Verificar
+
+SELECT * FROM gastos.GastoOrdinario WHERE NroExpensa = 1 AND Tipo = 'O';
+
 -------------------------------------------------
 --											   --
 --			     ESQUEMA EXPENSAS       	   --
