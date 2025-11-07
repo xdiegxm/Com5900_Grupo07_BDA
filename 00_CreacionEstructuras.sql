@@ -37,7 +37,6 @@ GO
 
 USE Com5600G07
 GO
- 
 -------------------------------------------------
 --											   --
 --			CREACION DE LOS ESQUEMAS	       --
@@ -173,7 +172,7 @@ IF OBJECT_ID('expensas.Prorrateo','U') IS NULL
 BEGIN
     CREATE TABLE expensas.Prorrateo(
         IdProrrateo INT IDENTITY(1,1),
-        Tipo CHAR(1) NOT NULL CHECK (Tipo IN ('O','E')),
+        Porcentaje decimal(10,2),
         NroExpensa INT NOT NULL,
         IdUF INT NOT NULL,
         SaldoAnterior DECIMAL(12,2) NOT NULL CHECK (SaldoAnterior >= 0),
@@ -183,147 +182,9 @@ BEGIN
         ExpensaExtraordinaria DECIMAL(12,2) CHECK (ExpensaExtraordinaria >= 0),
         Total DECIMAL(12,2) CHECK (Total >= 0),
         Deuda DECIMAL(12,2) CHECK (Deuda >= 0),
-        PRIMARY KEY (Tipo, NroExpensa, IdUF),
-        FOREIGN KEY (Tipo, NroExpensa) REFERENCES expensas.Expensa(Tipo, NroExpensa),
+        PRIMARY KEY (IdProrrateo, IdUF),
+        FOREIGN KEY (NroExpensa) REFERENCES expensas.Expensa(NroExpensa),
         FOREIGN KEY (IdUF) REFERENCES consorcio.UnidadFuncional(IdUF)
-    );
-END
-
-
-IF OBJECT_ID('expensas.EstadoFinanciero','U') IS NULL
-BEGIN
-    CREATE TABLE expensas.EstadoFinanciero(
-        IdFinanzas INT IDENTITY(1,1) PRIMARY KEY,
-        SaldoAnterior DECIMAL(12,2) CHECK(SaldoAnterior >= 0),
-        Ingresos DECIMAL(12,2) CHECK (Ingresos >= 0),
-        Egresos DECIMAL(12,2) CHECK(Egresos >= 0),
-        SaldoCierre DECIMAL(12,2),
-        Tipo CHAR(1) NOT NULL CHECK (Tipo IN ('O','E')),
-        NroExpensa INT NOT NULL,
-        FOREIGN KEY (Tipo, NroExpensa) REFERENCES expensas.Expensa(Tipo, NroExpensa)
-    );
-END
-
-IF OBJECT_ID('gastos.GastoExtraordinario','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.GastoExtraordinario (
-        IdGE INT IDENTITY(1,1),
-        Tipo CHAR(1) NOT NULL CHECK (Tipo = 'E'), -- Solo extraordinaria
-        nroExpensa INT NOT NULL,
-        Detalle NVARCHAR(100) NOT NULL,
-        ImporteTotal DECIMAL(12,2) NOT NULL CHECK (ImporteTotal > 0),
-        Cuotas BIT NOT NULL, -- 1 = Sí, 0 = No
-        ImporteCuota DECIMAL(12,2) CHECK (ImporteCuota >= 0),
-        CuotaActual TINYINT CHECK (CuotaActual >= 1),
-        TotalCuotas TINYINT,
-        PRIMARY KEY (IdGE, Tipo, nroExpensa),
-        FOREIGN KEY (Tipo, nroExpensa) REFERENCES expensas.Expensa(Tipo, NroExpensa),
-        CONSTRAINT CK_GastoExtraordinario_Cuotas CHECK (TotalCuotas IS NULL OR TotalCuotas >= CuotaActual)
-    );
-END
-
-IF OBJECT_ID('gastos.GastoOrdinario','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.GastoOrdinario (
-        IdGO INT IDENTITY(1,1),
-        Tipo CHAR(1) NOT NULL CHECK(Tipo='O'), -- Puede ser Ordinaria
-        Descripcion VARCHAR(50) NOT NULL,
-        Importe DECIMAL(12,2) NOT NULL CHECK (Importe>=0),
-        NroFactura VARCHAR(15) NOT NULL,
-        nroExpensa INT NOT NULL,
-        PRIMARY KEY(IdGO,Tipo),
-        FOREIGN KEY(Tipo,nroExpensa) REFERENCES expensas.Expensa(Tipo, NroExpensa)
-    );       
-END
-
-IF OBJECT_ID ('gastos.Generales','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.Generales (
-    nroFactura VARCHAR(15),
-    IdGO INT NOT NULL,
-    Tipo CHAR(1) NOT NULL CHECK (Tipo = 'O'),
-    TipoGasto VARCHAR(20) NOT NULL,
-    NombreEmpresa VARCHAR(30) NOT NULL,
-    Importe DECIMAL(12,2) NOT NULL CHECK (Importe >= 0),
-    PRIMARY KEY (nroFactura, IdGO),
-    FOREIGN KEY (IdGO, Tipo) REFERENCES gastos.GastoOrdinario(IdGO, Tipo)
-);
-END
-
-
-IF OBJECT_ID ('gastos.Seguros','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.Seguros (
-        nroFactura VARCHAR(15),
-        IdGO INT NOT NULL,
-        Tipo CHAR(1) NOT NULL CHECK (Tipo = 'O'),
-        NombreEmpresa VARCHAR(30) NOT NULL,
-        Importe DECIMAL(12,2) NOT NULL CHECK (Importe >= 0),
-        PRIMARY KEY (nroFactura, IdGO),
-        FOREIGN KEY (IdGO, Tipo) REFERENCES gastos.GastoOrdinario(IdGO, Tipo)
-    );
-END
-
-IF OBJECT_ID('gastos.Honorarios','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.Honorarios (
-        nroFactura VARCHAR(15),
-        IdGO INT NOT NULL,
-        Tipo CHAR(1) NOT NULL CHECK (Tipo = 'O'),
-        Importe DECIMAL(12,2) NOT NULL CHECK (Importe >= 0),
-        PRIMARY KEY (nroFactura, IdGO),
-        FOREIGN KEY (IdGO, Tipo) REFERENCES gastos.GastoOrdinario(IdGO, Tipo)
-    );
-END
-
-IF OBJECT_ID('gastos.Limpieza','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.Limpieza (
-        IdLimpieza INT IDENTITY(1,1),
-        IdGO INT NOT NULL,
-        Tipo CHAR(1) NOT NULL CHECK (Tipo = 'O'),
-        Importe DECIMAL(12,2) NOT NULL CHECK (Importe >= 0),
-        PRIMARY KEY (IdLimpieza, IdGO),
-        FOREIGN KEY (IdGO, Tipo) REFERENCES gastos.GastoOrdinario(IdGO, Tipo)
-    );
-END
-
-IF OBJECT_ID('gastos.Mantenimiento','U') IS NULL
-BEGIN
-    CREATE TABLE gastos.Mantenimiento (
-        IdMantenimiento INT IDENTITY(1,1),
-        IdGO INT NOT NULL,
-        Tipo CHAR(1) NOT NULL CHECK (Tipo = 'O'),
-        Importe DECIMAL(12,2) NOT NULL CHECK (Importe >= 0),
-        CuentaBancaria CHAR(22) NOT NULL CHECK (CuentaBancaria NOT LIKE '%[^0-9]%'),
-        PRIMARY KEY (IdMantenimiento, IdGO),
-        FOREIGN KEY (IdGO, Tipo) REFERENCES gastos.GastoOrdinario(IdGO, Tipo)
-    );
-END
-
-IF OBJECT_ID ('Externos.Empleado','U') IS NULL
-BEGIN
-    CREATE TABLE Externos.Empleado (
-        IdEmpleado INT IDENTITY(1,1),
-        IdLimpieza INT NOT NULL,
-        IdGO INT NOT NULL,
-        Sueldo DECIMAL(10,2) NOT NULL CHECK (Sueldo >= 0),
-        nroFactura VARCHAR(15) NOT NULL,
-        PRIMARY KEY (IdEmpleado, IdLimpieza),
-        FOREIGN KEY (IdLimpieza, IdGO) REFERENCES gastos.Limpieza(IdLimpieza, IdGO)
-    );
-END
-
-IF OBJECT_ID('Externos.Empresa','U') IS NULL
-BEGIN
-    CREATE TABLE Externos.Empresa (
-        IdEmpresa INT IDENTITY(1,1),
-        IdLimpieza INT NOT NULL,
-        IdGO INT NOT NULL,
-        nroFactura VARCHAR(15),
-        ImpFactura DECIMAL(12,2) NOT NULL CHECK (ImpFactura >= 0),
-        PRIMARY KEY (IdEmpresa, IdLimpieza),
-        FOREIGN KEY (IdLimpieza, IdGO) REFERENCES gastos.Limpieza(IdLimpieza, IdGO)
     );
 END
 
@@ -340,6 +201,80 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID('expensas.EstadoFinanciero','U') IS NULL
+BEGIN
+    CREATE TABLE expensas.EstadoFinanciero(
+        IdFinanzas INT IDENTITY(1,1) PRIMARY KEY,
+        SaldoAnterior DECIMAL(12,2) CHECK(SaldoAnterior >= 0),
+        pagoEnTermino DECIMAL(12,2) ChECK(pagoEnTermino>=0),
+        pagoAdeudado DECIMAL(12,2) ChECK(pagoAdeudado>=0),
+        pagoAdelantado DECIMAL(12,2) ChECK(pagoAdelantado>=0),
+        Egresos DECIMAL(12,2) CHECK(Egresos >= 0),
+        SaldoCierre DECIMAL(12,2),
+        idConsorcio int not null,
+        constraint fk_consorcio_ef foreign key(idConsorcio) references consorcio.Consorcio(IdConsorcio)
+    );
+END
+CREATE TABLE expensas.Expensa (
+    nroExpensa INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    idConsorcio INT NOT NULL,
+    fechaGeneracion DATE NOT NULL,
+    fechaVto1 DATE,
+    fechaVto2 DATE,
+    montoTotal DECIMAL(10,2),
+    CONSTRAINT FK_Expensa_Consorcio FOREIGN KEY (idConsorcio) REFERENCES consorcio.Consorcio (IdConsorcio)
+);
+go
+
+CREATE TABLE gasto.Gasto (
+    idGasto INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    nroExpensa INT NOT NULL,
+    idConsorcio INT NOT NULL,
+    tipo VARCHAR(16) CHECK (tipo IN ('Ordinario','Extraordinario')),
+    descripcion VARCHAR(200),
+    fechaEmision DATE DEFAULT GETDATE(),
+    importe DECIMAL(10,2) DEFAULT 0,
+    CONSTRAINT FK_Gasto_Consorcio
+        FOREIGN KEY (idConsorcio) REFERENCES consorcio.Consorcio (IdConsorcio),
+    CONSTRAINT FK_Gasto_Expensa
+        FOREIGN KEY (nroExpensa) REFERENCES expensas.Expensa (nroExpensa)
+);
+go
+
+CREATE TABLE gastos.Gasto_Ordinario (
+    idGasto INT NOT NULL PRIMARY KEY,
+    nombreProveedor VARCHAR(100),
+    categoria VARCHAR(35),
+    nroFactura VARCHAR(50),
+    CONSTRAINT FK_Ordinario_Gasto
+        FOREIGN KEY (idGasto) REFERENCES gastos.Gasto (idGasto)
+);
+go
+
+CREATE TABLE gastos.Gasto_Extraordinario (
+    idGasto INT NOT NULL PRIMARY KEY,
+    cuotaActual TINYINT,
+    cantCuotas TINYINT,
+    CONSTRAINT FK_Extraordinario_Gasto2
+        FOREIGN KEY (idGasto) REFERENCES gastos.Gasto (idGasto)
+);
+go
+
+
+CREATE TABLE HistoricoProrrateo (
+    IDuF INT NOT NULL,
+    Mes DATE NOT NULL,
+    TotalFinal DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    TotalPago DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    CVU VARCHAR(22) NULL,
+    IDConsorcio INT NOT NULL,
+    CONSTRAINT PK_Historico PRIMARY KEY (IDuF, Mes),
+    CONSTRAINT FK_Historico_UnidadFuncional FOREIGN KEY (IDuF)
+        REFERENCES consorcio.UnidadFuncional (IdUF),
+    CONSTRAINT FK_Historico_Consorcio FOREIGN KEY (IDConsorcio)
+        REFERENCES consorcio.Consorcio (IDConsorcio)
+);
+GO
 
 
 DECLARE @i INT = 1;
