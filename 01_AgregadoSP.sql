@@ -304,7 +304,7 @@ BEGIN
     END CATCH
 
     --insercion de la nueva unidad funcional
-    INSERT INTO consorcio.UnidadFuncional (Piso, Depto, Superficie, Coeficiente, IdConsorcio, Propietario)
+    INSERT INTO consorcio.UnidadFuncional (Piso, Depto, Superficie, Coeficiente, IdConsorcio)
     VALUES (@Piso, @Depto, @Superficie, @Coeficiente, @IdConsorcio);
 END
 GO
