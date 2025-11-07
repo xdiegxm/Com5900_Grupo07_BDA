@@ -334,10 +334,8 @@ BEGIN
         Fecha DATE NOT NULL,
         Importe DECIMAL(12,2) NOT NULL CHECK(Importe>=0),
         CuentaOrigen CHAR(22) NOT NULL,
-        IdUF INT NOT NULL
-		idExpensa INT NOT NULL,
-        FOREIGN KEY(IdUF) REFERENCES consorcio.UnidadFuncional(IdUF),
-		FOREIGN KEY (idExpensa) REFERENCES expensas.Expensa(nroExpensa)
+        IdUF INT NOT NULL,
+        FOREIGN KEY(IdUF) REFERENCES consorcio.UnidadFuncional(IdUF)
     );
 END
 GO
@@ -436,6 +434,7 @@ IF OBJECT_ID('consorcio.Consorcio','U') IS NOT NULL
     DROP TABLE consorcio.Consorcio;
 
 GO
+
 
 
 
