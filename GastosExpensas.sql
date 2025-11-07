@@ -47,7 +47,7 @@ CREATE TABLE gastos.Gasto_Extraordinario2 (
 go
 
 ----------------------------------------------------
-CREATE OR ALTER PROCEDURE importacion.Sp_CargarGastosDesdeJson
+CREATE OR ALTER PROCEDURE gastos.Sp_CargarGastosDesdeJson
     @JsonContent NVARCHAR(MAX),
     @Anio INT,
     @DiaVto1 INT, 
@@ -362,6 +362,7 @@ TRUNCATE TABLE gastos.Gasto_Extraordinario2;
 TRUNCATE TABLE gastos.Gasto_Ordinario2;
 delete from  gastos.Gasto2;
 delete from expensas.Expensa2;
+
 
 
 
