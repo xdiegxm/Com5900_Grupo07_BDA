@@ -47,20 +47,56 @@ CREATE TABLE gastos.Gasto_Extraordinario2 (
 go
 
 ----------------------------------------------------
-
 CREATE OR ALTER PROCEDURE importacion.Sp_CargarGastosDesdeJson
     @JsonContent NVARCHAR(MAX),
     @Anio INT,
     @DiaVto1 INT, 
-    @DiaVto2 INT
+    @DiaVto2 INT,
+    @RutaExcelProveedores NVARCHAR(500)
 AS
 BEGIN
     SET NOCOUNT ON;
     
-    PRINT '=== INICIANDO CARGA DESDE JSON ===';
-    
+    PRINT 'Carga desde excel y json';    
     BEGIN TRY
-        -- Tabla temporal para staging
+        PRINT 'Cargando proveedores desde excel';
+        
+        IF OBJECT_ID('tempdb..#ProveedoresTemp') IS NOT NULL DROP TABLE #ProveedoresTemp;
+        CREATE TABLE #ProveedoresTemp (
+            idConsorcio INT,
+            categoria NVARCHAR(100),
+            proveedor NVARCHAR(100),
+            descripcion NVARCHAR(200),
+            nroCuenta NVARCHAR(50)
+        );
+        
+        DECLARE @SqlProveedores NVARCHAR(MAX);
+        
+        SET @SqlProveedores = 
+        'INSERT INTO #ProveedoresTemp (categoria, proveedor, descripcion, nroCuenta, idConsorcio) ' +
+        'SELECT ' +
+        '    LTRIM(RTRIM(F1)), ' +
+        '    LTRIM(RTRIM(F2)), ' +
+        '    LTRIM(RTRIM(F3)), ' +
+        '    LTRIM(RTRIM(F4)), ' +
+        '    c.IdConsorcio ' +
+        'FROM OPENROWSET( ' +
+        '    ''Microsoft.ACE.OLEDB.16.0'', ' +
+        '    ''Excel 12.0;Database=' + @RutaExcelProveedores + ';HDR=NO'', ' +
+        '    ''SELECT * FROM [Proveedores$B2:E100]'' ' +
+        ') excel ' +
+        'INNER JOIN consorcio.Consorcio c ON c.NombreConsorcio = LTRIM(RTRIM(excel.F4)) ' +
+        'WHERE LTRIM(RTRIM(F1)) IS NOT NULL ' +
+        '  AND LTRIM(RTRIM(F4)) IS NOT NULL';
+        
+        EXEC sp_executesql @SqlProveedores;
+        
+        PRINT 'Proveedores cargados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        
+
+        PRINT 'Procesando json';
+        
+        -- Tabla temporal para staging del JSON
         IF OBJECT_ID('tempdb..#stg_gasto') IS NOT NULL DROP TABLE #stg_gasto;
         CREATE TABLE #stg_gasto (
             consorcio NVARCHAR(200),
@@ -104,9 +140,9 @@ BEGIN
                 ELSE TRY_CAST(REPLACE(REPLACE(REPLACE(importe_raw, '.', ''), ',', '.'), ' ', '') AS DECIMAL(18,2))
             END;
 
-        PRINT 'Registros en staging: ' + CAST(@@ROWCOUNT AS VARCHAR);
-
-        -- Verificar que existen TODOS los consorcios del JSON
+        PRINT 'Registros en staging JSON: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        
+        --Veo si los consorcios del json coinciden
         IF EXISTS (
             SELECT DISTINCT s.consorcio 
             FROM #stg_gasto s 
@@ -190,7 +226,9 @@ BEGIN
 
         PRINT 'Expensas encontradas: ' + CAST(@@ROWCOUNT AS VARCHAR);
 
-        -- Insertar gastos
+        PRINT 'Insertando gastos';
+        
+        -- Insertar gastos principales
         INSERT INTO gastos.Gasto2 (nroExpensa, idConsorcio, tipo, descripcion, fechaEmision, importe)
         SELECT 
             e.nroExpensa,
@@ -210,26 +248,28 @@ BEGIN
 
         PRINT 'Gastos insertados: ' + CAST(@@ROWCOUNT AS VARCHAR);
 
-        -- Insertar en gastos ordinarios
+        PRINT 'Asignando proveedores';
+        
         INSERT INTO gastos.Gasto_Ordinario2 (idGasto, nombreProveedor, categoria, nroFactura)
         SELECT 
             g.idGasto,
-            CASE 
-                WHEN g.descripcion LIKE '%AGUA%' THEN 'AYSA'
-                WHEN g.descripcion LIKE '%LUZ%' THEN 'EDENOR'
-                WHEN g.descripcion LIKE '%BANCARIOS%' THEN 'BANCO'
-                WHEN g.descripcion LIKE '%LIMPIEZA%' THEN 'EMPRESA LIMPIEZA'
-                WHEN g.descripcion LIKE '%ADMINISTRACION%' THEN 'ADMINISTRADOR'
-                WHEN g.descripcion LIKE '%SEGUROS%' THEN 'ASEGURADORA'
-                ELSE 'PROVEEDOR'
-            END as nombreProveedor,
-            LEFT(g.descripcion, 35) as categoria,
+            p.proveedor as nombreProveedor,
+            p.categoria,
             'FAC-' + CAST(g.idGasto as VARCHAR(20)) as nroFactura
         FROM gastos.Gasto2 g
+        INNER JOIN #ProveedoresTemp p ON p.idConsorcio = g.idConsorcio
+            AND (
+                (g.descripcion LIKE '%BANCARIOS%' AND p.categoria = 'GASTOS BANCARIOS') OR
+                (g.descripcion LIKE '%ADMINISTRACION%' AND p.categoria = 'GASTOS DE ADMINISTRACION') OR
+                (g.descripcion LIKE '%SEGUROS%' AND p.categoria = 'SEGUROS') OR
+                (g.descripcion LIKE '%LIMPIEZA%' AND p.categoria = 'GASTOS DE LIMPIEZA') OR
+                (g.descripcion LIKE '%AGUA%' AND p.categoria = 'SERVICIOS PUBLICOS' AND p.proveedor = 'AYSA') OR
+                (g.descripcion LIKE '%LUZ%' AND p.categoria = 'SERVICIOS PUBLICOS' AND p.proveedor = 'EDENOR')
+            )
         WHERE g.tipo = 'Ordinario'
-          AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Ordinario2 o WHERE o.idGasto = g.idGasto);
+            AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Ordinario2 o WHERE o.idGasto = g.idGasto);
 
-        PRINT 'Cant gastos ordinarios insertados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        PRINT 'Gastos ordinarios con proveedores: ' + CAST(@@ROWCOUNT AS VARCHAR);
 
         -- Insertar en gastos extraordinarios
         INSERT INTO gastos.Gasto_Extraordinario2 (idGasto, cuotaActual, cantCuotas)
@@ -239,19 +279,21 @@ BEGIN
             1 as cantCuotas
         FROM gastos.Gasto2 g
         WHERE g.tipo = 'Extraordinario'
-          AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Extraordinario2 e WHERE e.idGasto = g.idGasto);
-        PRINT 'Cant gastos extraordinarios insertados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+            AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Extraordinario2 e WHERE e.idGasto = g.idGasto);
+        
+        PRINT 'Gastos extraordinarios: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        
     END TRY
     BEGIN CATCH
-        PRINT 'ERROR: ' + ERROR_MESSAGE();
-        PRINT 'L�nea: ' + CAST(ERROR_LINE() AS VARCHAR);
+        PRINT 'ERROR: ';
         THROW;
     END CATCH
 END
-go
-
+GO
+---------------------------------------------------------------------
 CREATE OR ALTER PROCEDURE gastos.Sp_CargarGastosDesdeArchivo
-    @RutaArchivo NVARCHAR(500),
+    @RutaArchivoJSON NVARCHAR(500),
+    @RutaArchivoExcel NVARCHAR(500),
     @Anio INT = 2024,
     @DiaVto1 INT = 10,
     @DiaVto2 INT = 20
@@ -259,7 +301,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    PRINT 'Leyendo archivo: ' + @RutaArchivo;
+    PRINT 'Iniando carga';
+    PRINT 'JSON: ' + @RutaArchivoJSON;
+    PRINT 'Excel: ' + @RutaArchivoExcel;
     
     DECLARE @JsonContent NVARCHAR(MAX);
     DECLARE @Sql NVARCHAR(MAX);
@@ -267,32 +311,57 @@ BEGIN
     -- Leer el archivo JSON
     SET @Sql = N'
     SELECT @JsonContent = BulkColumn
-    FROM OPENROWSET(BULK ''' + @RutaArchivo + ''', SINGLE_CLOB) AS j;';
+    FROM OPENROWSET(BULK ''' + @RutaArchivoJSON + ''', SINGLE_CLOB) AS j;';
     
     EXEC sp_executesql @Sql, N'@JsonContent NVARCHAR(MAX) OUTPUT', @JsonContent OUTPUT;
     
     IF @JsonContent IS NULL
     BEGIN
-        RAISERROR('No se pudo leer el archivo JSON', 16, 1);
+        RAISERROR('No se pudo leer el archivo JSON: %s', 16, 1, @RutaArchivoJSON);
         RETURN;
     END
     
-    -- Llamar al procedimiento original con el contenido
+    PRINT 'Json leído correctamente';
+    
+    -- Llamar al procedimiento que integra JSON + Excel
     EXEC importacion.Sp_CargarGastosDesdeJson 
         @JsonContent = @JsonContent,
         @Anio = @Anio,
         @DiaVto1 = @DiaVto1,
-        @DiaVto2 = @DiaVto2;
+        @DiaVto2 = @DiaVto2,
+        @RutaExcelProveedores = @RutaArchivoExcel;
+        
+    PRINT 'Carga completada';
 END
-go
+GO
 
-EXEC importacion.Sp_CargarGastosDesdeArchivo 
-    @RutaArchivo = 'C:\Archivos_para_el_TP\Servicios.Servicios.json',
-    @Anio = 2024,
+--Primero crear las tablas nuevas 
+--Después los procedures
+
+EXEC gastos.Sp_CargarGastosDesdeArchivo 
+    @RutaArchivoJSON = 'C:\Archivos_para_el_TP\Servicios.Servicios.json',
+    @RutaArchivoExcel = 'C:\Archivos_para_el_TP\datos varios.xlsx',
+    @Anio = 2025,
     @DiaVto1 = 10,
     @DiaVto2 = 20;
 
+
+
+
+
+
+
+-- Verificar resultados
 select * from expensas.Expensa2
 select * from gastos.Gasto2
 select * from gastos.Gasto_Ordinario2
 select * from gastos.Gasto_Extraordinario2
+
+--Borrar tablas
+TRUNCATE TABLE gastos.Gasto_Extraordinario2;
+TRUNCATE TABLE gastos.Gasto_Ordinario2;
+delete from  gastos.Gasto2;
+delete from expensas.Expensa2;
+
+
+
