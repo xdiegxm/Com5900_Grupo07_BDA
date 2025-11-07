@@ -8,7 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Piñero, Agustín                             --
+-- PiÃ±ero, AgustÃ­n                             --
 -- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
@@ -22,6 +22,12 @@ Use master
 
 USE Com5600G07
 GO
+
+-------------------------------------------------
+--											   --
+--		        BORRAR CONSORCIO               --
+--											   --
+-------------------------------------------------
 
 CREATE OR ALTER PROCEDURE consorcio.sp_BorrarConsorcio
 	@IdConsorcio INT
@@ -98,6 +104,12 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR UNIDAD				   --
+--				  FUNCIONAL					   --
+--											   --			
+-------------------------------------------------
 
 CREATE OR ALTER PROCEDURE consorcio.sp_BorrarUnidadFuncional
 	@IdUF int
@@ -160,7 +172,12 @@ BEGIN
 END
 GO
 
-
+-------------------------------------------------
+--											   --
+--		        BORRAR PERSONA                 --
+--											   --
+-------------------------------------------------
+			
 CREATE OR ALTER PROCEDURE consorcio.sp_BorrarPersona
 	@DNI VARCHAR(10)
 AS
@@ -216,6 +233,11 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR EXPENSA                 --
+--											   --
+-------------------------------------------------
 
 CREATE OR ALTER PROCEDURE expensas.sp_BorrarExpensa
 	@Tipo CHAR(1),
@@ -288,6 +310,12 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR GASTO                   --
+--				  ORDINARIO				       --
+--											   --
+-------------------------------------------------
 
 CREATE OR ALTER PROCEDURE gastos.sp_BorrarGastoOrdinario
 	@IdGO INT,
@@ -358,6 +386,11 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR LIMPIEZA                --
+--											   --
+-------------------------------------------------
 
 CREATE OR ALTER PROCEDURE gastos.sp_BorrarLimpieza
 	@IdLimpieza INT,
@@ -414,6 +447,11 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR PAGO                    --
+--											   --
+-------------------------------------------------
 
 CREATE OR ALTER PROCEDURE Pago.sp_BorrarPago
 	@IdPago INT
@@ -460,6 +498,7 @@ BEGIN
 
 END
 GO
+
 
 
 
