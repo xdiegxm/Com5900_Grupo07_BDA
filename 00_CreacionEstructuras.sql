@@ -173,7 +173,7 @@ BEGIN
         ExpensaOrdinaria DECIMAL(12,2) CHECK (ExpensaOrdinaria >= 0),
         ExpensaExtraordinaria DECIMAL(12,2) CHECK (ExpensaExtraordinaria >= 0),
         Total DECIMAL(12,2) CHECK (Total >= 0),
-        Deuda DECIMAL(12,2) CHECK (Deuda >= 0),
+        Deuda DECIMAL(12,2),
         PRIMARY KEY (IdProrrateo, IdUF),
         FOREIGN KEY (NroExpensa) REFERENCES expensas.Expensa(NroExpensa),
         FOREIGN KEY (IdUF) REFERENCES consorcio.UnidadFuncional(IdUF)
@@ -188,6 +188,8 @@ BEGIN
         Importe DECIMAL(12,2) NOT NULL CHECK(Importe>=0),
         CuentaOrigen CHAR(22) NOT NULL,
         IdUF INT NOT NULL,
+		NroExpena INT,
+		FOREIGN KEY (NroExpensa) REFERENCES expensas.Expensa(nroExpensa),
         FOREIGN KEY(IdUF) REFERENCES consorcio.UnidadFuncional(IdUF)
     );
 END
@@ -251,13 +253,11 @@ CREATE TABLE expensas.HistoricoProrrateo (
     TotalFinal DECIMAL(10, 2) NOT NULL DEFAULT 0,
     TotalPago DECIMAL(10, 2) NOT NULL DEFAULT 0,
     CVU VARCHAR(22) NULL,
-    
     CONSTRAINT PK_Historico PRIMARY KEY (IDuF, Mes),
     constraint fk_nroExpensa_historic foreign key (nroexpensa) references expensas.Expensa(nroExpensa),
     CONSTRAINT FK_Historico_UnidadFuncional FOREIGN KEY (IDuF)
         REFERENCES consorcio.UnidadFuncional (IdUF),
-    CONSTRAINT FK_Historico_Consorcio FOREIGN KEY (IDConsorcio)
-        REFERENCES consorcio.Consorcio (IDConsorcio)
+
 );
 GO
 
@@ -354,6 +354,7 @@ IF OBJECT_ID('consorcio.Consorcio','U') IS NOT NULL
     DROP TABLE consorcio.Consorcio;
 
 GO
+
 
 
 
