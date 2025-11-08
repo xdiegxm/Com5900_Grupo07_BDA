@@ -68,6 +68,7 @@ IF SCHEMA_ID('Externos') IS NULL
 BEGIN
 	EXEC('CREATE SCHEMA Externos');
 END
+
 -------------------------------------------------
 --											   --
 --			CREACION DE LAS TABLAS	           --
@@ -148,25 +149,16 @@ BEGIN
     );
 END
 
-IF OBJECT_ID('expensas.Expensa','U') IS NULL
-BEGIN
-    CREATE TABLE expensas.Expensa (
-        Tipo CHAR(1) NOT NULL CHECK(Tipo IN('O','E')), -- Ordinaria o Extraordinaria
-        NroExpensa INT NOT NULL,
-        Mes TINYINT NOT NULL CHECK (Mes BETWEEN 1 AND 12),
-        Anio SMALLINT NOT NULL CHECK (Anio >= 2000),
-        FechaEmision DATE NOT NULL, 
-        Vencimiento DATE NOT NULL,
-        Total DECIMAL(12,2) NOT NULL CHECK (Total >= 0),
-        EstadoEnvio VARCHAR(20),
-        MetodoEnvio VARCHAR(20),
-        DestinoEnvio NVARCHAR(50),
-        IdConsorcio INT NOT NULL,
-        PRIMARY KEY(Tipo, NroExpensa),
-        FOREIGN KEY(IdConsorcio) REFERENCES consorcio.Consorcio(IdConsorcio),
-        CONSTRAINT CK_Expensa_Vencimiento CHECK (Vencimiento >= FechaEmision)
-    );
-END
+CREATE TABLE expensas.Expensa (
+    nroExpensa INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    idConsorcio INT NOT NULL,
+    fechaGeneracion DATE NOT NULL,
+    fechaVto1 DATE,
+    fechaVto2 DATE,
+    montoTotal DECIMAL(10,2),
+    CONSTRAINT FK_Expensa_Consorcio FOREIGN KEY (idConsorcio) REFERENCES consorcio.Consorcio (IdConsorcio)
+);
+go
 
 IF OBJECT_ID('expensas.Prorrateo','U') IS NULL
 BEGIN
@@ -215,18 +207,9 @@ BEGIN
         constraint fk_consorcio_ef foreign key(idConsorcio) references consorcio.Consorcio(IdConsorcio)
     );
 END
-CREATE TABLE expensas.Expensa (
-    nroExpensa INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-    idConsorcio INT NOT NULL,
-    fechaGeneracion DATE NOT NULL,
-    fechaVto1 DATE,
-    fechaVto2 DATE,
-    montoTotal DECIMAL(10,2),
-    CONSTRAINT FK_Expensa_Consorcio FOREIGN KEY (idConsorcio) REFERENCES consorcio.Consorcio (IdConsorcio)
-);
-go
 
-CREATE TABLE gasto.Gasto (
+
+CREATE TABLE gastos.Gasto (
     idGasto INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
     nroExpensa INT NOT NULL,
     idConsorcio INT NOT NULL,
@@ -252,7 +235,7 @@ CREATE TABLE gastos.Gasto_Ordinario (
 go
 
 CREATE TABLE gastos.Gasto_Extraordinario (
-    idGasto INT NOT NULL PRIMARY KEY,
+    idGasto INT NOT null primary key,
     cuotaActual TINYINT,
     cantCuotas TINYINT,
     CONSTRAINT FK_Extraordinario_Gasto2
@@ -261,14 +244,16 @@ CREATE TABLE gastos.Gasto_Extraordinario (
 go
 
 
-CREATE TABLE HistoricoProrrateo (
+CREATE TABLE expensas.HistoricoProrrateo (
     IDuF INT NOT NULL,
     Mes DATE NOT NULL,
+    nroExpensa int not null,
     TotalFinal DECIMAL(10, 2) NOT NULL DEFAULT 0,
     TotalPago DECIMAL(10, 2) NOT NULL DEFAULT 0,
     CVU VARCHAR(22) NULL,
-    IDConsorcio INT NOT NULL,
+    
     CONSTRAINT PK_Historico PRIMARY KEY (IDuF, Mes),
+    constraint fk_nroExpensa_historic foreign key (nroexpensa) references expensas.Expensa(nroExpensa),
     CONSTRAINT FK_Historico_UnidadFuncional FOREIGN KEY (IDuF)
         REFERENCES consorcio.UnidadFuncional (IdUF),
     CONSTRAINT FK_Historico_Consorcio FOREIGN KEY (IDConsorcio)
@@ -327,7 +312,7 @@ GO
 IF OBJECT_ID('gastos.GastoOrdinario','U') IS NOT NULL
     DROP TABLE gastos.GastoOrdinario;
 GO
-IF OBJECT_ID('gastos.GastoExtraordinario','U') IS NOT NULL
+IF OBJECT_ID('gastos.Gasto_Extraordinario','U') IS NOT NULL
     DROP TABLE gastos.GastoExtraordinario;
 GO
 
