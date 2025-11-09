@@ -26,7 +26,7 @@
 
 USE Com5600G07
 GO
-
+/*
 sp_configure 'show advanced options', 1;
 RECONFIGURE;
 GO
@@ -40,7 +40,7 @@ EXEC master.dbo.sp_MSset_oledb_prop
 EXEC master.dbo.sp_MSset_oledb_prop 
     N'Microsoft.ACE.OLEDB.16.0', 
     N'DynamicParameters', 1;
-GO
+GO*/
 -------------------------------------------------
 --											   --
 --			     TABLA DE LOG      	           --
@@ -64,6 +64,8 @@ GO
  *   - Registro en tabla report.logsReportes
  *   - XML con confirmación y ID del log generado
  */
+
+
 CREATE OR ALTER PROCEDURE report.Sp_LogReporte
     @SP           SYSNAME,
     @Tipo         VARCHAR(30),
@@ -964,23 +966,6 @@ END
 GO
 
 
--- 1. Crear Expensa Padre (Total 0)
-EXEC expensas.sp_agrExpensa @Tipo='O', @NroExpensa=1, @Mes=4, @Anio=2025, @IdConsorcio=1, @Total=0.00, @FechaEmision='2025-05-01', @Vencimiento='2025-05-10';
-
--- 2. Ejecutar Importación
--- Asegurate de que las rutas sean las correctas en tu pc.
-
-EXEC gastos.sp_importarGastosMensuales
-    @RutaArchivoJSON = 'D:\BDA 2C2025\archivostp\Servicios.Servicios.json',
-    @RutaArchivoXLSX = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',          --ESTO ES LO QUE FALLA, ACA EL OLE DB NO PUEDE ACCEDER AL .XLSX
-    @HojaProveedores = 'Proveedores',
-    @NroExpensa = 1,
-    @TipoExpensa = 'O';
-
--- 3. Verificar
-
-SELECT * FROM gastos.GastoOrdinario WHERE NroExpensa = 1 AND Tipo = 'O';
-
 CREATE OR ALTER PROCEDURE importacion.Sp_CargarGastosDesdeJson
     @JsonContent NVARCHAR(MAX),
     @Anio INT,
@@ -1120,7 +1105,7 @@ BEGIN
         PRINT 'Totales calculados: ' + CAST(@@ROWCOUNT AS VARCHAR);
 
         -- Crear expensas
-        INSERT INTO expensas.Expensa2 (idConsorcio, fechaGeneracion, fechaVto1, fechaVto2, montoTotal)
+        INSERT INTO expensas.Expensa (idConsorcio, fechaGeneracion, fechaVto1, fechaVto2, montoTotal)
         SELECT 
             t.IdConsorcio,
             t.fechaBase as fechaGeneracion,
@@ -1137,7 +1122,7 @@ BEGIN
             END as montoTotal
         FROM #totales t
         WHERE NOT EXISTS (
-            SELECT 1 FROM expensas.Expensa2 e 
+            SELECT 1 FROM expensas.Expensa e 
             WHERE e.idConsorcio = t.IdConsorcio 
             AND YEAR(e.fechaGeneracion) = @Anio 
             AND MONTH(e.fechaGeneracion) = t.mes
@@ -1155,7 +1140,7 @@ BEGIN
             e.idConsorcio,
             e.montoTotal
         INTO #ExpensasSinProrrateo
-        FROM expensas.Expensa2 e
+        FROM expensas.Expensa e
         INNER JOIN #totales t ON e.idConsorcio = t.IdConsorcio 
             AND YEAR(e.fechaGeneracion) = @Anio 
             AND MONTH(e.fechaGeneracion) = t.mes
@@ -1208,11 +1193,11 @@ BEGIN
             vp.nroExpensa,
             vp.idUF,
             vp.PorcentajeCalculado,
-            NULL, -- SaldoAnterior
-            NULL, -- PagosRecibidos
-            NULL, -- InteresMora
+            0, -- SaldoAnterior
+            0, -- PagosRecibidos
+            0, -- InteresMora
             vp.MontoPorUF, -- ExpensaOrdinaria 
-            NULL, -- ExpensaExtraordinaria
+            0, -- ExpensaExtraordinaria
             vp.MontoPorUF, -- Total 
             vp.MontoPorUF  -- Deuda
         FROM #VerificacionProrrateo vp;
@@ -1230,7 +1215,7 @@ BEGIN
         INTO #exp
         FROM #stg_gasto s
         INNER JOIN #cons c ON c.consorcio = s.consorcio
-        INNER JOIN expensas.Expensa2 e ON e.idConsorcio = c.IdConsorcio
+        INNER JOIN expensas.Expensa e ON e.idConsorcio = c.IdConsorcio
             AND YEAR(e.fechaGeneracion) = @Anio 
             AND MONTH(e.fechaGeneracion) = s.mes;
 
@@ -1239,7 +1224,7 @@ BEGIN
         PRINT 'Insertando gastos';
         
         -- Insertar gastos
-        INSERT INTO gastos.Gasto2 (nroExpensa, idConsorcio, tipo, descripcion, fechaEmision, importe)
+        INSERT INTO gastos.Gasto (nroExpensa, idConsorcio, tipo, descripcion, fechaEmision, importe)
         SELECT 
             e.nroExpensa,
             c.IdConsorcio,
@@ -1260,13 +1245,13 @@ BEGIN
 
         PRINT 'Asignando proveedores';
         
-        INSERT INTO gastos.Gasto_Ordinario2 (idGasto, nombreProveedor, categoria, nroFactura)
+        INSERT INTO gastos.Gasto_Ordinario (idGasto, nombreProveedor, categoria, nroFactura)
         SELECT 
             g.idGasto,
             p.proveedor as nombreProveedor,
             p.categoria,
             'FAC-' + CAST(g.idGasto as VARCHAR(20)) as nroFactura
-        FROM gastos.Gasto2 g
+        FROM gastos.Gasto g
         INNER JOIN #ProveedoresTemp p ON p.idConsorcio = g.idConsorcio
             AND (
                 (g.descripcion LIKE '%BANCARIOS%' AND p.categoria = 'GASTOS BANCARIOS') OR
@@ -1277,23 +1262,21 @@ BEGIN
                 (g.descripcion LIKE '%LUZ%' AND p.categoria = 'SERVICIOS PUBLICOS' AND p.proveedor = 'EDENOR')
             )
         WHERE g.tipo = 'Ordinario'
-            AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Ordinario2 o WHERE o.idGasto = g.idGasto);
+            AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Ordinario o WHERE o.idGasto = g.idGasto);
 
         PRINT 'Gastos ordinarios con proveedores: ' + CAST(@@ROWCOUNT AS VARCHAR);
 
         --gastos extraordinarios
-        INSERT INTO gastos.Gasto_Extraordinario2 (idGasto, cuotaActual, cantCuotas)
+        INSERT INTO gastos.Gasto_Extraordinario (idGasto, cuotaActual, cantCuotas)
         SELECT 
             g.idGasto,
             1 as cuotaActual,
             1 as cantCuotas
-        FROM gastos.Gasto2 g
+        FROM gastos.Gasto g
         WHERE g.tipo = 'Extraordinario'
-            AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Extraordinario2 e WHERE e.idGasto = g.idGasto);
+            AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Extraordinario e WHERE e.idGasto = g.idGasto);
         
         PRINT 'Gastos extraordinarios: ' + CAST(@@ROWCOUNT AS VARCHAR);
-        
-        PRINT 'Actualizando prorrateo con gastos reales...';
 
         -- totales de gastos por expensa
         IF OBJECT_ID('tempdb..#GastosPorExpensa') IS NOT NULL DROP TABLE #GastosPorExpensa;
@@ -1303,7 +1286,7 @@ BEGIN
             SUM(CASE WHEN tipo = 'Extraordinario' THEN importe ELSE 0 END) as TotalExtraordinario,
             SUM(importe) as TotalGeneral
         INTO #GastosPorExpensa
-        FROM gastos.Gasto2
+        FROM gastos.Gasto
         WHERE nroExpensa IN (SELECT DISTINCT nroExpensa FROM #exp)
         GROUP BY nroExpensa;
 
@@ -1381,15 +1364,9 @@ BEGIN
 END
 GO
 
-EXEC gastos.Sp_CargarGastosDesdeArchivo 
-    @RutaArchivoJSON = 'C:\Archivos_para_el_TP\Servicios.Servicios.json',
-    @RutaArchivoExcel = 'C:\Archivos_para_el_TP\datos varios.xlsx',
-    @Anio = 2025,
-    @DiaVto1 = 10,
-    @DiaVto2 = 20;    
 
 --pagos
-
+--hay que agregarle lo del reporteLog
 CREATE OR ALTER PROCEDURE Pago.sp_importarPagosDesdeCSV
     @rutaArchivo NVARCHAR(255)
 AS
@@ -1467,7 +1444,7 @@ BEGIN
         SET NroExpensa = pr.NroExpensa
         FROM #PagosTemp pt
         INNER JOIN expensas.Prorrateo pr ON pt.IdUF = pr.IdUF
-        INNER JOIN expensas.Expensa2 e ON pr.NroExpensa = e.nroExpensa
+        INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
         WHERE pt.FechaProcesada BETWEEN e.fechaGeneracion AND 
               COALESCE(e.fechaVto2, DATEADD(DAY, 30, e.fechaGeneracion))
         AND pt.NroExpensa IS NULL;
@@ -1479,7 +1456,7 @@ BEGIN
         SET NroExpensa = (
             SELECT TOP 1 pr.NroExpensa
             FROM expensas.Prorrateo pr
-            INNER JOIN expensas.Expensa2 e ON pr.NroExpensa = e.nroExpensa
+            INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
             WHERE pr.IdUF = pt.IdUF
             ORDER BY e.fechaGeneracion DESC
         )
@@ -1521,27 +1498,56 @@ BEGIN
                 BEGIN TRY
                     BEGIN TRANSACTION;
 
-                
+                    -- **CORRECCIÓN: OBTENER VALORES ACTUALES DEL PRORRATEO**
                     DECLARE @DeudaActual DECIMAL(12,2);
                     DECLARE @PagosActuales DECIMAL(12,2);
-                    DECLARE @TotalExpensa DECIMAL(12,2);                  
-                    
+                    DECLARE @TotalExpensa DECIMAL(12,2);
+
+                    -- Obtener los valores actuales del prorrateo
+                    SELECT 
+                        @PagosActuales = ISNULL(PagosRecibidos, 0),
+                        @TotalExpensa = ISNULL(Total, 0),
+                        @DeudaActual = ISNULL(Deuda, 0)
+                    FROM expensas.Prorrateo 
+                    WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
+
+                    -- Si no existe el prorrateo, crear uno básico
+                    IF @PagosActuales IS NULL
+                    BEGIN
+                        SET @PagosActuales = 0;
+                        SET @TotalExpensa = @Importe; -- Asumir que el total es igual al pago
+                        SET @DeudaActual = @Importe;
+                        
+                        -- Insertar registro en prorrateo si no existe
+                        IF NOT EXISTS (SELECT 1 FROM expensas.Prorrateo WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF)
+                        BEGIN
+                            INSERT INTO expensas.Prorrateo (NroExpensa, IdUF, Total, PagosRecibidos, Deuda)
+                            VALUES (@NroExpensa, @IdUF, @TotalExpensa, 0, @TotalExpensa);
+                        END
+                    END
+                                      
+                    -- Insertar el pago
                     INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, IdUF, NroExpensa)
                     VALUES (@Fecha, @Importe, @CuentaOrigen, @IdUF, @NroExpensa);
 
                     SET @IdPagoInsertado = SCOPE_IDENTITY();
 
-                   
+                    -- **CORRECCIÓN: CALCULAR NUEVOS VALORES**
+                    DECLARE @NuevosPagosRecibidos DECIMAL(12,2) = @PagosActuales + @Importe;
+                    DECLARE @NuevaDeuda DECIMAL(12,2) = @TotalExpensa - @NuevosPagosRecibidos;
+
+                    -- Actualizar el prorrateo con los valores calculados
                     UPDATE expensas.Prorrateo 
                     SET 
-                        PagosRecibidos = @PagosActuales + @Importe,
-                        Deuda = @TotalExpensa - (@PagosActuales + @Importe) 
+                        PagosRecibidos = @NuevosPagosRecibidos,
+                        Deuda = @NuevaDeuda
                     WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
 
                     PRINT 'Pago procesado - ID: ' + CAST(@IdPagoInsertado AS VARCHAR(10)) + 
                           ' - Importe: $' + CAST(@Importe AS VARCHAR(20)) +
-                          ' - Deuda anterior: $' + CAST(@DeudaActual AS VARCHAR(20)) +
-                          ' - Deuda nueva: $' + CAST((@TotalExpensa - (@PagosActuales + @Importe)) AS VARCHAR(20)) +
+                          ' - Pagos anteriores: $' + CAST(@PagosActuales AS VARCHAR(20)) +
+                          ' - Pagos nuevos: $' + CAST(@NuevosPagosRecibidos AS VARCHAR(20)) +
+                          ' - Deuda nueva: $' + CAST(@NuevaDeuda AS VARCHAR(20)) +
                           ' - IdUF: ' + CAST(@IdUF AS VARCHAR(10)) +
                           ' - Expensa: ' + CAST(@NroExpensa AS VARCHAR(10));
 
@@ -1551,7 +1557,7 @@ BEGIN
                     IF @@TRANCOUNT > 0 
                         ROLLBACK TRANSACTION;
                     
-                    PRINT 'Error al procesar el id de pago' + CAST(@IdPago AS VARCHAR(10))
+                    PRINT 'Error al procesar el id de pago ' + CAST(@IdPago AS VARCHAR(10)) + ': ' + ERROR_MESSAGE();
                 END CATCH;
             END
             ELSE
@@ -1572,7 +1578,7 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        PRINT 'Error durante la importación: '
+        PRINT 'Error durante la importación: ' + ERROR_MESSAGE();
         
         IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL 
             DROP TABLE #PagosTemp;
@@ -1580,7 +1586,6 @@ BEGIN
 END;
 GO
 
-EXEC pago.sp_importarPagosDesdeCSV @rutaArchivo = 'C:\Archivos_para_el_tp\pagos_consorcios.csv'
   
 
 -------------------------------------------------
@@ -1937,7 +1942,5 @@ BEGIN
     END CATCH;
 END;
 GO
-EXEC Pago.sp_importarPagosDesdeCSV @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
 
-select * from Pago.Pago
-select * from report.logsReportes
+--cuando ejecuto esto me da un bucle infinito, fijense q se rompe cuando le ponen los report

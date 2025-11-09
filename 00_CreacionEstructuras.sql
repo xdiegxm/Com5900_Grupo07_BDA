@@ -183,10 +183,11 @@ BEGIN
         Total DECIMAL(12,2) CHECK (Total >= 0),
         Deuda DECIMAL(12,2) CHECK (Deuda >= 0),
         PRIMARY KEY (IdProrrateo, IdUF),
-        FOREIGN KEY (NroExpensa) REFERENCES expensas.Expensa(NroExpensa),
+        FOREIGN KEY (NroExpensa) REFERENCES expensas.Expensa(nroExpensa),
         FOREIGN KEY (IdUF) REFERENCES consorcio.UnidadFuncional(IdUF)
     );
 END
+GO
 
 IF OBJECT_ID('Pago.Pago','U') IS NULL
 BEGIN
