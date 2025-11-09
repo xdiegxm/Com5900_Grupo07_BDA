@@ -1943,4 +1943,98 @@ BEGIN
 END;
 GO
 
+
 --cuando ejecuto esto me da un bucle infinito, fijense q se rompe cuando le ponen los report
+
+--SP para llenar la parte de saldo anterior e intereses por mora de la tabla prorrateo
+CREATE OR ALTER PROCEDURE expensas.Sp_ActualizarSaldosAnteriores
+    @NroExpensa INT = NULL,
+    @ForzarCalculo BIT = 1  -- Nuevo parámetro para testing
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRY
+        PRINT '=== ACTUALIZANDO SALDOS ANTERIORES ===';
+        
+        WITH Calculos AS (
+            SELECT 
+                p.IdProrrateo,
+                p.NroExpensa,
+                p.IdUF,
+                e.fechaVto1,
+                e.fechaVto2,
+                -- Calcular saldo anterior (deuda del período anterior de la MISMA UF)
+                ISNULL((
+                    SELECT TOP 1 p_ant.Deuda 
+                    FROM expensas.Prorrateo p_ant
+                    INNER JOIN expensas.Expensa e_ant ON p_ant.NroExpensa = e_ant.nroExpensa
+                    WHERE p_ant.IdUF = p.IdUF
+                      AND e_ant.fechaGeneracion < e.fechaGeneracion
+                    ORDER BY e_ant.fechaGeneracion DESC
+                ), 0) as SaldoAnteriorCalc
+            FROM expensas.Prorrateo p
+            INNER JOIN expensas.Expensa e ON p.NroExpensa = e.nroExpensa
+            WHERE (@NroExpensa IS NULL OR p.NroExpensa = @NroExpensa)
+        )
+        UPDATE p
+        SET 
+            SaldoAnterior = c.SaldoAnteriorCalc,
+            InteresMora = 
+                CASE 
+                    WHEN c.SaldoAnteriorCalc > 0 THEN
+                        CASE 
+                            WHEN @ForzarCalculo = 1 THEN c.SaldoAnteriorCalc * 0.02  -- Forzar 2% para testing
+                            WHEN c.fechaVto2 < GETDATE() THEN c.SaldoAnteriorCalc * 0.05
+                            WHEN c.fechaVto1 < GETDATE() THEN c.SaldoAnteriorCalc * 0.02
+                            ELSE 0 
+                        END
+                    ELSE 0 
+                END,
+            Total = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + 
+                   c.SaldoAnteriorCalc + 
+                   CASE 
+                        WHEN c.SaldoAnteriorCalc > 0 THEN
+                            CASE 
+                                WHEN @ForzarCalculo = 1 THEN c.SaldoAnteriorCalc * 0.02
+                                WHEN c.fechaVto2 < GETDATE() THEN c.SaldoAnteriorCalc * 0.05
+                                WHEN c.fechaVto1 < GETDATE() THEN c.SaldoAnteriorCalc * 0.02
+                                ELSE 0 
+                            END
+                        ELSE 0 
+                   END,
+            Deuda = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + 
+                   c.SaldoAnteriorCalc + 
+                   CASE 
+                        WHEN c.SaldoAnteriorCalc > 0 THEN
+                            CASE 
+                                WHEN @ForzarCalculo = 1 THEN c.SaldoAnteriorCalc * 0.02
+                                WHEN c.fechaVto2 < GETDATE() THEN c.SaldoAnteriorCalc * 0.05
+                                WHEN c.fechaVto1 < GETDATE() THEN c.SaldoAnteriorCalc * 0.02
+                                ELSE 0 
+                            END
+                        ELSE 0 
+                   END - p.PagosRecibidos
+        FROM expensas.Prorrateo p
+        INNER JOIN Calculos c ON p.IdProrrateo = c.IdProrrateo;
+        
+        PRINT 'Actualización completada. Filas afectadas: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        
+        -- Mostrar resumen
+        SELECT 
+            'RESULTADOS ACTUALIZADOS' as Info,
+            COUNT(*) as Total,
+            SUM(CASE WHEN SaldoAnterior > 0 THEN 1 ELSE 0 END) as ConSaldoAnterior,
+            SUM(CASE WHEN InteresMora > 0 THEN 1 ELSE 0 END) as ConInteresMora,
+            SUM(SaldoAnterior) as TotalSaldoAnterior,
+            SUM(InteresMora) as TotalInteresMora
+        FROM expensas.Prorrateo
+        WHERE (@NroExpensa IS NULL OR NroExpensa = @NroExpensa);
+        
+    END TRY
+    BEGIN CATCH
+        PRINT 'ERROR: ' + ERROR_MESSAGE();
+        THROW;
+    END CATCH
+END
+GO
