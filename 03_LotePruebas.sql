@@ -71,12 +71,3 @@ EXEC gastos.Sp_CargarGastosDesdeArchivo
 EXEC Pago.sp_importarPagosDesdeCSV 
     @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
 
-select * from Pago.Pago
-select * from expensas.Expensa
-select * from expensas.Prorrateo
-where PagosRecibidos != 0
-
-select * from gastos.Gasto
-select * from gastos.Gasto_Extraordinario
-select * from gastos.Gasto_Ordinario
-select * from report.logsReportes
