@@ -64,8 +64,6 @@ GO*/
  *   - Registro en tabla report.logsReportes
  *   - XML con confirmación y ID del log generado
  */
-
-
 CREATE OR ALTER PROCEDURE report.Sp_LogReporte
     @SP           SYSNAME,
     @Tipo         VARCHAR(30),
@@ -765,208 +763,12 @@ BEGIN
     END CATCH
 END
 GO
--- A PARTIR DE ACA, (ACTUALIZACION 08/11/2025 18:15hs), NO QUIERO TOCAR NADA CON EL LOG HASTA PODER CARGAR BIEN LAS TABLAS
-
-
-
-
-
-
-
-
 -------------------------------------------------
 --											   --
---			     ESQUEMA GASTOS       	       --
+--		   TABLA GASTOS Y EXPENSA       	   --
 --											   --
 -------------------------------------------------
-CREATE OR ALTER PROCEDURE gastos.sp_importarGastosMensuales
-    @RutaArchivoJSON NVARCHAR(MAX),
-    @RutaArchivoXLSX NVARCHAR(MAX),
-    @HojaProveedores NVARCHAR(100),
-    @NroExpensa INT,
-    @TipoExpensa CHAR(1) = 'O'
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-
-    DECLARE @Contador INT = 1, @TotalRows INT;
-    DECLARE @NombreConsorcio VARCHAR(100), @Mes VARCHAR(20), @IdConsorcio INT;
-    DECLARE @IdGO INT, @IdLimpieza INT;
-    DECLARE @Importe DECIMAL(12,2), @NroFactura VARCHAR(15);
-    DECLARE @Proveedor VARCHAR(100), @DatoProveedor VARCHAR(100);
-    DECLARE @DescripcionGasto VARCHAR(100);
-
-    BEGIN TRY
-        -- ===================================================================
-        -- PASO 1: Cargar el XLSX 
-        -- ===================================================================
-        -- Limpieza preventiva
-        IF OBJECT_ID('tempdb..##RawProveedores') IS NOT NULL DROP TABLE ##RawProveedores;
-        IF OBJECT_ID('tempdb..#TempProveedores') IS NOT NULL DROP TABLE #TempProveedores;
-
-        -- 1.a. Intentamos leer con HDR=YES. 
-        -- Si la Fila 1 es ",,,,", el driver podría asignar nombres F1, F2, F3... automáticamente.
-        -- Usamos SELECT * INTO ##Global para que agarre lo que encuentre.
-        DECLARE @sqlXLSX NVARCHAR(MAX) = N'
-        SELECT *
-        INTO ##RawProveedores
-        FROM OPENROWSET(
-            ''Microsoft.ACE.OLEDB.16.0'', 
-            ''Excel 12.0 Xml;HDR=YES;IMEX=1;Database=' + REPLACE(@RutaArchivoXLSX, '''', '''''') + ''', 
-            ''SELECT * FROM [' + @HojaProveedores + '$]''
-        )';
-        
-        PRINT 'Intentando leer archivo XLSX (con extensión .csv)...';
-        EXEC sp_executesql @sqlXLSX;
-        
-        -- Intentamos una selección genérica basada en la estructura probable que vimos antes.
-        -- Si F1 falla, probá reemplazar F1, F2... con los nombres reales si te da error de columna.
-        SELECT 
-            -- Casteamos todo a VARCHAR para evitar problemas de tipos
-            COALESCE(CAST(F2 AS VARCHAR(100)), '') AS TipoGasto,       -- Col B
-            COALESCE(CAST(F3 AS VARCHAR(100)), '') AS Detalle,         -- Col C
-            COALESCE(CAST(F4 AS VARCHAR(100)), '') AS DatoProveedor,   -- Col D
-            COALESCE(CAST(F5 AS VARCHAR(100)), '') AS NombreConsorcio  -- Col E
-        INTO #TempProveedores
-        FROM ##RawProveedores
-        WHERE F5 IS NOT NULL 
-          AND CAST(F5 AS VARCHAR(100)) <> 'Nombre del consorcio';
-
-        DROP TABLE ##RawProveedores;
-        PRINT 'Proveedores cargados. Registros válidos: ' + CAST(@@ROWCOUNT AS VARCHAR);
-
-        -- ===================================================================
-        -- PASO 2: Cargar JSON 
-        -- ===================================================================
-        IF OBJECT_ID('tempdb..#TempJSON') IS NOT NULL DROP TABLE #TempJSON;
-        DECLARE @JsonData NVARCHAR(MAX);
-        DECLARE @sqlJson NVARCHAR(MAX) = N'
-        SELECT @JsonContentOUT = BulkColumn
-        FROM OPENROWSET (BULK ''' + REPLACE(@RutaArchivoJSON, '''', '''''') + ''', SINGLE_CLOB) as j';
-        EXEC sp_executesql @sqlJson, N'@JsonContentOUT NVARCHAR(MAX) OUTPUT', @JsonContentOUT = @JsonData OUTPUT;
-
-        SELECT * INTO #TempJSON FROM OPENJSON(@JsonData) WITH (
-            [Nombre del consorcio] VARCHAR(100), Mes VARCHAR(20), BANCARIOS VARCHAR(50),
-            LIMPIEZA VARCHAR(50), ADMINISTRACION VARCHAR(50), SEGUROS VARCHAR(50),
-            [GASTOS GENERALES] VARCHAR(50), [SERVICIOS PUBLICOS-Agua] VARCHAR(50),
-            [SERVICIOS PUBLICOS-Luz] VARCHAR(50)
-        );
-        ALTER TABLE #TempJSON ADD ID INT IDENTITY(1,1);
-        SELECT @TotalRows = COUNT(*) FROM #TempJSON;
-
-        -- ===================================================================
-        -- PASO 3: Procesar Gastos
-        -- ===================================================================
-        WHILE @Contador <= @TotalRows
-        BEGIN
-            SELECT @NombreConsorcio = LTRIM(RTRIM([Nombre del consorcio])), @Mes = LTRIM(RTRIM(Mes)) 
-            FROM #TempJSON WHERE ID = @Contador;
-            SELECT @IdConsorcio = IdConsorcio FROM consorcio.Consorcio WHERE NombreConsorcio = @NombreConsorcio;
-
-            IF NOT EXISTS (SELECT 1 FROM expensas.Expensa WHERE IdConsorcio=@IdConsorcio AND NroExpensa=@NroExpensa AND Tipo=@TipoExpensa)
-            BEGIN
-                SET @Contador = @Contador + 1; CONTINUE;
-            END
-            PRINT 'Procesando: ' + @NombreConsorcio;
-
-            -- (A) GASTOS BANCARIOS
-
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT BANCARIOS FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                SELECT TOP 1 @DatoProveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND TipoGasto LIKE '%BANCARIOS%';
-                SET @NroFactura = 'NC-BANC-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Gastos Bancarios', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                EXEC gastos.sp_agrMantenimiento @IdGO=@IdGO, @Tipo=@TipoExpensa, @Importe=@Importe, @CuentaBancaria=@DatoProveedor;
-            END
-
-            -- (B) ADMINISTRACION
-
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT ADMINISTRACION FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                SET @NroFactura = 'F-ADM-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Honorarios Administracion', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                EXEC gastos.sp_agrHonorarios @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @Importe=@Importe;
-            END
-
-            -- (C) LIMPIEZA
-
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT LIMPIEZA FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                SELECT TOP 1 @Proveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND TipoGasto LIKE '%LIMPIEZA%';
-                SET @NroFactura = 'F-LIMP-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                SET @DescripcionGasto = 'Servicio Limpieza (' + ISNULL(@Proveedor, '?') + ')';
-                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion=@DescripcionGasto, @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                EXEC @IdLimpieza = gastos.sp_agrLimpieza @IdGO=@IdGO, @Tipo=@TipoExpensa, @Importe=@Importe;
-                EXEC Externos.sp_agrEmpresa @IdLimpieza=@IdLimpieza, @IdGO=@IdGO, @nroFactura=@NroFactura, @ImpFactura=@Importe;
-            END
-
-            -- (D) SEGUROS
-
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT SEGUROS FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                SELECT TOP 1 @Proveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND TipoGasto LIKE 'SEGUROS%';
-                SET @NroFactura = 'POL-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                SET @DescripcionGasto = 'Seguro (' + ISNULL(@Proveedor, '?') + ')';
-                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion=@DescripcionGasto, @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                EXEC gastos.sp_agrSeguros @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @NombreEmpresa=@Proveedor, @Importe=@Importe;
-            END
-
-            -- (E) GENERALES
-
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT [GASTOS GENERALES] FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                 SET @NroFactura = 'F-GEN-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                 EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Gastos Generales Varios', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                 EXEC gastos.sp_agrGenerales @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @TipoGasto='Varios', @NombreEmpresa='Proveedores Varios', @Importe=@Importe;
-            END
-
-            -- (F) SERVICIOS
-
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT [SERVICIOS PUBLICOS-Agua] FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                SELECT TOP 1 @Proveedor = 'AYSA', @DatoProveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND Detalle LIKE '%AYSA%';
-                SET @NroFactura = 'F-AGUA-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Servicio Agua', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                EXEC gastos.sp_agrGenerales @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @TipoGasto='Servicio', @NombreEmpresa=@Proveedor, @Importe=@Importe;
-            END
-            SET @Importe = TRY_CAST(REPLACE(REPLACE((SELECT [SERVICIOS PUBLICOS-Luz] FROM #TempJSON WHERE ID = @Contador), '.', ''), ',', '.') AS DECIMAL(12,2));
-            IF @Importe > 0
-            BEGIN
-                SELECT TOP 1 @Proveedor = 'EDENOR', @DatoProveedor = DatoProveedor FROM #TempProveedores WHERE NombreConsorcio = @NombreConsorcio AND Detalle LIKE '%EDENOR%';
-                SET @NroFactura = 'F-LUZ-' + @Mes + '-' + CAST(@IdConsorcio AS VARCHAR);
-                EXEC @IdGO = gastos.sp_agrGastoOrdinario @Tipo=@TipoExpensa, @Descripcion='Servicio Luz', @Importe=@Importe, @NroFactura=@NroFactura, @NroExpensa=@NroExpensa;
-                EXEC gastos.sp_agrGenerales @NroFactura=@NroFactura, @IdGO=@IdGO, @Tipo=@TipoExpensa, @TipoGasto='Servicio Luz', @NombreEmpresa=@Proveedor, @Importe=@Importe;
-            END
-
-            SET @Contador = @Contador + 1;
-        END
-
-        COMMIT TRANSACTION;
-        PRINT '=== Importación FINALIZADA con éxito ===';
-
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-
-        -- Si falla, intentamos limpiar la global
-        IF OBJECT_ID('tempdb..##RawProveedores') IS NOT NULL DROP TABLE ##RawProveedores;
-        PRINT 'ERROR GRAVE: ' + ERROR_MESSAGE();
-        THROW;
-
-    END CATCH
-
-END
-GO
-
-
-CREATE OR ALTER PROCEDURE importacion.Sp_CargarGastosDesdeJson
+CREATE OR ALTER PROCEDURE gastos.Sp_CargarGastosDesdeJson
     @JsonContent NVARCHAR(MAX),
     @Anio INT,
     @DiaVto1 INT, 
@@ -1010,7 +812,18 @@ BEGIN
         
         EXEC sp_executesql @SqlProveedores;
         
-        PRINT 'Proveedores cargados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        DECLARE @ProveedoresCargados INT = @@ROWCOUNT;
+        PRINT 'Proveedores cargados: ' + CAST(@ProveedoresCargados AS VARCHAR);
+
+        -- Log de carga de proveedores
+        DECLARE @MensajeProveedores NVARCHAR(500);
+        SET @MensajeProveedores = 'Proveedores cargados desde Excel: ' + CAST(@ProveedoresCargados AS VARCHAR(10)) + ' registros';
+        
+        EXEC report.Sp_LogReporte
+            @SP = 'gastos.Sp_CargarGastosDesdeJson',
+            @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+            @Mensaje = @MensajeProveedores,
+            @RutaArchivo = @RutaExcelProveedores;
         
 
         PRINT 'Procesando json';
@@ -1071,11 +884,22 @@ BEGIN
         )
         BEGIN
             DECLARE @ConsorciosFaltantes NVARCHAR(1000);
-            SELECT @ConsorciosFaltantes = STRING_AGG(consorcio, ', ')
+            
+            SELECT @ConsorciosFaltantes = ISNULL(STRING_AGG(consorcio, ', '), 'Ninguno identificado')
             FROM (SELECT DISTINCT consorcio FROM #stg_gasto s 
                   WHERE NOT EXISTS (SELECT 1 FROM consorcio.Consorcio c WHERE c.NombreConsorcio = s.consorcio)) f;
             
-            RAISERROR('Los siguientes consorcios no existen en la base de datos: %s', 16, 1, @ConsorciosFaltantes);
+            DECLARE @MensajeErrorConsorcios NVARCHAR(2000);
+            SET @MensajeErrorConsorcios = 'Los siguientes consorcios no existen en la base de datos: ' + @ConsorciosFaltantes;
+            
+            -- Log de error de consorcios faltantes
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'ERROR',
+                @Mensaje = @MensajeErrorConsorcios,
+                @RutaArchivo = @RutaExcelProveedores;
+            
+            RAISERROR(@MensajeErrorConsorcios, 16, 1);
             RETURN;
         END
 
@@ -1105,6 +929,8 @@ BEGIN
         PRINT 'Totales calculados: ' + CAST(@@ROWCOUNT AS VARCHAR);
 
         -- Crear expensas
+        DECLARE @ExpensasCreadas INT = 0;
+        
         INSERT INTO expensas.Expensa (idConsorcio, fechaGeneracion, fechaVto1, fechaVto2, montoTotal)
         SELECT 
             t.IdConsorcio,
@@ -1128,7 +954,32 @@ BEGIN
             AND MONTH(e.fechaGeneracion) = t.mes
         );
 
-        PRINT 'Expensas creadas: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        SET @ExpensasCreadas = @@ROWCOUNT;
+
+        PRINT 'Expensas creadas: ' + CAST(@ExpensasCreadas AS VARCHAR(10));
+
+        -- Log de creación de expensas
+        DECLARE @MensajeExpensas NVARCHAR(500);
+        IF @ExpensasCreadas > 0
+        BEGIN
+            SET @MensajeExpensas = 'Expensas creadas exitosamente: ' + CAST(@ExpensasCreadas AS VARCHAR(10)) + ' registros';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+                @Mensaje = @MensajeExpensas,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
+        ELSE
+        BEGIN
+            SET @MensajeExpensas = 'No se crearon nuevas expensas (todas ya existían)';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',
+                @Mensaje = @MensajeExpensas,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
 
 
         PRINT 'Generando prorrateo para las expensas creadas...';
@@ -1176,6 +1027,7 @@ BEGIN
             GROUP BY idConsorcio
         ) sc ON uf.idConsorcio = sc.idConsorcio;
 
+        DECLARE @ProrrateosGenerados INT = 0;
        
         INSERT INTO expensas.Prorrateo (
             NroExpensa, 
@@ -1202,7 +1054,22 @@ BEGIN
             vp.MontoPorUF  -- Deuda
         FROM #VerificacionProrrateo vp;
 
-        PRINT 'Prorrateos generados: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+        SET @ProrrateosGenerados = @@ROWCOUNT;
+
+        PRINT 'Prorrateos generados: ' + CAST(@ProrrateosGenerados AS VARCHAR(10));
+
+        -- Log de prorrateos generados
+        IF @ProrrateosGenerados > 0
+        BEGIN
+            DECLARE @MensajeProrrateos NVARCHAR(500);
+            SET @MensajeProrrateos = 'Prorrateos generados exitosamente: ' + CAST(@ProrrateosGenerados AS VARCHAR(10)) + ' registros';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+                @Mensaje = @MensajeProrrateos,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
 
         DROP TABLE #VerificacionProrrateo;
         DROP TABLE #ExpensasSinProrrateo;
@@ -1224,6 +1091,8 @@ BEGIN
         PRINT 'Insertando gastos';
         
         -- Insertar gastos
+        DECLARE @GastosInsertados INT = 0;
+        
         INSERT INTO gastos.Gasto (nroExpensa, idConsorcio, tipo, descripcion, fechaEmision, importe)
         SELECT 
             e.nroExpensa,
@@ -1241,9 +1110,36 @@ BEGIN
         INNER JOIN #exp e ON e.IdConsorcio = c.IdConsorcio AND e.mes = s.mes
         WHERE s.importe > 0;
 
-        PRINT 'Gastos insertados: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        SET @GastosInsertados = @@ROWCOUNT;
+
+        PRINT 'Gastos insertados: ' + CAST(@GastosInsertados AS VARCHAR(10));
+
+        -- Log de gastos insertados
+        DECLARE @MensajeGastos NVARCHAR(500);
+        IF @GastosInsertados > 0
+        BEGIN
+            SET @MensajeGastos = 'Gastos insertados exitosamente: ' + CAST(@GastosInsertados AS VARCHAR(10)) + ' registros';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+                @Mensaje = @MensajeGastos,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
+        ELSE
+        BEGIN
+            SET @MensajeGastos = 'No se insertaron gastos (posiblemente no hay importes válidos)';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'WARN',  -- Cambiado de 'WARNING' a 'WARN'
+                @Mensaje = @MensajeGastos,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
 
         PRINT 'Asignando proveedores';
+        
+        DECLARE @GastosOrdinariosAsignados INT = 0;
         
         INSERT INTO gastos.Gasto_Ordinario (idGasto, nombreProveedor, categoria, nroFactura)
         SELECT 
@@ -1264,9 +1160,26 @@ BEGIN
         WHERE g.tipo = 'Ordinario'
             AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Ordinario o WHERE o.idGasto = g.idGasto);
 
-        PRINT 'Gastos ordinarios con proveedores: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        SET @GastosOrdinariosAsignados = @@ROWCOUNT;
+
+        PRINT 'Gastos ordinarios con proveedores: ' + CAST(@GastosOrdinariosAsignados AS VARCHAR(10));
+
+        -- Log de gastos ordinarios asignados
+        IF @GastosOrdinariosAsignados > 0
+        BEGIN
+            DECLARE @MensajeOrdinarios NVARCHAR(500);
+            SET @MensajeOrdinarios = 'Gastos ordinarios asignados con proveedores: ' + CAST(@GastosOrdinariosAsignados AS VARCHAR(10)) + ' registros';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+                @Mensaje = @MensajeOrdinarios,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
 
         --gastos extraordinarios
+        DECLARE @GastosExtraordinariosAsignados INT = 0;
+        
         INSERT INTO gastos.Gasto_Extraordinario (idGasto, cuotaActual, cantCuotas)
         SELECT 
             g.idGasto,
@@ -1276,7 +1189,22 @@ BEGIN
         WHERE g.tipo = 'Extraordinario'
             AND NOT EXISTS (SELECT 1 FROM gastos.Gasto_Extraordinario e WHERE e.idGasto = g.idGasto);
         
-        PRINT 'Gastos extraordinarios: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        SET @GastosExtraordinariosAsignados = @@ROWCOUNT;
+        
+        PRINT 'Gastos extraordinarios: ' + CAST(@GastosExtraordinariosAsignados AS VARCHAR(10));
+
+        -- Log de gastos extraordinarios asignados
+        IF @GastosExtraordinariosAsignados > 0
+        BEGIN
+            DECLARE @MensajeExtraordinarios NVARCHAR(500);
+            SET @MensajeExtraordinarios = 'Gastos extraordinarios asignados: ' + CAST(@GastosExtraordinariosAsignados AS VARCHAR(10)) + ' registros';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+                @Mensaje = @MensajeExtraordinarios,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
 
         -- totales de gastos por expensa
         IF OBJECT_ID('tempdb..#GastosPorExpensa') IS NOT NULL DROP TABLE #GastosPorExpensa;
@@ -1291,6 +1219,8 @@ BEGIN
         GROUP BY nroExpensa;
 
         -- Actualizar prorrateo
+        DECLARE @ProrrateosActualizados INT = 0;
+        
         UPDATE p
         SET 
             ExpensaOrdinaria = ISNULL(gpe.TotalOrdinario, 0) * (p.Porcentaje / 100),
@@ -1301,7 +1231,37 @@ BEGIN
         INNER JOIN #GastosPorExpensa gpe ON p.NroExpensa = gpe.nroExpensa
         WHERE p.NroExpensa IN (SELECT DISTINCT nroExpensa FROM #exp);
 
-        PRINT 'Prorrateos actualizados con gastos reales: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+        SET @ProrrateosActualizados = @@ROWCOUNT;
+
+        PRINT 'Prorrateos actualizados con gastos reales: ' + CAST(@ProrrateosActualizados AS VARCHAR(10));
+
+        -- Log de prorrateos actualizados
+        IF @ProrrateosActualizados > 0
+        BEGIN
+            DECLARE @MensajeProrrateosActualizados NVARCHAR(500);
+            SET @MensajeProrrateosActualizados = 'Prorrateos actualizados con gastos reales: ' + CAST(@ProrrateosActualizados AS VARCHAR(10)) + ' registros';
+            
+            EXEC report.Sp_LogReporte
+                @SP = 'gastos.Sp_CargarGastosDesdeJson',
+                @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+                @Mensaje = @MensajeProrrateosActualizados,
+                @RutaArchivo = @RutaExcelProveedores;
+        END
+
+        -- Log de resumen final exitoso
+        DECLARE @MensajeResumen NVARCHAR(1000);
+        SET @MensajeResumen = 'Carga completada exitosamente. ' +
+            'Expensas: ' + CAST(@ExpensasCreadas AS VARCHAR(10)) + ', ' +
+            'Gastos: ' + CAST(@GastosInsertados AS VARCHAR(10)) + ', ' +
+            'Prorrateos: ' + CAST(@ProrrateosGenerados AS VARCHAR(10)) + ', ' +
+            'Gastos Ordinarios: ' + CAST(@GastosOrdinariosAsignados AS VARCHAR(10)) + ', ' +
+            'Gastos Extraordinarios: ' + CAST(@GastosExtraordinariosAsignados AS VARCHAR(10));
+
+        EXEC report.Sp_LogReporte
+            @SP = 'gastos.Sp_CargarGastosDesdeJson',
+            @Tipo = 'INFO',  -- Cambiado de 'SUCCESS' a 'INFO'
+            @Mensaje = @MensajeResumen,
+            @RutaArchivo = @RutaExcelProveedores;
 
         -- Limpiar temporales
         DROP TABLE #GastosPorExpensa;
@@ -1313,12 +1273,21 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        PRINT 'ERROR: ' + ERROR_MESSAGE();
+        DECLARE @MensajeErrorFinal NVARCHAR(4000);
+        SET @MensajeErrorFinal = 'ERROR durante la carga: ' + ERROR_MESSAGE();
+        
+        -- Log de error final
+        EXEC report.Sp_LogReporte
+            @SP = 'gastos.Sp_CargarGastosDesdeJson',
+            @Tipo = 'ERROR',
+            @Mensaje = @MensajeErrorFinal,
+            @RutaArchivo = @RutaExcelProveedores;
+            
+        PRINT @MensajeErrorFinal;
         THROW;
     END CATCH
 END
 GO
-
 --Llama al que carga gastos, expensas y prorrateo (falta que cargue saldo anterior y interes mora)
 CREATE OR ALTER PROCEDURE gastos.Sp_CargarGastosDesdeArchivo
     @RutaArchivoJSON NVARCHAR(500),
@@ -1353,7 +1322,7 @@ BEGIN
     PRINT 'Json leído correctamente';
     
     -- Llamar al procedimiento que integra JSON + Excel
-    EXEC importacion.Sp_CargarGastosDesdeJson 
+    EXEC gastos.Sp_CargarGastosDesdeJson 
         @JsonContent = @JsonContent,
         @Anio = @Anio,
         @DiaVto1 = @DiaVto1,
@@ -1363,15 +1332,24 @@ BEGIN
     PRINT 'Carga completada';
 END
 GO
-
-
---pagos
---hay que agregarle lo del reporteLog
+-------------------------------------------------
+--											   --
+--		    TABLA PAGO Y PRORRATEO        	   --
+--											   --
+-------------------------------------------------
 CREATE OR ALTER PROCEDURE Pago.sp_importarPagosDesdeCSV
     @rutaArchivo NVARCHAR(255)
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    -- Variables para logs
+    DECLARE @PagosCargadosCSV INT = 0;
+    DECLARE @PagosProcesadosExitosos INT = 0;
+    DECLARE @PagosOmitidos INT = 0;
+    DECLARE @ErroresProcesamiento INT = 0;
+    DECLARE @ProrrateosCreados INT = 0;
+    DECLARE @MensajeLog NVARCHAR(1000);
 
     BEGIN TRY
         IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL
@@ -1398,7 +1376,16 @@ BEGIN
         
         EXEC sp_executesql @sql;
 
-        PRINT 'Pagos cargados desde el CSV: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+        SET @PagosCargadosCSV = @@ROWCOUNT;
+        PRINT 'Pagos cargados desde el CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10));
+
+        -- Log de carga desde CSV
+        SET @MensajeLog = 'Pagos cargados desde CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10)) + ' registros';
+        EXEC report.Sp_LogReporte
+            @SP = 'Pago.sp_importarPagosDesdeCSV',
+            @Tipo = 'INFO',
+            @Mensaje = @MensajeLog,
+            @RutaArchivo = @rutaArchivo;
 
         ALTER TABLE #PagosTemp 
         ADD ID INT IDENTITY(1,1),
@@ -1523,6 +1510,8 @@ BEGIN
                         BEGIN
                             INSERT INTO expensas.Prorrateo (NroExpensa, IdUF, Total, PagosRecibidos, Deuda)
                             VALUES (@NroExpensa, @IdUF, @TotalExpensa, 0, @TotalExpensa);
+                            
+                            SET @ProrrateosCreados = @ProrrateosCreados + 1;
                         END
                     END
                                       
@@ -1531,10 +1520,23 @@ BEGIN
                     VALUES (@Fecha, @Importe, @CuentaOrigen, @IdUF, @NroExpensa);
 
                     SET @IdPagoInsertado = SCOPE_IDENTITY();
+                    SET @PagosProcesadosExitosos = @PagosProcesadosExitosos + 1;
 
-                    -- **CORRECCIÓN: CALCULAR NUEVOS VALORES**
+                    -- **CORRECCIÓN: CALCULAR NUEVOS VALORES EVITANDO DEUDA NEGATIVA**
                     DECLARE @NuevosPagosRecibidos DECIMAL(12,2) = @PagosActuales + @Importe;
+                    
+                    -- Asegurar que los pagos recibidos no superen el total
+                    IF @NuevosPagosRecibidos > @TotalExpensa
+                    BEGIN
+                        SET @NuevosPagosRecibidos = @TotalExpensa;
+                    END
+                    
+                    -- Calcular nueva deuda (nunca menor a 0)
                     DECLARE @NuevaDeuda DECIMAL(12,2) = @TotalExpensa - @NuevosPagosRecibidos;
+                    IF @NuevaDeuda < 0
+                    BEGIN
+                        SET @NuevaDeuda = 0;
+                    END
 
                     -- Actualizar el prorrateo con los valores calculados
                     UPDATE expensas.Prorrateo 
@@ -1557,11 +1559,15 @@ BEGIN
                     IF @@TRANCOUNT > 0 
                         ROLLBACK TRANSACTION;
                     
+                    SET @ErroresProcesamiento = @ErroresProcesamiento + 1;
+                    
                     PRINT 'Error al procesar el id de pago ' + CAST(@IdPago AS VARCHAR(10)) + ': ' + ERROR_MESSAGE();
                 END CATCH;
             END
             ELSE
             BEGIN
+                SET @PagosOmitidos = @PagosOmitidos + 1;
+                
                 PRINT 'Registro omitido - ' +
                       'IdPago: ' + ISNULL(CAST(@IdPago AS VARCHAR(10)), 'NULL') +
                       ', Fecha: ' + ISNULL(CONVERT(VARCHAR(10), @Fecha, 103), 'NULL') +
@@ -1574,379 +1580,63 @@ BEGIN
         END;
 
         DROP TABLE #PagosTemp;
+        
+        -- Log de resumen final
+        SET @MensajeLog = 'Importación de pagos completada. ' +
+            'Total CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10)) + ', ' +
+            'Procesados exitosos: ' + CAST(@PagosProcesadosExitosos AS VARCHAR(10)) + ', ' +
+            'Pagos omitidos: ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ', ' +
+            'Errores procesamiento: ' + CAST(@ErroresProcesamiento AS VARCHAR(10)) + ', ' +
+            'Prorrateos creados: ' + CAST(@ProrrateosCreados AS VARCHAR(10));
+        
+        EXEC report.Sp_LogReporte
+            @SP = 'Pago.sp_importarPagosDesdeCSV',
+            @Tipo = 'INFO',
+            @Mensaje = @MensajeLog,
+            @RutaArchivo = @rutaArchivo;
+
+        -- Log de errores si los hay
+        IF @ErroresProcesamiento > 0
+        BEGIN
+            SET @MensajeLog = 'Se produjeron ' + CAST(@ErroresProcesamiento AS VARCHAR(10)) + ' errores durante el procesamiento de pagos';
+            EXEC report.Sp_LogReporte
+                @SP = 'Pago.sp_importarPagosDesdeCSV',
+                @Tipo = 'ERROR',
+                @Mensaje = @MensajeLog,
+                @RutaArchivo = @rutaArchivo;
+        END
+
+        -- Log de pagos omitidos si los hay
+        IF @PagosOmitidos > 0
+        BEGIN
+            SET @MensajeLog = 'Se omitieron ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ' pagos por datos incompletos o inválidos';
+            EXEC report.Sp_LogReporte
+                @SP = 'Pago.sp_importarPagosDesdeCSV',
+                @Tipo = 'WARN',
+                @Mensaje = @MensajeLog,
+                @RutaArchivo = @rutaArchivo;
+        END
+
         PRINT 'Proceso completado.';
 
     END TRY
     BEGIN CATCH
-        PRINT 'Error durante la importación: ' + ERROR_MESSAGE();
+        DECLARE @MensajeError NVARCHAR(4000) = 'Error durante la importación: ' + ERROR_MESSAGE();
         
-        IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL 
-            DROP TABLE #PagosTemp;
-    END CATCH;
-END;
-GO
-
-  
-
--------------------------------------------------
---											   --
---			     ESQUEMA EXPENSAS       	   --
---											   --
--------------------------------------------------
--------------------------------------------------
---											   --
---			       ESQUEMA PAGO        	       --
---											   --
--------------------------------------------------
-
-CREATE OR ALTER PROCEDURE Pago.sp_importarPagosDesdeCSV
-    @rutaArchivo NVARCHAR(255)
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    DECLARE @MensajeResumen NVARCHAR(4000);
-    DECLARE @MensajeError NVARCHAR(4000);
-    DECLARE @MensajeAuxiliar NVARCHAR(4000);
-    DECLARE @PagosCargados INT = 0;
-    DECLARE @ValoresLimpiados INT = 0;
-    DECLARE @ImportesConvertidos INT = 0;
-    DECLARE @UFAsignadas INT = 0;
-    DECLARE @ExpensasAsignadasFecha INT = 0;
-    DECLARE @ExpensasAsignadas INT = 0;
-    DECLARE @PagosProcesados INT = 0;
-    DECLARE @PagosOmitidos INT = 0;
-    DECLARE @ErroresProcesamiento INT = 0;
-
-    BEGIN TRY
-        -- Log inicio
-        SET @MensajeAuxiliar = 'Iniciando importación de pagos desde CSV: ' + @rutaArchivo;
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL
-            DROP TABLE #PagosTemp;
-
-        CREATE TABLE #PagosTemp (
-            IdPago VARCHAR(50),
-            Fecha NVARCHAR(50),
-            CVU_CBU NVARCHAR(50) NULL,
-            Valor NVARCHAR(100)
-        );
-
-        DECLARE @sql NVARCHAR(MAX);
-        SET @sql = N'
-        BULK INSERT #PagosTemp
-        FROM ''' + @rutaArchivo + '''
-        WITH (
-            FIRSTROW = 2,
-            FIELDTERMINATOR = '','',
-            ROWTERMINATOR = ''\n'',
-            CODEPAGE = ''65001'',
-            MAXERRORS = 1000
-        );';
-        
-        EXEC sp_executesql @sql;
-
-        SET @PagosCargados = @@ROWCOUNT;
-
-        -- Log carga de pagos
-        SET @MensajeAuxiliar = 'Pagos cargados desde el CSV: ' + CAST(@PagosCargados AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Si no hay registros, terminar
-        IF @PagosCargados = 0
-        BEGIN
-            SET @MensajeError = 'No se cargaron registros del archivo CSV';
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'ERROR',
-                @Mensaje = @MensajeError,
-                @RutaArchivo = @rutaArchivo;
-            RETURN;
-        END;
-
-        ALTER TABLE #PagosTemp 
-        ADD ID INT IDENTITY(1,1),
-            IdUF INT NULL,
-            Importe DECIMAL(12,2) NULL,
-            FechaProcesada DATE NULL,
-            ValorLimpio NVARCHAR(100) NULL,
-            NroExpensa INT NULL;
-
-        -- Limpiar valores
-        UPDATE #PagosTemp 
-        SET ValorLimpio = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Valor, 
-                '$', ''),        
-                ' ', ''),        
-                '''', ''),       
-                '.', ''),        
-                ',', '.')
-        WHERE Valor IS NOT NULL AND Valor != '';
-
-        SET @ValoresLimpiados = @@ROWCOUNT;
-
-        -- Log valores limpiados
-        SET @MensajeAuxiliar = 'Valores limpiados: ' + CAST(@ValoresLimpiados AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Convertir importes
-        UPDATE #PagosTemp 
-        SET Importe = TRY_CAST(ValorLimpio AS DECIMAL(12,2))
-        WHERE ValorLimpio IS NOT NULL AND ValorLimpio != '';
-
-        SET @ImportesConvertidos = @@ROWCOUNT;
-
-        -- Log importes convertidos
-        SET @MensajeAuxiliar = 'Importes convertidos: ' + CAST(@ImportesConvertidos AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Procesar fechas
-        UPDATE #PagosTemp 
-        SET FechaProcesada = TRY_CONVERT(DATE, Fecha, 103)
-        WHERE Fecha IS NOT NULL;
-
-        -- Log fechas procesadas
-        DECLARE @FechasProcesadas INT = (SELECT COUNT(*) FROM #PagosTemp WHERE FechaProcesada IS NOT NULL);
-        SET @MensajeAuxiliar = 'Fechas procesadas correctamente: ' + CAST(@FechasProcesadas AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Asignar unidades funcionales (limpiar CVU_CBU primero)
-        UPDATE #PagosTemp
-        SET CVU_CBU = LTRIM(RTRIM(CVU_CBU))
-        WHERE CVU_CBU IS NOT NULL;
-
-        UPDATE #PagosTemp
-        SET IdUF = p.idUF
-        FROM #PagosTemp pt
-        INNER JOIN consorcio.Persona p ON pt.CVU_CBU = p.CVU
-        WHERE pt.IdUF IS NULL;
-
-        SET @UFAsignadas = @@ROWCOUNT;
-
-        -- Log UF asignadas
-        SET @MensajeAuxiliar = 'Unidades funcionales asignadas: ' + CAST(@UFAsignadas AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Log registros sin UF
-        DECLARE @SinUF INT = (SELECT COUNT(*) FROM #PagosTemp WHERE IdUF IS NULL);
-        IF @SinUF > 0
-        BEGIN
-            SET @MensajeAuxiliar = 'Registros sin UF asignada: ' + CAST(@SinUF AS VARCHAR(10)) + 
-                                  '. Ejemplo CVU: ' + ISNULL((SELECT TOP 1 CVU_CBU FROM #PagosTemp WHERE IdUF IS NULL), 'N/A');
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'WARN',
-                @Mensaje = @MensajeAuxiliar,
-                @RutaArchivo = @rutaArchivo;
-        END;
-
-        -- Asignar números de expensa por fecha
-        UPDATE #PagosTemp
-        SET NroExpensa = pr.NroExpensa
-        FROM #PagosTemp pt
-        INNER JOIN expensas.Prorrateo pr ON pt.IdUF = pr.IdUF
-        INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
-        WHERE pt.FechaProcesada BETWEEN e.fechaGeneracion AND 
-              COALESCE(e.fechaVto2, DATEADD(DAY, 30, e.fechaGeneracion))
-        AND pt.NroExpensa IS NULL;
-
-        SET @ExpensasAsignadasFecha = @@ROWCOUNT;
-
-        -- Log expensas asignadas por fecha
-        SET @MensajeAuxiliar = 'Números de expensa asignados por fecha: ' + CAST(@ExpensasAsignadasFecha AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Asignar números de expensa restantes (última expensa)
-        UPDATE #PagosTemp
-        SET NroExpensa = (
-            SELECT TOP 1 pr.NroExpensa
-            FROM expensas.Prorrateo pr
-            INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
-            WHERE pr.IdUF = pt.IdUF
-            ORDER BY e.fechaGeneracion DESC
-        )
-        FROM #PagosTemp pt
-        WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
-
-        SET @ExpensasAsignadas = @@ROWCOUNT;
-
-        -- Log expensas asignadas
-        SET @MensajeAuxiliar = 'Números de expensa asignados restantes: ' + CAST(@ExpensasAsignadas AS VARCHAR(10));
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Log registros sin expensa
-        DECLARE @SinExpensa INT = (SELECT COUNT(*) FROM #PagosTemp WHERE NroExpensa IS NULL AND IdUF IS NOT NULL);
-        IF @SinExpensa > 0
-        BEGIN
-            SET @MensajeAuxiliar = 'Registros con UF pero sin expensa asignada: ' + CAST(@SinExpensa AS VARCHAR(10));
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'WARN',
-                @Mensaje = @MensajeAuxiliar,
-                @RutaArchivo = @rutaArchivo;
-        END;
-
-        -- Variables para recorrer la tabla temporal
-        DECLARE @id INT = 1, @maxId INT;
-        DECLARE 
-            @IdPago VARCHAR(50),
-            @Fecha DATE,
-            @Importe DECIMAL(12,2),
-            @CuentaOrigen CHAR(22),
-            @IdUF INT,
-            @NroExpensa INT;
-
-        SELECT @maxId = MAX(ID) FROM #PagosTemp;
-
-        -- Log inicio de procesamiento
-        SET @MensajeAuxiliar = 'Procesando ' + CAST(@maxId AS VARCHAR(10)) + ' registros';
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchivo;
-
-        WHILE @id <= @maxId
-        BEGIN
-            SELECT
-                @IdPago = IdPago,
-                @Fecha = FechaProcesada,
-                @Importe = Importe,
-                @CuentaOrigen = CVU_CBU,
-                @IdUF = IdUF,
-                @NroExpensa = NroExpensa
-            FROM #PagosTemp WHERE ID = @id;
-
-            IF @Fecha IS NOT NULL AND @Importe IS NOT NULL 
-               AND @Importe > 0 AND @IdUF IS NOT NULL AND @NroExpensa IS NOT NULL
-            BEGIN
-                BEGIN TRY
-                    BEGIN TRANSACTION;
-
-                    -- Insertar pago
-                    INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, IdUF, NroExpensa)
-                    VALUES (@Fecha, @Importe, @CuentaOrigen, @IdUF, @NroExpensa);
-
-                    -- Actualizar prorrateo
-                    UPDATE expensas.Prorrateo 
-                    SET PagosRecibidos = PagosRecibidos + @Importe,
-                        Deuda = Total - (PagosRecibidos + @Importe)
-                    WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
-
-                    SET @PagosProcesados = @PagosProcesados + 1;
-
-                    COMMIT TRANSACTION;
-                END TRY
-                BEGIN CATCH
-                    IF @@TRANCOUNT > 0 
-                        ROLLBACK TRANSACTION;
-                    
-                    SET @ErroresProcesamiento = @ErroresProcesamiento + 1;
-                    
-                    -- Log error individual
-                    SET @MensajeError = 'Error al procesar registro ' + CAST(@id AS VARCHAR(10)) + ': ' + ERROR_MESSAGE();
-                    EXEC report.Sp_LogReporte
-                        @SP = 'Pago.sp_importarPagosDesdeCSV',
-                        @Tipo = 'ERROR',
-                        @Mensaje = @MensajeError,
-                        @RutaArchivo = @rutaArchivo;
-                END CATCH;
-            END
-            ELSE
-            BEGIN
-                SET @PagosOmitidos = @PagosOmitidos + 1;
-                
-                -- Log detalle del registro omitido (solo los primeros 5 para no saturar)
-                IF @PagosOmitidos <= 5
-                BEGIN
-                    SET @MensajeAuxiliar = 'Registro omitido ID ' + CAST(@id AS VARCHAR(10)) + 
-                                          ' - Fecha: ' + ISNULL(CONVERT(VARCHAR(10), @Fecha, 103), 'NULL') +
-                                          ', Importe: ' + ISNULL(CAST(@Importe AS VARCHAR(20)), 'NULL') +
-                                          ', IdUF: ' + ISNULL(CAST(@IdUF AS VARCHAR(10)), 'NULL') +
-                                          ', Expensa: ' + ISNULL(CAST(@NroExpensa AS VARCHAR(10)), 'NULL');
-                    EXEC report.Sp_LogReporte
-                        @SP = 'Pago.sp_importarPagosDesdeCSV',
-                        @Tipo = 'WARN',
-                        @Mensaje = @MensajeAuxiliar,
-                        @RutaArchivo = @rutaArchivo;
-                END
-            END
-
-            SET @id += 1;
-        END;
-
-        DROP TABLE #PagosTemp;
-
-        -- Log resumen final
-        SET @MensajeResumen = 'Proceso completado. ' +
-                   'Pagos cargados: ' + CAST(@PagosCargados AS VARCHAR(10)) + ', ' +
-                   'Importes convertidos: ' + CAST(@ImportesConvertidos AS VARCHAR(10)) + ', ' +
-                   'UF asignadas: ' + CAST(@UFAsignadas AS VARCHAR(10)) + ', ' +
-                   'Expensas asignadas: ' + CAST((@ExpensasAsignadasFecha + @ExpensasAsignadas) AS VARCHAR(10)) + ', ' +
-                   'Pagos procesados: ' + CAST(@PagosProcesados AS VARCHAR(10)) + ', ' +
-                   'Pagos omitidos: ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ', ' +
-                   'Errores procesamiento: ' + CAST(@ErroresProcesamiento AS VARCHAR(10));
-
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeResumen,
-            @RutaArchivo = @rutaArchivo;
-
-    END TRY
-    BEGIN CATCH
-        SET @MensajeError = 'Error durante la importación: ' + ERROR_MESSAGE();
-        
+        -- Log de error general
         EXEC report.Sp_LogReporte
             @SP = 'Pago.sp_importarPagosDesdeCSV',
             @Tipo = 'ERROR',
             @Mensaje = @MensajeError,
             @RutaArchivo = @rutaArchivo;
-
+        
+        PRINT @MensajeError;
+        
         IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL 
             DROP TABLE #PagosTemp;
-            
-        THROW;
     END CATCH;
 END;
 GO
-
-
---cuando ejecuto esto me da un bucle infinito, fijense q se rompe cuando le ponen los report
-
---SP para llenar la parte de saldo anterior e intereses por mora de la tabla prorrateo
 CREATE OR ALTER PROCEDURE expensas.Sp_ActualizarSaldosAnteriores
     @NroExpensa INT = NULL,
     @ForzarCalculo BIT = 1  -- Nuevo parámetro para testing

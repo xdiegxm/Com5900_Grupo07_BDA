@@ -27,7 +27,7 @@ GO
 --											   --
 -------------------------------------------------
 EXEC ImportarConsorciosDesdeExcel 
-    @RutaArchivo = 'C:\archivos_para_el_TP\datos varios.xlsx',
+    @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
     @NombreHoja = N'Consorcios';
 ---------------------------------------------------------------------
 --											                       --
@@ -35,47 +35,48 @@ EXEC ImportarConsorciosDesdeExcel
 --											                       --
 ---------------------------------------------------------------------
 EXEC consorcio.importarunidadesfuncionales 
-     @rutaarch = 'C:\archivos_para_el_TP\uf por consorcio.txt'
+     @rutaarch = 'D:\BDA 2C2025\archivostp\uf por consorcio.txt'
 -------------------------------------------------
 --											   --
 --			    TABLA PERSONAS      	       --
 --											   --
 -------------------------------------------------
 EXEC consorcio.importarPersonas 
-    @rutaArchPersonas = 'C:\archivos_para_el_TP\inquilino-propietarios-datos.csv', 
-    @rutaArchUF = 'C:\archivos_para_el_TP\inquilino-propietarios-UF.csv'
+    @rutaArchPersonas = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-datos.csv', 
+    @rutaArchUF = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-UF.csv'
 -------------------------------------------------
 --											   --
 --			    TABLA OCUPACION      	       --
 --											   --
 -------------------------------------------------
 exec consorcio.importarocupaciones	
-	@rutaarchpersonas = 'C:\archivos_para_el_TP\inquilino-propietarios-datos.csv',
-	@rutaarchuf = 'C:\archivos_para_el_TP\inquilino-propietarios-uf.csv';
-
+	@rutaarchpersonas = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-datos.csv',
+	@rutaarchuf = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-uf.csv';
 -------------------------------------------------
 --											   --
 --		    TABLA EXPENSA Y GASTOS     	       --
 --											   --
 -------------------------------------------------
 EXEC gastos.Sp_CargarGastosDesdeArchivo 
-    @RutaArchivoJSON = 'C:\Archivos_para_el_TP\Servicios.Servicios.json',
-    @RutaArchivoExcel = 'C:\Archivos_para_el_TP\datos varios.xlsx',
+    @RutaArchivoJSON = 'D:\BDA 2C2025\archivostp\Servicios.Servicios.json',
+    @RutaArchivoExcel = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
     @Anio = 2025,
     @DiaVto1 = 10,
     @DiaVto2 = 20;    
 -------------------------------------------------
 --											   --
---		         TABLA PAGOS     	           --
+--		    TABLA PAGOS Y PRORRATEO     	   --
 --											   --
 -------------------------------------------------
-EXEC Pago.sp_importarPagosDesdeCSV @rutaArchivo = 'C:\Archivos_para_el_TP\pagos_consorcios.csv'
+EXEC Pago.sp_importarPagosDesdeCSV 
+    @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
 
 select * from Pago.Pago
-
+select * from expensas.Expensa
 select * from expensas.Prorrateo
 where PagosRecibidos != 0
 
 select * from gastos.Gasto
 select * from gastos.Gasto_Extraordinario
 select * from gastos.Gasto_Ordinario
+select * from report.logsReportes

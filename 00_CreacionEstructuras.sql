@@ -162,7 +162,6 @@ BEGIN
         fechaVto1 DATE,
         fechaVto2 DATE,
         montoTotal DECIMAL(10,2),
-        Tipo CHAR(1) NOT NULL CHECK (Tipo IN ('O', 'E')),  -- O = Ordinario, E = Extraordinario
         CONSTRAINT FK_Expensa_Consorcio FOREIGN KEY (idConsorcio) REFERENCES consorcio.Consorcio (IdConsorcio)
     );
 END
@@ -175,9 +174,9 @@ BEGIN
         Porcentaje decimal(10,2),
         NroExpensa INT NOT NULL,
         IdUF INT NOT NULL,
-        SaldoAnterior DECIMAL(12,2) NOT NULL CHECK (SaldoAnterior >= 0),
-        PagosRecibidos DECIMAL(12,2) NOT NULL CHECK (PagosRecibidos >= 0),
-        InteresMora DECIMAL(12,2) NOT NULL CHECK (InteresMora >= 0),
+        SaldoAnterior DECIMAL(12,2) CHECK (SaldoAnterior >= 0),
+        PagosRecibidos DECIMAL(12,2) CHECK (PagosRecibidos >= 0),
+        InteresMora DECIMAL(12,2) CHECK (InteresMora >= 0),
         ExpensaOrdinaria DECIMAL(12,2) CHECK (ExpensaOrdinaria >= 0),
         ExpensaExtraordinaria DECIMAL(12,2) CHECK (ExpensaExtraordinaria >= 0),
         Total DECIMAL(12,2) CHECK (Total >= 0),
@@ -203,21 +202,6 @@ BEGIN
     );
 END
 GO
-
-IF OBJECT_ID('expensas.EstadoFinanciero','U') IS NULL
-BEGIN
-    CREATE TABLE expensas.EstadoFinanciero(
-        IdFinanzas INT IDENTITY(1,1) PRIMARY KEY,
-        SaldoAnterior DECIMAL(12,2) CHECK(SaldoAnterior >= 0),
-        pagoEnTermino DECIMAL(12,2) ChECK(pagoEnTermino>=0),
-        pagoAdeudado DECIMAL(12,2) ChECK(pagoAdeudado>=0),
-        pagoAdelantado DECIMAL(12,2) ChECK(pagoAdelantado>=0),
-        Egresos DECIMAL(12,2) CHECK(Egresos >= 0),
-        SaldoCierre DECIMAL(12,2),
-        idConsorcio int not null,
-        constraint fk_consorcio_ef foreign key(idConsorcio) references consorcio.Consorcio(IdConsorcio)
-    );
-END
 
 IF OBJECT_ID('gastos.Gasto','U') IS NULL
 BEGIN
