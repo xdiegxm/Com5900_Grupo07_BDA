@@ -9,7 +9,6 @@
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
 -- Piñero, Agustín                             --
--- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -322,4 +321,5 @@ TRUNCATE TABLE consorcio.Consorcio;
 TRUNCATE TABLE report.logsReportes;
 
 -- Reactivar restricciones de clave foránea
+
 EXEC sp_MSforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL';
