@@ -8,8 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Pi馿ro, Agust韓                             --
--- Nardelli Rosales, Cecilia Anahi             --
+-- Pi帽ero, Agust铆n                             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -105,7 +104,7 @@ begin
             return;
         END
 
-        -- COALESCE: Mantiene el valor anterior si el par醡etro es NULL.
+        -- COALESCE: Mantiene el valor anterior si el par谩metro es NULL.
         UPDATE consorcio.UnidadFuncional
         set 
             Piso = COALESCE(@Piso, Piso),
@@ -154,7 +153,7 @@ begin
         -- valido pk
         if not exists (select 1 from consorcio.Ocupacion where Id_Ocupacion = @Id_Ocupacion)
         begin
-            print 'Error: No existe una Ocupaci髇 con el ID proporcionado para modificar';
+            print 'Error: No existe una Ocupaci贸n con el ID proporcionado para modificar';
             return;
         end
 
@@ -182,17 +181,17 @@ begin
             
         if @@ROWCOUNT = 0
         begin
-            print 'La Ocupaci髇 existe, pero no se proporcionaron valores nuevos para actualizar';
+            print 'La Ocupaci贸n existe, pero no se proporcionaron valores nuevos para actualizar';
         end
         else
         begin
-            print 'Ocupaci髇 con ID ' + CAST(@Id_Ocupacion AS VARCHAR) + 'actualizada correctamente';
+            print 'Ocupaci贸n con ID ' + CAST(@Id_Ocupacion AS VARCHAR) + 'actualizada correctamente';
         end
 
     end try
     begin catch
 
-            PRINT 'ERROR al modificar la Ocupaci髇';
+            PRINT 'ERROR al modificar la Ocupaci贸n';
     end catch
 end
 go
@@ -297,3 +296,4 @@ begin
 	end catch
 end
 go
+
