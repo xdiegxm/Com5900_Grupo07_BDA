@@ -112,3 +112,9 @@ BEGIN
 
 END
 GO
+
+--PARA PROBARLO
+EXEC report.sp_Reporte1_FlujoCajaSemanal 
+    @FechaInicio = '2025-01-01', 
+    @FechaFin = '2025-12-31', 
+    @IdConsorcio = 1; -- Opcional para prueba
