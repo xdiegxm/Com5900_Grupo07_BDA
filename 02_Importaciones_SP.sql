@@ -451,6 +451,7 @@ GO
 --			    TABLA PERSONAS      	       --
 --											   --
 -------------------------------------------------
+
 CREATE OR ALTER PROCEDURE consorcio.importarPersonas
     @rutaArchPersonas NVARCHAR(255),
     @rutaArchUF NVARCHAR(255)
@@ -467,159 +468,118 @@ BEGIN
     DECLARE @MensajeError NVARCHAR(4000);
     DECLARE @MensajeAuxiliar NVARCHAR(4000);
 
-    BEGIN TRY
-        -- Log inicio
-        SET @MensajeAuxiliar = 'Iniciando importación desde archivos CSV: ' + @rutaArchPersonas + ' y ' + @rutaArchUF;
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchPersonas;
+BEGIN TRY
 
-        -- Crear tabla temporal para personas
-        IF OBJECT_ID('tempdb..#tempPersonas') IS NOT NULL
-            DROP TABLE #tempPersonas;
+    SET @MensajeAuxiliar = 'Iniciando importación desde CSV.';
+    EXEC report.Sp_LogReporte @SP='consorcio.importarPersonas',@Tipo='INFO',@Mensaje=@MensajeAuxiliar,@RutaArchivo=@rutaArchPersonas;
 
-        CREATE TABLE #tempPersonas (
-            Nombre NVARCHAR(50),
-            Apellido NVARCHAR(50),
-            DNI VARCHAR(10),
-            Email NVARCHAR(100),
-            Telefono NVARCHAR(15),
-            CVU_CBU CHAR(22),
-            Inquilino INT
-        );
 
-        -- Cargar datos de personas
-        SET @sql = N'BULK INSERT #tempPersonas FROM ''' + @rutaArchPersonas + ''' 
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = '';'', ROWTERMINATOR = ''\n'', CODEPAGE = ''65001'')';
-        EXEC sp_executesql @sql;
+    IF OBJECT_ID('tempdb..#tempPersonas') IS NOT NULL DROP TABLE #tempPersonas;
 
-        SET @PersonasCargadas = @@ROWCOUNT;
+    CREATE TABLE #tempPersonas(
+        Nombre NVARCHAR(50),
+        Apellido NVARCHAR(50),
+        DNI VARCHAR(10),
+        Email NVARCHAR(100),
+        Telefono NVARCHAR(15),
+        CVU_CBU CHAR(22),
+        Inquilino INT
+    );
 
-        -- Log carga de personas
-        SET @MensajeAuxiliar = 'Datos de personas cargados: ' + CAST(@PersonasCargadas AS VARCHAR);
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchPersonas;
+    SET @sql = N'
+        BULK INSERT #tempPersonas
+        FROM ''' + @rutaArchPersonas + '''
+        WITH (FIRSTROW=2, FIELDTERMINATOR='';'', ROWTERMINATOR=''\n'', CODEPAGE=''65001'')';
+    EXEC sp_executesql @sql;
 
-        -- Crear tabla temporal para UF
-        IF OBJECT_ID('tempdb..#tempUF') IS NOT NULL
-            DROP TABLE #tempUF;
+    SET @PersonasCargadas = @@ROWCOUNT;
 
-        CREATE TABLE #tempUF (
-            CVU_CBU CHAR(22),
-            NombreConsorcio NVARCHAR(50),
-            NroUF INT,
-            Piso NVARCHAR(10),
-            Departamento NVARCHAR(10)
-        );
+    IF OBJECT_ID('tempdb..#tempUF') IS NOT NULL DROP TABLE #tempUF;
 
-        -- Cargar datos de UF
-        SET @sql = N'BULK INSERT #tempUF FROM ''' + @rutaArchUF + ''' 
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ''|'', ROWTERMINATOR = ''\n'', CODEPAGE = ''65001'')';
-        EXEC sp_executesql @sql;
+    CREATE TABLE #tempUF(
+        CVU_CBU CHAR(22),
+        NombreConsorcio NVARCHAR(50),
+        NroUF INT,
+        Piso NVARCHAR(10),
+        Departamento NVARCHAR(10)
+    );
 
-        SET @UFCargadas = @@ROWCOUNT;
+    SET @sql = N'
+        BULK INSERT #tempUF
+        FROM ''' + @rutaArchUF + '''
+        WITH (FIRSTROW=2, FIELDTERMINATOR=''|'', ROWTERMINATOR=''\n'', CODEPAGE=''65001'')';
+    EXEC sp_executesql @sql;
 
-        -- Log carga de UF
-        SET @MensajeAuxiliar = 'Datos de UF cargados: ' + CAST(@UFCargadas AS VARCHAR);
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchUF;
+    SET @UFCargadas = @@ROWCOUNT;
 
-        -- Eliminar duplicados
-        IF OBJECT_ID('tempdb..#personasSinDuplicados') IS NOT NULL
-            DROP TABLE #personasSinDuplicados;
+    IF OBJECT_ID('tempdb..#personasSinDuplicados') IS NOT NULL DROP TABLE #personasSinDuplicados;
 
-        SELECT 
-            DNI = LTRIM(RTRIM(DNI)),
-            Nombre = LEFT(LTRIM(RTRIM(Nombre)), 30),
-            Apellido = LEFT(LTRIM(RTRIM(Apellido)), 30),
-            Email = CASE WHEN LTRIM(RTRIM(Email)) = '' THEN NULL ELSE LEFT(LTRIM(RTRIM(Email)), 40) END,
-            Telefono = CASE WHEN LTRIM(RTRIM(Telefono)) = '' THEN NULL ELSE LEFT(LTRIM(RTRIM(Telefono)), 15) END,
-            CVU_CBU = LTRIM(RTRIM(CVU_CBU)),
-            Inquilino = Inquilino,
-            ROW_NUMBER() OVER (PARTITION BY LTRIM(RTRIM(DNI)) ORDER BY (SELECT NULL)) as RowNum
-        INTO #personasSinDuplicados
-        FROM #tempPersonas;
+    SELECT
+        DNI = LTRIM(RTRIM(DNI)),
+        Nombre = LEFT(LTRIM(RTRIM(Nombre)),30),
+        Apellido = LEFT(LTRIM(RTRIM(Apellido)),30),
+        Email = NULLIF(LEFT(LTRIM(RTRIM(Email)),40),''),
+        Telefono = NULLIF(LEFT(LTRIM(RTRIM(Telefono)),15),''),
+        CVU_CBU = LTRIM(RTRIM(CVU_CBU)),
+        Inquilino,
+        ROW_NUMBER() OVER (PARTITION BY LTRIM(RTRIM(DNI)) ORDER BY (SELECT NULL)) AS RowNum
+    INTO #personasSinDuplicados
+    FROM #tempPersonas;
 
-        DELETE FROM #personasSinDuplicados WHERE RowNum > 1;
+    DELETE FROM #personasSinDuplicados WHERE RowNum > 1;
+    SET @DuplicadosEliminados = @@ROWCOUNT;
 
-        SET @DuplicadosEliminados = @@ROWCOUNT;
 
-        -- Log eliminación de duplicados
-        SET @MensajeAuxiliar = 'Duplicados eliminados del archivo: ' + CAST(@DuplicadosEliminados AS VARCHAR);
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchPersonas;
+    INSERT INTO consorcio.Persona (DNI,Nombre,Apellido,Email,Telefono,CVU,idUF)
+    SELECT
+        p.DNI,
+        p.Nombre,
+        p.Apellido,
+        p.Email,
+        p.Telefono,
+        p.CVU_CBU,
+        uf.IdUF
+    FROM #personasSinDuplicados p
+    INNER JOIN #tempUF t ON t.CVU_CBU = p.CVU_CBU
+    INNER JOIN consorcio.Consorcio c
+        ON c.NombreConsorcio = t.NombreConsorcio
+    INNER JOIN consorcio.UnidadFuncional uf
+        ON uf.IdConsorcio = c.IdConsorcio
+        AND uf.Piso = t.Piso
+        AND uf.Depto = t.Departamento
+    WHERE NOT EXISTS (
+        SELECT 1 FROM consorcio.Persona per WHERE per.DNI = p.DNI
+    );
 
-        -- Insertar datos en tabla Persona
-        INSERT INTO consorcio.Persona (DNI, Nombre, Apellido, Email, Telefono, CVU, idUF)
-        SELECT 
-            p.DNI,
-            p.Nombre,
-            p.Apellido,
-            p.Email,
-            p.Telefono,
-            p.CVU_CBU,
-            u.NroUF
-        FROM #personasSinDuplicados p
-        INNER JOIN #tempUF u ON p.CVU_CBU = LTRIM(RTRIM(u.CVU_CBU))
-        WHERE NOT EXISTS (SELECT 1 FROM consorcio.Persona WHERE DNI = p.DNI);
+    SET @PersonasInsertadas = @@ROWCOUNT;
 
-        SET @PersonasInsertadas = @@ROWCOUNT;
+    DROP TABLE #tempPersonas;
+    DROP TABLE #tempUF;
+    DROP TABLE #personasSinDuplicados;
 
-        -- Log inserción de personas
-        SET @MensajeAuxiliar = 'Personas insertadas: ' + CAST(@PersonasInsertadas AS VARCHAR);
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeAuxiliar,
-            @RutaArchivo = @rutaArchPersonas;
+    SET @MensajeResumen =
+        'Importación completa. Personas cargadas=' + CAST(@PersonasCargadas AS VARCHAR(10)) +
+        ', UF cargadas=' + CAST(@UFCargadas AS VARCHAR(10)) +
+        ', Duplicados eliminados=' + CAST(@DuplicadosEliminados AS VARCHAR(10)) +
+        ', Personas insertadas=' + CAST(@PersonasInsertadas AS VARCHAR(10));
 
-        -- Limpiar tablas temporales
-        DROP TABLE #tempPersonas;
-        DROP TABLE #tempUF;
-        DROP TABLE #personasSinDuplicados;
+    EXEC report.Sp_LogReporte @SP='consorcio.importarPersonas',@Tipo='INFO',@Mensaje=@MensajeResumen,@RutaArchivo=@rutaArchPersonas;
 
-        -- Log resumen final
-        SET @MensajeResumen = 'Importación completada exitosamente. ' +
-                   'Personas cargadas: ' + CAST(@PersonasCargadas AS VARCHAR(10)) + ', ' +
-                   'UF cargadas: ' + CAST(@UFCargadas AS VARCHAR(10)) + ', ' +
-                   'Duplicados eliminados: ' + CAST(@DuplicadosEliminados AS VARCHAR(10)) + ', ' +
-                   'Personas insertadas: ' + CAST(@PersonasInsertadas AS VARCHAR(10));
+END TRY
+BEGIN CATCH
+    SET @MensajeError = 'Error: ' + ERROR_MESSAGE();
+    EXEC report.Sp_LogReporte @SP='consorcio.importarPersonas',@Tipo='ERROR',@Mensaje=@MensajeError,@RutaArchivo=@rutaArchPersonas;
 
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeResumen,
-            @RutaArchivo = @rutaArchPersonas;
+    IF OBJECT_ID('tempdb..#tempPersonas') IS NOT NULL DROP TABLE #tempPersonas;
+    IF OBJECT_ID('tempdb..#tempUF') IS NOT NULL DROP TABLE #tempUF;
+    IF OBJECT_ID('tempdb..#personasSinDuplicados') IS NOT NULL DROP TABLE #personasSinDuplicados;
 
-    END TRY
-    BEGIN CATCH
-        SET @MensajeError = 'Error durante la importación: ' + ERROR_MESSAGE();
-        
-        EXEC report.Sp_LogReporte
-            @SP = 'consorcio.importarPersonas',
-            @Tipo = 'ERROR',
-            @Mensaje = @MensajeError,
-            @RutaArchivo = @rutaArchPersonas;
-
-        IF OBJECT_ID('tempdb..#tempPersonas') IS NOT NULL DROP TABLE #tempPersonas;
-        IF OBJECT_ID('tempdb..#tempUF') IS NOT NULL DROP TABLE #tempUF;
-        IF OBJECT_ID('tempdb..#personasSinDuplicados') IS NOT NULL DROP TABLE #personasSinDuplicados;
-        
-        THROW;
-    END CATCH
+    THROW;
+END CATCH
 END
 GO
+
+
 -------------------------------------------------
 --											   --
 --			    TABLA OCUPACION      	       --
@@ -1728,3 +1688,4 @@ BEGIN
     END CATCH
 END
 GO
+
