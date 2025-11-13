@@ -34,20 +34,20 @@
           <FullPath>01_AgregadoSP.sql</FullPath>
         </FileNode>
         <FileNode Name="01_ModificacionesEsquemaConsorcio.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_ModificacionesEsquemaConsorcio.sql</FullPath>
         </FileNode>
         <FileNode Name="01_ModificacionesEsquemaExpensas.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_ModificacionesEsquemaExpensas.sql</FullPath>
         </FileNode>
         <FileNode Name="01_ModificacionesEsquemaGastos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_ModificacionesEsquemaGastos.sql</FullPath>
         </FileNode>
@@ -56,6 +56,12 @@
           <AssociatedConnSrvName />
           <AssociatedConnUserName />
           <FullPath>01_SPParaBorrado.sql</FullPath>
+        </FileNode>
+        <FileNode Name="01_SPParaModificaciones.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>01_SPParaModificaciones.sql</FullPath>
         </FileNode>
         <FileNode Name="02_Importaciones_SP.sql">
           <AssociatedConnectionMoniker />
