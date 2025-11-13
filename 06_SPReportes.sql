@@ -8,7 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Piñero, Agustín                             --
+-- PiÃ±ero, AgustÃ­n                             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -25,7 +25,7 @@ sp_configure 'show advanced options', 1;
 RECONFIGURE;
 GO
 
--- 2. Habilitar procedimientos de automatización OLE (Para la API)
+-- 2. Habilitar procedimientos de automatizaciÃ³n OLE (Para la API)
 sp_configure 'Ole Automation Procedures', 1;
 RECONFIGURE;
 GO
@@ -130,7 +130,7 @@ EXEC report.sp_ReporteFlujoCajaSemanal
 CREATE OR ALTER PROCEDURE report.sp_ReporteRecaudacionMensual
     @IdConsorcio INT,
     @Anio INT,
-    @IdUF INT = NULL -- Parametro opcional para filtrar una UF específica
+    @IdUF INT = NULL -- Parametro opcional para filtrar una UF especÃ­fica
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -142,7 +142,7 @@ BEGIN
         RETURN;
     END
 
-    PRINT 'Generando reporte de recaudación cruzada...';
+    PRINT 'Generando reporte de recaudaciÃ³n cruzada...';
 
     SELECT 
         -- Buscamos la UF
@@ -175,11 +175,11 @@ BEGIN
     LEFT JOIN 
         Pago.Pago p ON uf.IdUF = p.IdUF AND YEAR(p.Fecha) = @Anio
     LEFT JOIN
-        consorcio.Persona p_per ON p_per.idUF = uf.IdUF -- Para mostrar el nombre (opcional pero útil)
+        consorcio.Persona p_per ON p_per.idUF = uf.IdUF -- Para mostrar el nombre (opcional pero Ãºtil)
         
     WHERE 
         uf.IdConsorcio = @IdConsorcio
-        AND (@IdUF IS NULL OR uf.IdUF = @IdUF) -- Filtro opcional del 3er parámetro
+        AND (@IdUF IS NULL OR uf.IdUF = @IdUF) -- Filtro opcional del 3er parÃ¡metro
 
     GROUP BY 
         uf.IdUF, uf.Piso, uf.Depto, p_per.Nombre, p_per.Apellido
@@ -265,9 +265,9 @@ BEGIN
     FROM 
         DesglosePagos
     GROUP BY 
-        YEAR(Fecha), MONTH(Fecha), FORMAT(Fecha, 'MMMM', 'es-ES'); --el FORMAT lo utilizamos para mostrar los meses en Español
+        YEAR(Fecha), MONTH(Fecha), FORMAT(Fecha, 'MMMM', 'es-ES'); --el FORMAT lo utilizamos para mostrar los meses en EspaÃ±ol
                                                                    --por default, SQL esta configurado en us-en
-    -- 4. Mostrar la salida según el formato pedido
+    -- 4. Mostrar la salida segÃºn el formato pedido
     IF @FormatoXML = 1
     BEGIN
         SELECT * FROM #ReporteFinal 
@@ -430,7 +430,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM #RankingMorosos)
     BEGIN
         PRINT 'XML: No se encontraron morosos con deuda pendiente para este consorcio.';
-        -- Devolvemos una fila vacía
+        -- Devolvemos una fila vacÃ­a
         IF @FormatoXML = 0 SELECT * FROM #RankingMorosos; 
         RETURN;
     END
@@ -453,10 +453,10 @@ BEGIN
 
         -- A. Si nos pidieron el dato por OUTPUT (desde otro SP), lo asignamos
         IF @XmlSalida IS NULL 
-            -- Si es NULL, asumimos que no se pasó variable, así que mostramos por pantalla (SSMS)
+            -- Si es NULL, asumimos que no se pasÃ³ variable, asÃ­ que mostramos por pantalla (SSMS)
             SELECT @ResultadoXML AS ReporteXML;
         ELSE
-            -- Si NO es NULL (nos pasaron una variable), guardamos el dato ahí y NO hacemos SELECT
+            -- Si NO es NULL (nos pasaron una variable), guardamos el dato ahÃ­ y NO hacemos SELECT
             SET @XmlSalida = @ResultadoXML;
     END
     ELSE
@@ -522,7 +522,7 @@ BEGIN
         UnidadFuncional,
         FechaPagoActual, --Ponemos Primer Pago cuando el valor es NULL, ya que no existen pagos previos al primer pago de cada inquilino
         ISNULL(CONVERT(VARCHAR, FechaPagoAnterior), 'Primer Pago') AS FechaPagoAnterior,
-        -- DATEDIFF: Calcula los días entre las dos fechas, si hay pagos el mismo dia ponemos 0
+        -- DATEDIFF: Calcula los dÃ­as entre las dos fechas, si hay pagos el mismo dia ponemos 0
         CASE 
             WHEN FechaPagoAnterior IS NULL THEN 0 
             ELSE DATEDIFF(DAY, FechaPagoAnterior, FechaPagoActual) 
@@ -566,16 +566,17 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @NombreConsorcio NVARCHAR(100);
-    DECLARE @XmlData XML; -- Acá vamos a recibir el dato
+    DECLARE @XmlData XML; -- AcÃ¡ vamos a recibir el dato
     DECLARE @HtmlRows NVARCHAR(MAX);
     DECLARE @HtmlBody NVARCHAR(MAX);
     DECLARE @JsonPayload NVARCHAR(MAX);
     DECLARE @Object INT, @Status INT, @HRESULT INT;
     DECLARE @ResponseText VARCHAR(8000);
     DECLARE @UrlAPI VARCHAR(200) = 'https://api.brevo.com/v3/smtp/email';
-    DECLARE @ApiKey VARCHAR(200) = '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';
+    DECLARE @ApiKey VARCHAR(200) = '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';
                                 --Aca ponemos nuestra API key de brevo, en caso de necesitar levantarla nuevamente
                                 --esta backupeada en el archivo apikey.txt
+                            --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
 
     -- Validamos el consorcio
     IF NOT EXISTS (SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
@@ -587,7 +588,7 @@ BEGIN
 
     PRINT 'Obteniendo datos de morosos...';
 
-    -- Inicializamos la variable para que el SP sepa que queremos el output
+    -- Inicializamos la variable para que el SP sepa que queremos el output XML
     SET @XmlData = ''; 
     
     EXEC report.sp_ReporteTopMorosos 
@@ -595,10 +596,10 @@ BEGIN
         @FormatoXML = 1, 
         @XmlSalida = @XmlData OUTPUT;
 
-    -- Validar si volvio vacío
+    -- Validar si volvio vacÃ­o
     IF CAST(@XmlData AS NVARCHAR(MAX)) = '' OR @XmlData IS NULL
     BEGIN
-        PRINT 'No hay morosos para informar (XML Vacío). No se envía mail.';
+        PRINT 'No hay morosos para informar (XML VacÃ­o). No se envÃ­a mail.';
         RETURN;
     END
 
@@ -625,8 +626,10 @@ SET @HtmlRows = CAST((
     ) AS NVARCHAR(MAX));
 
     SET @HtmlRows = REPLACE(@HtmlRows, '[SALTO]', '<br>');
+    --convertimos [SALTO] en una etiqueta break para forzar un salto de linea ya que dentro de FOR XML
+    --no podemos utilizar la etiqueta ya que lo convierte a texto, es por esto que usamos un placeholder
 
-    -- B. Armar el cuerpo completo (Contenedor tipo Tarjeta)
+    -- Armamos el cuerpo completo (Contenedor tipo Tarjeta)
 SET @HtmlBody = 
         '<!DOCTYPE html>
         <html>
@@ -639,13 +642,13 @@ SET @HtmlBody =
                 </div>
 
                 <p style="color: #555; line-height: 1.5;">Estimados,</p>
-                <p style="color: #555; line-height: 1.5;">Se adjunta el listado de los <strong>3 mayores deudores</strong> al día de la fecha para iniciar las gestiones de cobranza judicial.</p>
+                <p style="color: #555; line-height: 1.5;">Se adjunta el listado de los <strong>3 mayores deudores</strong> al dÃ­a de la fecha para iniciar las gestiones de cobranza judicial.</p>
 
                 <table style="width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #0056b3; color: #ffffff; text-align: left;">
                             <th style="padding: 12px;">DNI</th>
-                            <th style="padding: 12px;">Propietario</th>
+                            <th style="padding: 12px;">Nombre</th>
                             <th style="padding: 12px;">UF</th>
                             <th style="padding: 12px; text-align: right;">Deuda Total</th>
                             <th style="padding: 12px;">Contacto</th>
@@ -657,7 +660,7 @@ SET @HtmlBody =
                 </table>
 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center;">
-                    <p>Este es un reporte automático generado por el <strong>Sistema de Gestión de Consorcios</strong>.</p>
+                    <p>Este es un reporte automÃ¡tico generado por el <strong>Sistema de GestiÃ³n de Consorcios Altos de Saint Just</strong>.</p>
                     <p>Por favor no responder a este correo.</p>
                 </div>
             </div>
@@ -665,14 +668,14 @@ SET @HtmlBody =
         </html>';
 
     -- Enviamos a Brevo
-    SET @HtmlBody = REPLACE(@HtmlBody, '"', '\"');  --en el payload esta cargado el mail con el que se creo la cuenta en brevo
-                                                    --no se puede enviar desde cualquier mail, la pagina solo reconoce el mail del usuario
+    SET @HtmlBody = REPLACE(@HtmlBody, '"', '\"');                                                
     SET @HtmlBody = REPLACE(REPLACE(@HtmlBody, CHAR(13), ''), CHAR(10), '');
-    
+    --en el payload esta cargado el mail con el que se creo la cuenta en brevo
+     --no se puede enviar desde cualquier mail, la pagina solo reconoce el mail del usuario
     SET @JsonPayload = '{
-        "sender": { "name": "Sistema Consorcio", "email": "agus_1871@hotmail.com" }, 
+        "sender": { "name": "Sistema Consorcio", "email": "grupo07bda@gmail.com" }, 
         "to": [ { "email": "' + @EmailDestino + '", "name": "Estudio Juridico" } ],
-        "subject": "Derivación a Legales: Morosos ' + @NombreConsorcio + '",
+        "subject": "DerivaciÃ³n a Legales: Morosos ' + @NombreConsorcio + '",
         "htmlContent": "' + @HtmlBody + '"
     }';
 
