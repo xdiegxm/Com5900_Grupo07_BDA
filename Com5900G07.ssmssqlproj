@@ -27,6 +27,12 @@
           <AssociatedConnUserName />
           <FullPath>00_CreacionEstructuras.sql</FullPath>
         </FileNode>
+        <FileNode Name="00_EliminacionEstructuras.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>00_EliminacionEstructuras.sql</FullPath>
+        </FileNode>
         <FileNode Name="01_AgregadoSP.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>

@@ -23,7 +23,6 @@ GO
 ------------------------------------------ SCHEMA EXPENSAS -------------------------------------------
 ---------------------------------------- Para Tabla Expensa ----------------------------------------
 CREATE OR ALTER PROCEDURE expensas.sp_ModifExpensa
-    @Tipo CHAR(1),
     @NroExpensa INT,
     @Mes TINYINT = NULL,
     @Anio SMALLINT = NULL,
@@ -43,7 +42,7 @@ BEGIN
         IF NOT EXISTS (
             SELECT 1
             FROM expensas.Expensa
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa
+            WHERE NroExpensa = @NroExpensa
         )
         BEGIN
             PRINT('No existe una expensa con el tipo y número proporcionado.');
@@ -60,7 +59,7 @@ BEGIN
             END
             UPDATE expensas.Expensa
             SET Mes = @Mes
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Validar y modificar Año
@@ -73,7 +72,7 @@ BEGIN
             END
             UPDATE expensas.Expensa
             SET Anio = @Anio
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Validar y modificar Fechas
@@ -86,13 +85,13 @@ BEGIN
             END
             UPDATE expensas.Expensa
             SET FechaEmision = @FechaEmision
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         IF @Vencimiento IS NOT NULL
         BEGIN
             DECLARE @FechaE DATE;
-            SELECT @FechaE = FechaEmision FROM expensas.Expensa WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            SELECT @FechaE = FechaEmision FROM expensas.Expensa WHERE NroExpensa = @NroExpensa;
 
             IF @FechaE IS NULL SET @FechaE = ISNULL(@FechaEmision, GETDATE());
 
@@ -104,7 +103,7 @@ BEGIN
 
             UPDATE expensas.Expensa
             SET Vencimiento = @Vencimiento
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Validar y modificar Total
@@ -117,7 +116,7 @@ BEGIN
             END
             UPDATE expensas.Expensa
             SET Total = @Total
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Modificar Estado de Envío
@@ -125,7 +124,7 @@ BEGIN
         BEGIN
             UPDATE expensas.Expensa
             SET EstadoEnvio = TRIM(@EstadoEnvio)
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Modificar Método de Envío
@@ -133,7 +132,7 @@ BEGIN
         BEGIN
             UPDATE expensas.Expensa
             SET MetodoEnvio = TRIM(@MetodoEnvio)
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Modificar Destino de Envío
@@ -141,7 +140,7 @@ BEGIN
         BEGIN
             UPDATE expensas.Expensa
             SET DestinoEnvio = TRIM(@DestinoEnvio)
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         -- Modificar IdConsorcio
@@ -154,7 +153,7 @@ BEGIN
             END
             UPDATE expensas.Expensa
             SET IdConsorcio = @IdConsorcio
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+            WHERE NroExpensa = @NroExpensa;
         END
 
         PRINT('Expensa actualizada correctamente.');
@@ -191,7 +190,7 @@ BEGIN
         IF NOT EXISTS (
             SELECT 1 
             FROM expensas.Prorrateo
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF
         )
         BEGIN
             PRINT('No existe un prorrateo con el Tipo, NroExpensa e IdUF proporcionados.');
@@ -200,7 +199,7 @@ BEGIN
 
         -- Validar referencia a Expensa
         IF NOT EXISTS (
-            SELECT 1 FROM expensas.Expensa WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa
+            SELECT 1 FROM expensas.Expensa WHERE NroExpensa = @NroExpensa
         )
         BEGIN
             PRINT('No existe la expensa asociada.');
@@ -230,7 +229,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET SaldoAnterior = @SaldoAnterior
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         -- PagosRecibidos
@@ -243,7 +242,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET PagosRecibidos = @PagosRecibidos
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         -- InteresMora
@@ -256,7 +255,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET InteresMora = @InteresMora
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         -- ExpensaOrdinaria
@@ -269,7 +268,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET ExpensaOrdinaria = @ExpensaOrdinaria
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         -- ExpensaExtraordinaria
@@ -282,7 +281,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET ExpensaExtraordinaria = @ExpensaExtraordinaria
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         -- Total
@@ -295,7 +294,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET Total = @Total
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         -- Deuda
@@ -308,7 +307,7 @@ BEGIN
             END
             UPDATE expensas.Prorrateo
             SET Deuda = @Deuda
-            WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa AND IdUF = @IdUF;
+            WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
         END
 
         PRINT('Prorrateo actualizado correctamente.');
@@ -324,301 +323,6 @@ BEGIN
 END
 GO
 
----------------------------------------- Para Tabla EstadoFinanciero ----------------------------------------
-CREATE OR ALTER PROCEDURE expensas.sp_ModifEstadoFinanciero
-    @IdFinanzas INT,
-    @SaldoAnterior DECIMAL(12,2) = NULL,
-    @Ingresos DECIMAL(12,2) = NULL,
-    @Egresos DECIMAL(12,2) = NULL,
-    @SaldoCierre DECIMAL(12,2) = NULL,
-    @Tipo CHAR(1) = NULL,
-    @NroExpensa INT = NULL
-AS
-BEGIN
-    BEGIN TRY
-        SET NOCOUNT ON;
-
-        -- Validar existencia del registro
-        IF NOT EXISTS (SELECT 1 FROM expensas.EstadoFinanciero WHERE IdFinanzas = @IdFinanzas)
-        BEGIN
-            PRINT('No existe un estado financiero con el IdFinanzas proporcionado.');
-            RETURN;
-        END
-
-        ----------------------------
-        -- Validaciones y updates
-        ----------------------------
-
-        -- SaldoAnterior
-        IF @SaldoAnterior IS NOT NULL
-        BEGIN
-            IF @SaldoAnterior < 0
-            BEGIN
-                PRINT('El saldo anterior no puede ser negativo.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.EstadoFinanciero
-            SET SaldoAnterior = @SaldoAnterior
-            WHERE IdFinanzas = @IdFinanzas;
-        END
-
-        -- Ingresos
-        IF @Ingresos IS NOT NULL
-        BEGIN
-            IF @Ingresos < 0
-            BEGIN
-                PRINT('Los ingresos no pueden ser negativos.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.EstadoFinanciero
-            SET Ingresos = @Ingresos
-            WHERE IdFinanzas = @IdFinanzas;
-        END
-
-        -- Egresos
-        IF @Egresos IS NOT NULL
-        BEGIN
-            IF @Egresos < 0
-            BEGIN
-                PRINT('Los egresos no pueden ser negativos.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.EstadoFinanciero
-            SET Egresos = @Egresos
-            WHERE IdFinanzas = @IdFinanzas;
-        END
-
-        -- SaldoCierre
-        IF @SaldoCierre IS NOT NULL
-        BEGIN
-            UPDATE expensas.EstadoFinanciero
-            SET SaldoCierre = @SaldoCierre
-            WHERE IdFinanzas = @IdFinanzas;
-        END
-
-        -- Tipo (requiere validar con Expensa)
-        IF @Tipo IS NOT NULL
-        BEGIN
-            IF @Tipo NOT IN ('O', 'E')
-            BEGIN
-                PRINT('El tipo debe ser O (Ordinaria) o E (Extraordinaria).');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.EstadoFinanciero
-            SET Tipo = @Tipo
-            WHERE IdFinanzas = @IdFinanzas;
-        END
-
-        -- NroExpensa (y validar FK)
-        IF @NroExpensa IS NOT NULL
-        BEGIN
-            DECLARE @TipoActual CHAR(1);
-            SELECT @TipoActual = ISNULL(@Tipo, Tipo) 
-            FROM expensas.EstadoFinanciero
-            WHERE IdFinanzas = @IdFinanzas;
-
-            IF NOT EXISTS (
-                SELECT 1 FROM expensas.Expensa 
-                WHERE Tipo = @TipoActual AND NroExpensa = @NroExpensa
-            )
-            BEGIN
-                PRINT('No existe una expensa asociada con el tipo y número indicados.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE expensas.EstadoFinanciero
-            SET NroExpensa = @NroExpensa
-            WHERE IdFinanzas = @IdFinanzas;
-        END
-
-        PRINT('Estado financiero actualizado correctamente.');
-    END TRY
-
-    BEGIN CATCH
-        IF ERROR_SEVERITY() > 10
-        BEGIN
-            RAISERROR('Ocurrió un error al modificar el estado financiero.', 16, 1);
-            RETURN;
-        END
-    END CATCH
-END
-GO
-
------------------------------------------- SCHEMA EXTERNOS -------------------------------------------
----------------------------------------- Para Tabla Empleado ----------------------------------------
-CREATE OR ALTER PROCEDURE Externos.sp_ModifEmpleado
-    @IdEmpleado INT,
-    @IdLimpieza INT,
-    @IdGO INT = NULL,
-    @Sueldo DECIMAL(10,2) = NULL,
-    @nroFactura VARCHAR(15) = NULL
-AS
-BEGIN
-    BEGIN TRY
-        SET NOCOUNT ON;
-
-        -- Validar existencia del empleado
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM Externos.Empleado 
-            WHERE IdEmpleado = @IdEmpleado AND IdLimpieza = @IdLimpieza
-        )
-        BEGIN
-            PRINT('No existe un empleado con el IdEmpleado e IdLimpieza proporcionados.');
-            RETURN;
-        END
-
-        -- Modificar IdGO
-        IF @IdGO IS NOT NULL
-        BEGIN
-            -- Validar FK en gastos.Limpieza
-            IF NOT EXISTS (
-                SELECT 1 
-                FROM gastos.Limpieza 
-                WHERE IdLimpieza = @IdLimpieza AND IdGO = @IdGO
-            )
-            BEGIN
-                PRINT('El IdGO o IdLimpieza no corresponden a un registro válido en gastos.Limpieza.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Externos.Empleado
-            SET IdGO = @IdGO
-            WHERE IdEmpleado = @IdEmpleado AND IdLimpieza = @IdLimpieza;
-        END
-
-        -- Modificar Sueldo
-        IF @Sueldo IS NOT NULL
-        BEGIN
-            IF @Sueldo < 0
-            BEGIN
-                PRINT('El sueldo no puede ser negativo.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Externos.Empleado
-            SET Sueldo = @Sueldo
-            WHERE IdEmpleado = @IdEmpleado AND IdLimpieza = @IdLimpieza;
-        END
-
-        -- Modificar nroFactura
-        IF @nroFactura IS NOT NULL AND @nroFactura <> ''
-        BEGIN
-            SET @nroFactura = TRIM(@nroFactura);
-            IF LEN(@nroFactura) > 15
-            BEGIN
-                PRINT('El número de factura excede el largo permitido (15 caracteres).');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Externos.Empleado
-            SET nroFactura = @nroFactura
-            WHERE IdEmpleado = @IdEmpleado AND IdLimpieza = @IdLimpieza;
-        END
-
-        PRINT('Empleado actualizado correctamente.');
-    END TRY
-
-    BEGIN CATCH
-        IF ERROR_SEVERITY() > 10
-        BEGIN
-            RAISERROR('Ocurrió un error al modificar el empleado.', 16, 1);
-            RETURN;
-        END
-    END CATCH
-END
-GO
-
----------------------------------------- Para Tabla Empresa ----------------------------------------
-CREATE OR ALTER PROCEDURE Externos.sp_ModifEmpresa
-    @IdEmpresa INT,
-    @IdLimpieza INT,
-    @IdGO INT = NULL,
-    @nroFactura VARCHAR(15) = NULL,
-    @ImpFactura DECIMAL(12,2) = NULL
-AS
-BEGIN
-    BEGIN TRY
-        SET NOCOUNT ON;
-
-        -- Validar existencia del registro
-        IF NOT EXISTS (
-            SELECT 1
-            FROM Externos.Empresa
-            WHERE IdEmpresa = @IdEmpresa AND IdLimpieza = @IdLimpieza
-        )
-        BEGIN
-            PRINT('No existe una empresa con el IdEmpresa e IdLimpieza proporcionados.');
-            RETURN;
-        END
-
-        ------------------------------------------------
-        -- Modificar IdGO
-        ------------------------------------------------
-        IF @IdGO IS NOT NULL
-        BEGIN
-            -- Validar existencia de la FK en gastos.Limpieza
-            IF NOT EXISTS (
-                SELECT 1 
-                FROM gastos.Limpieza
-                WHERE IdLimpieza = @IdLimpieza AND IdGO = @IdGO
-            )
-            BEGIN
-                PRINT('El IdGO o IdLimpieza no corresponden a un registro válido en gastos.Limpieza.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Externos.Empresa
-            SET IdGO = @IdGO
-            WHERE IdEmpresa = @IdEmpresa AND IdLimpieza = @IdLimpieza;
-        END
-
-        ------------------------------------------------
-        -- Modificar nroFactura
-        ------------------------------------------------
-        IF @nroFactura IS NOT NULL AND @nroFactura <> ''
-        BEGIN
-            SET @nroFactura = TRIM(@nroFactura);
-            IF LEN(@nroFactura) > 15
-            BEGIN
-                PRINT('El número de factura excede el largo máximo permitido (15 caracteres).');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Externos.Empresa
-            SET nroFactura = @nroFactura
-            WHERE IdEmpresa = @IdEmpresa AND IdLimpieza = @IdLimpieza;
-        END
-
-        ------------------------------------------------
-        -- Modificar ImpFactura
-        ------------------------------------------------
-        IF @ImpFactura IS NOT NULL
-        BEGIN
-            IF @ImpFactura < 0
-            BEGIN
-                PRINT('El importe de factura no puede ser negativo.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Externos.Empresa
-            SET ImpFactura = @ImpFactura
-            WHERE IdEmpresa = @IdEmpresa AND IdLimpieza = @IdLimpieza;
-        END
-
-        PRINT('Empresa actualizada correctamente.');
-    END TRY
-
-    BEGIN CATCH
-        IF ERROR_SEVERITY() > 10
-        BEGIN
-            RAISERROR('Ocurrió un error al modificar la empresa.', 16, 1);
-            RETURN;
-        END
-    END CATCH
-END
-GO
-
 ------------------------------------------ SCHEMA PAGO -------------------------------------------
 ---------------------------------------- Para Tabla Pago ----------------------------------------
 CREATE OR ALTER PROCEDURE Pago.sp_ModifPago
@@ -626,8 +330,6 @@ CREATE OR ALTER PROCEDURE Pago.sp_ModifPago
     @Fecha DATE = NULL,
     @Importe DECIMAL(12,2) = NULL,
     @CuentaOrigen CHAR(22) = NULL,
-    @CuentaDestino CHAR(22) = NULL,
-    @Estado VARCHAR(20) = NULL,
     @IdUF INT = NULL
 AS
 BEGIN
@@ -689,40 +391,6 @@ BEGIN
 
             UPDATE Pago.Pago
             SET CuentaOrigen = @CuentaOrigen
-            WHERE IdPago = @IdPago;
-        END
-
-        ------------------------------------------------------------
-        -- Modificar CuentaDestino
-        ------------------------------------------------------------
-        IF @CuentaDestino IS NOT NULL AND @CuentaDestino <> ''
-        BEGIN
-            SET @CuentaDestino = TRIM(@CuentaDestino);
-            IF LEN(@CuentaDestino) <> 22
-            BEGIN
-                PRINT('La cuenta destino debe tener exactamente 22 caracteres.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Pago.Pago
-            SET CuentaDestino = @CuentaDestino
-            WHERE IdPago = @IdPago;
-        END
-
-        ------------------------------------------------------------
-        -- Modificar Estado
-        ------------------------------------------------------------
-        IF @Estado IS NOT NULL AND @Estado <> ''
-        BEGIN
-            SET @Estado = TRIM(@Estado);
-            IF @Estado NOT IN ('Pendiente', 'Confirmado', 'Rechazado')
-            BEGIN
-                PRINT('El estado debe ser Pendiente, Confirmado o Rechazado.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE Pago.Pago
-            SET Estado = @Estado
             WHERE IdPago = @IdPago;
         END
 
@@ -1061,30 +729,25 @@ begin
     
     begin try
         --valido pk
-        if not exists (select 1 from gastos.gastoextraordinario where idge = @idge and tipo = @tipo)
+        if not exists (select 1 from gastos.Gasto_Extraordinario where idGasto = @idge)
         begin
             raiserror('Error: No existe un Gasto Extraordinario con el ID proporcionado.', 16, 1);
             return;
         end
 
         --valido fk
-        if @nroexpensa is not null and not exists (select 1 from expensas.expensa where tipo = @tipo and nroexpensa = @nroexpensa)
+        if @nroexpensa is not null and not exists (select 1 from expensas.expensa where nroExpensa = @nroexpensa)
         begin
             raiserror('Error: El nroExpensa proporcionado no existe como Expensa Extraordinaria (Tipo E).', 16, 1);
             return;
         end
 
-        update gastos.gastoextraordinario
+        update gastos.Gasto_Extraordinario
         set
-            nroexpensa = coalesce(@nroexpensa, nroexpensa),
-            detalle = coalesce(@detalle, detalle),
-            importetotal = coalesce(@importetotal, importetotal),
-            cuotas = coalesce(@cuotas, cuotas),
-            importecuota = coalesce(@importecuota, importecuota),
             cuotaactual = coalesce(@cuotaactual, cuotaactual),
             totalcuotas = coalesce(@totalcuotas, totalcuotas)
         where
-            idge = @idge and tipo = @tipo;
+            idGasto = @idge;
 
         if @@rowcount > 0
         begin
@@ -1120,28 +783,28 @@ begin
 
     begin try
         --valido pk
-        if not exists (select 1 from gastos.gastoordinario where idgo = @idgo and tipo = @tipo)
+        if not exists (select 1 from gastos.Gasto_Ordinario where idGasto = @idgo)
         begin
             print'Error: No existe un Gasto Ordinario con el ID proporcionado'
             return;
         end
 
         --valido fk
-        if @nroexpensa is not null and not exists (select 1 from expensas.expensa where tipo = @tipo and nroexpensa = @nroexpensa)
+        if @nroexpensa is not null and not exists (select 1 from expensas.expensa where nroexpensa = @nroexpensa)
         begin
             print 'Error: El nroExpensa proporcionado no existe como Expensa Ordinaria (Tipo O)'
             return;
         end
 
 
-        update gastos.gastoordinario
+        update gastos.Gasto_Ordinario
         set
             descripcion = coalesce(@descripcion, descripcion),
             importe = coalesce(@importe, importe),
             nrofactura = coalesce(@nrofactura, nrofactura),
             nroexpensa = coalesce(@nroexpensa, nroexpensa)
         where
-            idgo = @idgo and tipo = @tipo;
+            idGasto = @idgo;
             
 
         if @@rowcount > 0
@@ -1156,218 +819,6 @@ begin
     end try
     begin catch
         print 'error no se pudo modificar la tabla de gastos ordinarios'
-    end catch
-end
-go
--------------------------------------------------
---											   --
---			       GENERALES	               --
---											   --
--------------------------------------------------
-create or alter procedure gastos.sp_modifgenerales
-    @nrofactura varchar(15),
-    @idgo int,
-    @tipogasto varchar(20) = null,
-    @nombreempresa varchar(30) = null,
-    @importe decimal(12,2) = null
-as
-begin
-    set nocount on;
-
-    declare @tipo char(1) = 'O'; 
-
-    begin try
-        --valido pk
-        if not exists (select 1 from gastos.generales where nrofactura = @nrofactura and idgo = @idgo)
-        begin
-            print'Error: No existe un registro de Gasto General con la Factura y IdGO proporcionados.'
-            return;
-        end
-
-        update gastos.generales
-        set
-            tipogasto = coalesce(@tipogasto, tipogasto),
-            nombreempresa = coalesce(@nombreempresa, nombreempresa),
-            importe = coalesce(@importe, importe)
-        where
-            nrofactura = @nrofactura and idgo = @idgo;
-
-
-        if @@rowcount > 0
-        begin
-            print 'Gasto General (' + @nrofactura + ') actualizado correctamente.';
-        end
-
-    end try
-    begin catch
-        print 'error no se pudo modificar la tabla de gastos generales'
-    end catch
-end
-go
--------------------------------------------------
---											   --
---			         SEGUROS	               --
---											   --
--------------------------------------------------
-create or alter procedure gastos.sp_modifseguros
-    @nrofactura varchar(15),
-    @idgo int,
-    @nombreempresa varchar(30) = null,
-    @importe decimal(12,2) = null
-as
-begin
-    set nocount on;
-
-    declare @tipo char(1) = 'O'; 
-
-    begin try
-        -- valido pk, que existe el seguro 
-        if not exists (select 1 from gastos.seguros where nrofactura = @nrofactura and idgo = @idgo)
-        begin
-            print 'Error: No existe un registro de Seguro con la Factura y IdGO proporcionados.'
-            return;
-        end
-
-        
-        update gastos.seguros
-        set
-            nombreempresa = coalesce(@nombreempresa, nombreempresa),
-            importe = coalesce(@importe, importe)
-        where
-            nrofactura = @nrofactura and idgo = @idgo;
-
-   
-        if @@rowcount > 0
-        begin
-            print 'Gasto de Seguros (' + @nrofactura + ') actualizado .';
-        end
-
-    end try
-    begin catch
-        print 'error: no se pudo modificar la tabla de seguros'
-    end catch
-end
-go
--------------------------------------------------
---											   --
---			        HONORARIOS		           --
---											   --
--------------------------------------------------
-create or alter procedure gastos.sp_modifhonorarios
-    @nrofactura varchar(15),
-    @idgo int,
-    @importe decimal(12,2) = null
-as
-begin
-    set nocount on;
-
-    declare @tipo char(1) = 'O'; 
-
-    begin try
-        -- valido pk
-        if not exists (select 1 from gastos.honorarios where nrofactura = @nrofactura and idgo = @idgo)
-        begin
-            print 'Error: No existe un registro de Honorarios con la Factura y IdGO proporcionados.'
-            return;
-        end
-
-        update gastos.honorarios
-        set
-            importe = coalesce(@importe, importe)
-        where
-            nrofactura = @nrofactura and idgo = @idgo;
-
-        if @@rowcount > 0
-        begin
-            print 'Gasto de Honorarios (' + @nrofactura + ') actualizado';
-        end
-
-    end try
-    begin catch
-        print 'error: no se actualizo la tabla de honorarios'
-    end catch
-end
-go
--------------------------------------------------
---											   --
---			        LIMPIEZA		           --
---											   --
--------------------------------------------------
-create or alter procedure gastos.sp_modiflimpieza
-    @idlimpieza int,
-    @idgo int,
-    @importe decimal(12,2) = null
-as
-begin
-    set nocount on;
-
-    declare @tipo char(1) = 'O'; 
-
-    begin try
-        -- 1. validar existencia del gasto de limpieza (pk compuesta)
-        if not exists (select 1 from gastos.limpieza where idlimpieza = @idlimpieza and idgo = @idgo)
-        begin
-            print 'Error: No existe un registro de Limpieza con el IdLimpieza y IdGO proporcionados.'
-            return;
-        end
-
-        update gastos.limpieza
-        set
-            importe = coalesce(@importe, importe)
-        where
-            idlimpieza = @idlimpieza and idgo = @idgo;
-
-        if @@rowcount > 0
-        begin
-            print 'Gasto de Limpieza (Id: ' + cast(@idlimpieza as varchar) + ') actualizado correctamente.';
-        end
-
-    end try
-    begin catch
-        print 'error: no se pudo modificar la tabla de limpieza'
-    end catch
-end
-go
--------------------------------------------------
---											   --
---			      MANTENIMIENTO		           --
---											   --
--------------------------------------------------
-create or alter procedure gastos.sp_modifmantenimiento
-    @idmantenimiento int,
-    @idgo int,
-    @importe decimal(12,2) = null,
-    @cuentabancaria char(22) = null
-as
-begin
-    set nocount on;
-
-    declare @tipo char(1) = 'O'; 
-
-    begin try
-        --valido pk
-        if not exists (select 1 from gastos.mantenimiento where idmantenimiento = @idmantenimiento and idgo = @idgo)
-        begin
-            print'Error: No existe un registro de Mantenimiento con el IdMantenimiento y IdGO proporcionados.'
-            return;
-        end
-
-        update gastos.mantenimiento
-        set
-            importe = coalesce(@importe, importe),
-            cuentabancaria = coalesce(@cuentabancaria, cuentabancaria)
-        where
-            idmantenimiento = @idmantenimiento and idgo = @idgo;
-
-
-        if @@rowcount > 0
-        begin
-            print 'gasto de Mantenimiento (Id: ' + cast(@idmantenimiento as varchar) + ') actualizado correctamente.';
-        end
-
-    end try
-    begin catch
-        print 'error: no se pudo modificar la tabla de mantenimiento'
     end catch
 end
 go
