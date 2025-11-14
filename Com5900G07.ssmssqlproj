@@ -1,14 +1,29 @@
 <?xml version="1.0"?>
-<SqlWorkbenchSqlProject xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="Com5900G07">
+<SqlWorkbenchSqlProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="Com5900G07">
   <Items>
-    <LogicalFolder Name="Conexiones" Type="2" Sorted="true">
+    <LogicalFolder Name="Connections" Type="2" Sorted="true">
       <Items>
-        <ConnectionNode Name="IRIEL\SQLEXPRESS:IRIEL\Iriel">
+        <ConnectionNode Name="FAWUI\SQLEXPRESS:FAWUI\Fawui">
+          <Created>2025-11-14T15:08:02.4645316-03:00</Created>
+          <Type>SQL</Type>
+          <Server>FAWUI\SQLEXPRESS</Server>
+          <UserName />
+          <Authentication>Windows Authentication</Authentication>
+          <InitialDB />
+          <LoginTimeout>30</LoginTimeout>
+          <TrustServerCertificate>True</TrustServerCertificate>
+          <HostNameInServerCertificate />
+          <EncryptionOption>True</EncryptionOption>
+          <ExecutionTimeout>0</ExecutionTimeout>
+          <ConnectionProtocol>NotSpecified</ConnectionProtocol>
+          <ApplicationName>Microsoft SQL Server Management Studio - Query</ApplicationName>
+        </ConnectionNode>
+        <ConnectionNode Name="IRIEL\SQLEXPRESS:">
           <Created>2025-11-13T13:20:17.8033442-03:00</Created>
           <Type>SQL</Type>
           <Server>IRIEL\SQLEXPRESS</Server>
           <UserName />
-          <Authentication>Autenticación de Windows</Authentication>
+          <Authentication>SQL</Authentication>
           <InitialDB />
           <LoginTimeout>15</LoginTimeout>
           <TrustServerCertificate>False</TrustServerCertificate>
@@ -19,7 +34,7 @@
         </ConnectionNode>
       </Items>
     </LogicalFolder>
-    <LogicalFolder Name="Consultas" Type="0" Sorted="true">
+    <LogicalFolder Name="Queries" Type="0" Sorted="true">
       <Items>
         <FileNode Name="00_CreacionEstructuras.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
@@ -81,9 +96,27 @@
           <AssociatedConnUserName />
           <FullPath>06_SPReportes.sql</FullPath>
         </FileNode>
+        <FileNode Name="0ULTIMO_EncriptarDesencriptar.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:FAWUI\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>FAWUI\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>0ULTIMO_EncriptarDesencriptar.sql</FullPath>
+        </FileNode>
+        <FileNode Name="0ULTIMO_Roles.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:FAWUI\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>FAWUI\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>0ULTIMO_Roles.sql</FullPath>
+        </FileNode>
+        <FileNode Name="Reportes.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:FAWUI\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>FAWUI\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>Reportes.sql</FullPath>
+        </FileNode>
       </Items>
     </LogicalFolder>
-    <LogicalFolder Name="Varios" Type="3" Sorted="true">
+    <LogicalFolder Name="Miscellaneous" Type="3" Sorted="true">
       <Items />
     </LogicalFolder>
   </Items>
