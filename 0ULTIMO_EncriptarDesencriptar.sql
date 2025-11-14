@@ -1,3 +1,5 @@
+USE Com5600G07
+
 /* -----------------------------------------------------------
    FUNCIONES GENÉRICAS DE CIFRADO Y DESCRIPFADO
    Usan ENCRYPTBYPASSPHRASE y DECRYPTBYPASSPHRASE con una
@@ -60,4 +62,73 @@ BEGIN
 END;
 GO
 /*TESTING*/
-select p.DNI, p.Nombre, seguridad.EncryptData(p.Nombre) as encriptado,seguridad.DecryptData(seguridad.EncryptData(p.Nombre)) as desencriptado from consorcio.Persona p
+
+select p.DNI, p.Nombre, seguridad.EncryptData(p.Nombre) as encriptado,seguridad.DecryptData(seguridad.EncryptData(p.Nombre)) as desencriptado from consorcio.Persona p;
+
+
+/* -----------------------------------------------------------
+                 MODIFICAR CAMPOS, TODO ENCRIPTADO
+----------------------------------------------------------- *//
+
+-- 1.1. Añadir columnas temporales para los datos encriptados
+ALTER TABLE consorcio.Persona
+ADD Email_Encrypted VARBINARY(MAX) NULL,
+    Telefono_Encrypted VARBINARY(MAX) NULL,
+    CVU_Encrypted VARBINARY(MAX) NULL;
+GO
+
+-- 1.2. Encriptar los datos existentes y moverlos a las nuevas columnas
+-- (Solo encripta si el valor no es NULL)
+UPDATE consorcio.Persona
+SET 
+    Email_Encrypted = CASE WHEN Email IS NOT NULL THEN seguridad.EncryptData(Email) ELSE NULL END,
+    Telefono_Encrypted = CASE WHEN Telefono IS NOT NULL THEN seguridad.EncryptData(Telefono) ELSE NULL END,
+    CVU_Encrypted = CASE WHEN CVU IS NOT NULL THEN seguridad.EncryptData(CVU) ELSE NULL END;
+GO
+
+-- 1.3. Eliminar las columnas originales (en texto plano)
+ALTER TABLE consorcio.Persona
+DROP COLUMN Email,
+            COLUMN Telefono,
+            COLUMN CVU;
+GO
+
+-- 1.4. Renombrar las nuevas columnas a sus nombres originales
+EXEC sp_rename 'consorcio.Persona.Email_Encrypted', 'Email', 'COLUMN';
+EXEC sp_rename 'consorcio.Persona.Telefono_Encrypted', 'Telefono', 'COLUMN';
+EXEC sp_rename 'consorcio.Persona.CVU_Encrypted', 'CVU', 'COLUMN';
+GO
+
+/* -----------------------------------------------------------
+   PASO 2: MODIFICAR la tabla Pago.Pago
+   (CuentaOrigen)
+----------------------------------------------------------- */
+
+-- 2.1. Añadir columna temporal
+ALTER TABLE Pago.Pago
+ADD CuentaOrigen_Encrypted VARBINARY(MAX) NULL;
+GO
+
+-- 2.2. Encriptar datos existentes
+-- La columna original era NOT NULL, por lo que encriptamos todo
+UPDATE Pago.Pago
+SET 
+    CuentaOrigen_Encrypted = seguridad.EncryptData(CuentaOrigen);
+GO
+
+-- 2.3. Eliminar la columna original
+ALTER TABLE Pago.Pago
+DROP COLUMN CuentaOrigen;
+GO
+
+-- 2.4. Renombrar la nueva columna
+EXEC sp_rename 'Pago.Pago.CuentaOrigen_Encrypted', 'CuentaOrigen', 'COLUMN';
+GO
+
+-- 2.5. RE-APLICAR la restricción NOT NULL que tenía la columna original
+ALTER TABLE Pago.Pago
+ALTER COLUMN CuentaOrigen VARBINARY(MAX) NOT NULL;
+GO
+
+PRINT 'Migración a columnas encriptadas completada.';
+
