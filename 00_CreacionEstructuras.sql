@@ -242,23 +242,7 @@ BEGIN
     );
 END
 
-IF OBJECT_ID('expensas.HistoricoProrrateo','U') IS NULL
-BEGIN
-    CREATE TABLE expensas.HistoricoProrrateo (
-        IDuF INT NOT NULL,
-        Mes DATE NOT NULL,
-        nroExpensa int not null,
-        TotalFinal DECIMAL(10, 2) NOT NULL DEFAULT 0,
-        TotalPago DECIMAL(10, 2) NOT NULL DEFAULT 0,
-        CVU VARCHAR(22) NULL,
-    
-        CONSTRAINT PK_Historico PRIMARY KEY (IDuF, Mes),
-        constraint fk_nroExpensa_historic foreign key (nroexpensa) references expensas.Expensa(nroExpensa),
-        CONSTRAINT FK_Historico_UnidadFuncional FOREIGN KEY (IDuF)
-            REFERENCES consorcio.UnidadFuncional (IdUF),
-    );
-END
-GO
+
 
 IF OBJECT_ID('report.logsReportes','U') IS NULL
 BEGIN

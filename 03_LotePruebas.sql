@@ -27,7 +27,7 @@ GO
 --											   --
 -------------------------------------------------
 EXEC ImportarConsorciosDesdeExcel 
-    @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
+    @RutaArchivo = 'C:\import SQL\datos varios.xlsx',
     @NombreHoja = N'Consorcios';
 ---------------------------------------------------------------------
 --											                       --
@@ -35,31 +35,51 @@ EXEC ImportarConsorciosDesdeExcel
 --											                       --
 ---------------------------------------------------------------------
 EXEC consorcio.importarunidadesfuncionales 
-     @rutaarch = 'D:\BDA 2C2025\archivostp\uf por consorcio.txt'
+     @rutaarch = 'C:\import SQL\uf por consorcio.txt'
 -------------------------------------------------
 --											   --
 --			    TABLA PERSONAS      	       --
 --											   --
 -------------------------------------------------
 EXEC consorcio.importarPersonas 
-    @rutaArchPersonas = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-datos.csv', 
-    @rutaArchUF = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-UF.csv'
+    @rutaArchPersonas = 'C:\import SQL\inquilino-propietarios-datos.csv', 
+    @rutaArchUF = 'C:\import SQL\inquilino-propietarios-UF.csv'
 -------------------------------------------------
 --											   --
 --			    TABLA OCUPACION      	       --
 --											   --
 -------------------------------------------------
 exec consorcio.importarocupaciones	
-	@rutaarchpersonas = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-datos.csv',
-	@rutaarchuf = 'D:\BDA 2C2025\archivostp\inquilino-propietarios-uf.csv';
+	@rutaarchpersonas = 'C:\import SQL\inquilino-propietarios-datos.csv',
+	@rutaarchuf = 'C:\import SQL\inquilino-propietarios-uf.csv';
 -------------------------------------------------
 --											   --
 --		    TABLA EXPENSA Y GASTOS     	       --
 --											   --
 -------------------------------------------------
+
+-- 1. Habilitar las opciones avanzadas
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+GO
+
+-- 2. Habilitar las consultas distribuidas Ad Hoc
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+GO
+
+-- 3. Permitir que el proveedor ACE se ejecute "In-Process" (Dentro del proceso de SQL)
+-- ESTA ES LA CLAVE
+EXEC master.dbo.sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.16.0', N'AllowInProcess', 1
+GO
+
+-- 4. (Opcional, pero recomendado) Habilitar parámetros dinámicos
+EXEC master.dbo.sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.16.0', N'DynamicParameters', 1
+GO
+
 EXEC gastos.Sp_CargarGastosDesdeArchivo 
-    @RutaArchivoJSON = 'D:\BDA 2C2025\archivostp\Servicios.Servicios.json',
-    @RutaArchivoExcel = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
+    @RutaArchivoJSON = 'C:\import SQL\Servicios.Servicios.json',
+    @RutaArchivoExcel = 'C:\import SQL\datos varios.xlsx',
     @Anio = 2025,
     @DiaVto1 = 10,
     @DiaVto2 = 20;    
@@ -69,5 +89,4 @@ EXEC gastos.Sp_CargarGastosDesdeArchivo
 --											   --
 -------------------------------------------------
 EXEC Pago.sp_importarPagosDesdeCSV 
-    @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
-
+    @rutaArchivo = 'C:\import SQL\pagos_consorcios.csv'

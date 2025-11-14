@@ -40,9 +40,9 @@ CREATE NONCLUSTERED INDEX IX_UnidadFuncional_Coeficiente ON consorcio.UnidadFunc
 --											   --
 -------------------------------------------------
 CREATE NONCLUSTERED INDEX IX_Persona_UF ON consorcio.Persona (idUF);
-CREATE NONCLUSTERED INDEX IX_Persona_CVU ON consorcio.Persona (CVU);
+/*CREATE NONCLUSTERED INDEX IX_Persona_CVU ON consorcio.Persona (CVU);*/
 CREATE NONCLUSTERED INDEX IX_Persona_ApellidoNombre ON consorcio.Persona (Apellido, Nombre);
-CREATE NONCLUSTERED INDEX IX_Persona_Email ON consorcio.Persona (Email) WHERE Email IS NOT NULL;
+/*CREATE NONCLUSTERED INDEX IX_Persona_Email ON consorcio.Persona (Email) WHERE Email IS NOT NULL;*/
 -------------------------------------------------
 --											   --
 --			    TABLA OCUPACION      	       --

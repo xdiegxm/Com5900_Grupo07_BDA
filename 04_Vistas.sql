@@ -85,6 +85,6 @@ LEFT JOIN PagosAgrupados PA ON EB.nroExpensa = PA.NroExpensa AND EB.idConsorcio 
 GO
 
 -- Consultar por consorcio específico
-SELECT * FROM expensas.vw_EstadoFinanciero 
+SELECT * FROM expensas.vw_EstadoFinanciero_Optimizada
 WHERE IdConsorcio = 1 
 
