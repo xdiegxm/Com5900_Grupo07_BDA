@@ -40,8 +40,8 @@
           <FullPath>01_AgregadoSP.sql</FullPath>
         </FileNode>
         <FileNode Name="01_SPParaBorrado.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_SPParaBorrado.sql</FullPath>
         </FileNode>
