@@ -86,5 +86,5 @@ GO
 
 -- Consultar por consorcio específico
 SELECT * FROM expensas.vw_EstadoFinanciero_Optimizada
-WHERE IdConsorcio = 1 
+WHERE IdConsorcio = 3
 

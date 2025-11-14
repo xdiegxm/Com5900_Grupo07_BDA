@@ -186,3 +186,5 @@ GO
 
 PRINT 'Migración de Pago.Pago completada (Encriptación + Hash).';
  
+
+ select * from consorcio.Persona

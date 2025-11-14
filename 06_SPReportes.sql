@@ -117,7 +117,7 @@ GO
 EXEC report.sp_ReporteFlujoCajaSemanal
     @FechaInicio = '2025-01-01', 
     @FechaFin = '2025-12-31', 
-    @IdConsorcio = 6; -- Poner num de consorcio para realizar el reporte
+    @IdConsorcio = 4; -- Poner num de consorcio para realizar el reporte
 
 
 -------------------------------------------------
@@ -192,7 +192,7 @@ GO
 --PARA PROBARLO
 
 EXEC report.sp_ReporteRecaudacionMensual
-    @IdConsorcio = 6, 
+    @IdConsorcio = 4, 
     @Anio = 2025;
 
 
@@ -288,10 +288,10 @@ GO
 -- Para probarlo
 
 -- Como output normal
-EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 6, @Anio = 2025, @FormatoXML = 0;
+EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 4, @Anio = 2025, @FormatoXML = 0;
 
 -- Formato XML
-EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 6, @Anio = 2025, @FormatoXML = 1;
+EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 4, @Anio = 2025, @FormatoXML = 1;
 
 
 -------------------------------------------------
@@ -364,7 +364,7 @@ GO
 
 --Probamos
 
-EXEC report.sp_ReporteTopMeses @IdConsorcio = 6, @Anio = 2025;
+EXEC report.sp_ReporteTopMeses @IdConsorcio = 2, @Anio = 2025;
 
 
 -------------------------------------------------
@@ -372,37 +372,11 @@ EXEC report.sp_ReporteTopMeses @IdConsorcio = 6, @Anio = 2025;
 --		         TOP 3 MOROSOS                 --
 --                                             --
 -------------------------------------------------
+-- Aseguramos el contexto de la base de datos
+USE Com5600G07;
+GO
 
---EN ESTE SP UTILIZAMOS FORMATOXML PARA DARLE OPCION DE DEVOLVER LA EJECUCION EN FORMATO XML TAL COMO SOLICITA LA CONSIGNA
-
-CREATE OR ALTER PROCEDURE report.sp_ReporteTopMorosos
-    @IdConsorcio INT,
-    @FormatoXML BIT = 0, -- 0 = Output normal, 1 = Formato XML
-    @XmlSalida XML = NULL OUTPUT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    -- Validamos Consorcio
-    IF NOT EXISTS (SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
-    BEGIN
-        PRINT 'El Consorcio no existe';
-        RETURN;
-    END
-
-    -- Creamos una tabla temporal para guardar el ranking
-    CREATE TABLE #RankingMorosos (
-        DNI VARCHAR(10),
-        Nombre VARCHAR(30),
-        Apellido VARCHAR(30),
-        Email VARCHAR(40),
-        Telefono VARCHAR(15),
-        UnidadFuncional NVARCHAR(25),
-        DeudaTotal DECIMAL(12,2),
-        CantidadExpensasAdeudadas INT
-    );
-
-    -- Calcular e insertar los TOP 3 morosos
+-- Calcular e insertar los TOP 3 morosos
     INSERT INTO #RankingMorosos (DNI, Nombre, Apellido, Email, Telefono, UnidadFuncional, DeudaTotal, CantidadExpensasAdeudadas)
     SELECT TOP 3
         p.DNI,
@@ -467,13 +441,14 @@ BEGIN
     DROP TABLE #RankingMorosos;
 END
 
+
 -- Para probarlo
 
 -- Como output normal
-EXEC report.sp_ReporteTopMorosos @IdConsorcio = 10, @FormatoXML = 0;
+EXEC report.sp_ReporteTopMorosos @IdConsorcio = 5, @FormatoXML = 0;
 
 -- Formato XML
-EXEC report.sp_ReporteTopMorosos @IdConsorcio = 10, @FormatoXML = 1;
+EXEC report.sp_ReporteTopMorosos @IdConsorcio = 2, @FormatoXML = 1;
 
 
 -------------------------------------------------
@@ -703,6 +678,6 @@ GO
 --Probamos
 
 EXEC report.sp_EnviarReportePorEmail 
-    @IdConsorcio = 7, 
+    @IdConsorcio = 5, 
     @EmailDestino = 'agustinpe45@gmail.com'; --aca ponemos el mail al que queremos mandar el reporte (se puede usar cualquiera)
                                              --simulando el contacto con el estudio juridico
