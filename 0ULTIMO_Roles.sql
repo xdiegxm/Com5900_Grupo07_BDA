@@ -1,4 +1,4 @@
--------------------------------------------------
+﻿-------------------------------------------------
 --											   --
 --			BASES DE DATOS APLICADA		       --
 --											   --
@@ -8,7 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Pi�ero, Agust�n                             --
+-- Piñero, Agustín                             --
 -- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
@@ -207,11 +207,11 @@ DENY ALTER ON DATABASE::Com5600G07 TO administrativo_operativo;
 --											   --
 -------------------------------------------------
 -------------------------------------------------
--- Documentaci�n:
+-- Documentación:
 -- Los usuarios se crean SIN LOGIN porque
--- funcionan como identificadores l�gicos para
--- permisos internos. No est�n vinculados a
--- autenticaci�n del servidor SQL.
+-- funcionan como identificadores lógicos para
+-- permisos internos. No están vinculados a
+-- autenticación del servidor SQL.
 ------------------------------------------------
 
 IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'usuario_administrador_general')
@@ -248,9 +248,9 @@ SELECT name as Nombre_rol from sys.database_principals where type='R' order by n
 --											   --
 -------------------------------------------------
 -- Nota final:
--- Esta secci�n permite revertir todos los 
+-- Esta sección permite revertir todos los 
 -- cambios, eliminando miembros y roles en caso
--- de recreaci�n del entorno de desarrollo.
+-- de recreación del entorno de desarrollo.
 -------------------------------------------------
 
 IF DATABASE_PRINCIPAL_ID('administrativo_general') IS NOT NULL
@@ -278,3 +278,188 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--                                               --
+--         PRUEBAS DE PERMISOS POR ROL          --
+--                                               --
+-------------------------------------------------
+-- En esta sección se validan las capacidades de
+-- cada rol utilizando EXECUTE AS USER, lo cual
+-- simula el contexto del usuario sin login.
+-- Para volver al usuario original se debe usar REVERT.
+-------------------------------------------------
+
+
+/***********************************************
+ *  PRUEBA 1 — ADMINISTRATIVO GENERAL
+ ***********************************************/
+PRINT '===== PRUEBA: ADMINISTRATIVO GENERAL =====';
+EXECUTE AS USER = 'usuario_administrador_general';
+
+--  Debe Poder: Actualizar datos de UF
+PRINT 'Prueba: Ejecutar ImportarConsorciosDesdeExcel';
+BEGIN TRY
+    EXEC ImportarConsorciosDesdeExcel 
+         @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
+        @NombreHoja = N'Consorcios';
+    PRINT 'OK: Puede ejecutar ImportarConsorciosDesdeExcel';
+END TRY
+BEGIN CATCH
+    PRINT 'ERROR inesperado en ImportarConsorciosDesdeExcel: ' + ERROR_MESSAGE();
+END CATCH;
+
+--  No Debe Poder: Importación bancaria
+PRINT 'Prueba: Ejecutar sp_importarPagosDesdeCSV (DEBE FALLAR)';
+BEGIN TRY
+    EXEC Pago.sp_importarPagosDesdeCSV 
+    @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
+    PRINT 'ERROR: NO deberia poder ejecutar sp_importarPagosDesdeCSV';
+END TRY
+BEGIN CATCH
+    PRINT 'OK: Acceso denegado correctamente → ' + ERROR_MESSAGE();
+END CATCH;
+
+--  Debe Poder: Generación de reportes
+PRINT 'Prueba: Ejecutar SP dentro de report (si existe alguno)';
+BEGIN TRY
+    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    PRINT 'OK: Puede acceder a reportes';
+END TRY
+BEGIN CATCH
+    PRINT 'Advertencia: No se encontró SP para probar reportes';
+END CATCH;
+
+REVERT;  -- Regresar al usuario actual
+PRINT '===== FIN PRUEBA ADMINISTRATIVO GENERAL =====';
+
+
+
+/***********************************************
+ *  PRUEBA 2 — ADMINISTRATIVO BANCARIO
+ ***********************************************/
+PRINT '===== PRUEBA: ADMINISTRATIVO BANCARIO =====';
+EXECUTE AS USER = 'usuario_administrador_bancario';
+
+--  No puede actualizar UF
+PRINT 'Prueba: Ejecutar ImportarConsorciosDesdeExcel (DEBE FALLAR)';
+BEGIN TRY
+    EXEC ImportarConsorciosDesdeExcel 
+         @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
+         @NombreHoja = N'Consorcios';
+    PRINT 'ERROR: NO deberia poder ejecutar ImportarConsorciosDesdeExcel';
+END TRY
+BEGIN CATCH
+    PRINT 'OK: Acceso denegado correctamente → ' + ERROR_MESSAGE();
+END CATCH;
+
+--  Sí puede importar pagos
+PRINT 'Prueba: Ejecutar sp_importarPagosDesdeCSV';
+BEGIN TRY
+    EXEC Pago.sp_importarPagosDesdeCSV 
+    @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
+    PRINT 'OK: Puede ejecutar sp_importarPagosDesdeCSV';
+END TRY
+BEGIN CATCH
+    PRINT 'ERROR inesperado en sp_importarPagosDesdeCSV: ' + ERROR_MESSAGE();
+END CATCH;
+
+--  Puede generar reportes
+PRINT 'Prueba: Ejecución de SP de reportes';
+BEGIN TRY
+    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    PRINT 'OK: Puede generar reportes';
+END TRY
+BEGIN CATCH
+    PRINT 'Advertencia: SP de report no encontrado.';
+END CATCH;
+
+REVERT;
+PRINT '===== FIN PRUEBA ADMINISTRATIVO BANCARIO =====';
+
+
+
+/***********************************************
+ *  PRUEBA 3 — ADMINISTRATIVO OPERATIVO
+ ***********************************************/
+PRINT '===== PRUEBA: ADMINISTRATIVO OPERATIVO =====';
+EXECUTE AS USER = 'usuario_administrador_operativo';
+
+-- Puede actualizar UF
+PRINT 'Prueba: Ejecutar ImportarConsorciosDesdeExcel';
+BEGIN TRY
+    EXEC ImportarConsorciosDesdeExcel 
+         @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
+        @NombreHoja = N'Consorcios';
+    PRINT 'OK: Puede ejecutar ImportarConsorciosDesdeExcel';
+END TRY
+BEGIN CATCH
+    PRINT 'ERROR inesperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+--  No puede importar pagos bancarios
+PRINT 'Prueba: Ejecutar sp_importarPagosDesdeCSV (DEBE FALLAR)';
+BEGIN TRY
+    EXEC Pago.sp_importarPagosDesdeCSV 
+    @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
+    PRINT 'ERROR: No deberia poder importar pagos';
+END TRY
+BEGIN CATCH
+    PRINT 'OK: Acceso denegado correctamente → ' + ERROR_MESSAGE();
+END CATCH;
+
+-- Puede generar reportes
+PRINT 'Prueba: Ejecutar reportes';
+BEGIN TRY
+    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    PRINT 'OK: Puede acceder a reportes';
+END TRY
+BEGIN CATCH
+    PRINT 'Advertencia: No existe SP de reportes.';
+END CATCH;
+
+REVERT;
+PRINT '===== FIN PRUEBA ADMINISTRATIVO OPERATIVO =====';
+
+
+
+/***********************************************
+ *  PRUEBA 4 — SISTEMAS
+ ***********************************************/
+PRINT '===== PRUEBA: SISTEMAS =====';
+EXECUTE AS USER = 'usuario_sistemas';
+
+--  No puede actualizar UF
+PRINT 'Prueba: Ejecutar ImportarConsorciosDesdeExcel (DEBE FALLAR)';
+BEGIN TRY
+    EXEC ImportarConsorciosDesdeExcel 
+    @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
+    @NombreHoja = N'Consorcios';
+    PRINT 'ERROR: NO deberia poder ejecutar ImportarConsorciosDesdeExcel';
+END TRY
+BEGIN CATCH
+    PRINT 'OK: Acceso denegado → ' + ERROR_MESSAGE();
+END CATCH;
+
+--  No puede importar pagos
+PRINT 'Prueba: Ejecutar sp_importarPagosDesdeCSV (DEBE FALLAR)';
+BEGIN TRY
+    EXEC Pago.sp_importarPagosDesdeCSV 
+    @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
+    PRINT 'ERROR: NO debería poder ejecutar sp_importarPagosDesdeCSV';
+END TRY
+BEGIN CATCH
+    PRINT 'OK: Acceso denegado → ' + ERROR_MESSAGE();
+END CATCH;
+
+--  Puede generar reportes
+PRINT 'Prueba: Ejecutar reportes';
+BEGIN TRY
+    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    PRINT 'OK: Puede generar reportes';
+END TRY
+BEGIN CATCH
+    PRINT 'Advertencia: No existe SP de reportes para probar.';
+END CATCH;
+
+REVERT;
+PRINT '===== FIN PRUEBA SISTEMAS =====';
