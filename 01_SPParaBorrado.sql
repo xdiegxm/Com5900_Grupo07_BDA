@@ -40,15 +40,14 @@ BEGIN
 
 			WHILE EXISTS(SELECT 1 FROM expensas.Expensa WHERE IdConsorcio = @IdConsorcio)
 			BEGIN
-				DECLARE @TmpTipo CHAR(1), @TmpNro INT;
+				DECLARE @TmpNro INT;
 
-				SELECT TOP 1 @TmpTipo = Tipo, @TmpNro = NroExpensa
+				SELECT TOP 1 @TmpNro = NroExpensa
 				FROM expensas.Expensa
 				WHERE IdConsorcio = @IdConsorcio;
 
-				PRINT('Borrando Expensa ' + @TmpTipo + '-' + CAST(@TmpNro AS VARCHAR));
+				PRINT('Borrando Expensa ' + CAST(@TmpNro AS VARCHAR));
 				EXEC expensas.sp_BorrarExpensa
-					@Tipo = @TmpTipo,
 					@NroExpensa = @TmpNro;
 
 			END
@@ -232,7 +231,6 @@ GO
 --											   --
 -------------------------------------------------
 CREATE OR ALTER PROCEDURE expensas.sp_BorrarExpensa
-	@Tipo CHAR(1),
 	@NroExpensa INT
 AS
 BEGIN
@@ -240,35 +238,14 @@ BEGIN
 	BEGIN TRY
 		BEGIN TRANSACTION;
 
-		IF EXISTS(SELECT 1 FROM expensas.Expensa WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa)
+		IF EXISTS(SELECT 1 FROM expensas.Expensa WHERE NroExpensa = @NroExpensa)
 		BEGIN
 			DELETE FROM expensas.Prorrateo
-			WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+			WHERE NroExpensa = @NroExpensa;
 
-			DELETE FROM expensas.EstadoFinanciero
-			WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
-
-			DELETE FROM gastos.GastoExtraordinario
-			WHERE Tipo = @Tipo AND nroExpensa = @NroExpensa;
-
-			WHILE EXISTS(SELECT 1 FROM gastos.GastoOrdinario WHERE nroExpensa = @NroExpensa AND Tipo = @Tipo)
-			BEGIN
-				DECLARE @TmpIdGO INT;
-
-				SELECT TOP 1 @TmpIdGO = IdGO
-				FROM gastos.GastoOrdinario
-				WHERE nroExpensa = @NroExpensa AND Tipo = @Tipo;
-
-				PRINT('Borrando Gasto Ordinario: ' + CAST(@TmpIdGO AS VARCHAR));
-
-				EXEC gastos.sp_BorrarGastoOrdinario
-					@IdGO = @TmpIdGO,
-					@Tipo = @Tipo;
-
-			END
 
 			DELETE FROM expensas.Expensa
-			WHERE Tipo = @Tipo AND NroExpensa = @NroExpensa;
+			WHERE NroExpensa = @NroExpensa;
 
 		END
 
@@ -309,41 +286,18 @@ GO
 -------------------------------------------------
 
 CREATE OR ALTER PROCEDURE gastos.sp_BorrarGastoOrdinario
-	@IdGO INT,
-	@Tipo CHAR(1)
+	@IdGO INT
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
 		BEGIN TRANSACTION;
 
-		IF EXISTS(SELECT 1 FROM gastos.GastoOrdinario WHERE IdGO = @IdGO AND Tipo = @Tipo)
-		BEGIN
-
-			DELETE FROM gastos.Generales WHERE IdGO = @IdGO AND Tipo = @Tipo;
-			DELETE FROM gastos.Seguros WHERE IdGO = @IdGO AND Tipo = @Tipo;
-			DELETE FROM gastos.Honorarios WHERE IdGO = @IdGO AND Tipo = @Tipo;
-			DELETE FROM gastos.Mantenimiento WHERE IdGO = @IdGO AND Tipo = @Tipo;
-
-
-			WHILE EXISTS(SELECT 1 FROM gastos.Limpieza WHERE IdGO = @IdGO AND Tipo = @Tipo)
-			BEGIN
-				DECLARE @TmpLimpieza int;
-
-				SELECT TOP 1 @TmpLimpieza = IdLimpieza
-				FROM gastos.Limpieza
-				WHERE IdGO = @IdGO AND Tipo = @Tipo;
-
-				PRINT('Borrando Limpieza: ' + CAST(@TmpLimpieza AS VARCHAR));
-
-				EXEC gastos.sp_BorrarLimpieza
-					@IdLimpieza = @TmpLimpieza,
-					@IdGO = @IdGO;
-
-			END
-
-			DELETE FROM gastos.GastoOrdinario
-			WHERE IdGO = @IdGO AND Tipo = @Tipo;
+		IF EXISTS(SELECT 1 FROM gastos.Gasto_Ordinario WHERE idGasto = @IdGO)
+		
+		begin
+			DELETE FROM gastos.Gasto_Ordinario
+			WHERE idGasto = @IdGO;
 
 		END
 

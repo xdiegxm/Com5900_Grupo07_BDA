@@ -49,45 +49,6 @@ BEGIN
             RETURN;
         END
 
-        -- Validar y modificar Mes
-        IF @Mes IS NOT NULL
-        BEGIN
-            IF @Mes NOT BETWEEN 1 AND 12
-            BEGIN
-                PRINT('El mes debe estar entre 1 y 12.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.Expensa
-            SET Mes = @Mes
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Validar y modificar Año
-        IF @Anio IS NOT NULL
-        BEGIN
-            IF @Anio < 2000
-            BEGIN
-                PRINT('El año no puede ser menor a 2000.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.Expensa
-            SET Anio = @Anio
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Validar y modificar Fechas
-        IF @FechaEmision IS NOT NULL
-        BEGIN
-            IF @FechaEmision > GETDATE()
-            BEGIN
-                PRINT('La fecha de emisión no puede ser futura.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.Expensa
-            SET FechaEmision = @FechaEmision
-            WHERE NroExpensa = @NroExpensa;
-        END
-
         IF @Vencimiento IS NOT NULL
         BEGIN
             DECLARE @FechaE DATE;
