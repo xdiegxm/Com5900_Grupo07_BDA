@@ -24,98 +24,65 @@ GO
 ---------------------------------------- Para Tabla Expensa ----------------------------------------
 CREATE OR ALTER PROCEDURE expensas.sp_ModifExpensa
     @NroExpensa INT,
-    @Mes TINYINT = NULL,
-    @Anio SMALLINT = NULL,
-    @FechaEmision DATE = NULL,
-    @Vencimiento DATE = NULL,
-    @Total DECIMAL(12,2) = NULL,
-    @EstadoEnvio VARCHAR(20) = NULL,
-    @MetodoEnvio VARCHAR(20) = NULL,
-    @DestinoEnvio NVARCHAR(50) = NULL,
-    @IdConsorcio INT = NULL
+    @IdConsorcio INT = NULL,
+    @FechaGeneracion DATE = NULL,
+    @FechaVto1 DATE = NULL,
+    @FechaVto2 DATE = NULL,
+    @MontoTotal DECIMAL(10,2) = NULL
 AS
 BEGIN
-    BEGIN TRY
-        SET NOCOUNT ON;
+    SET NOCOUNT ON;
 
-        -- Validar existencia
+    BEGIN TRY
         IF NOT EXISTS (
             SELECT 1
             FROM expensas.Expensa
-            WHERE NroExpensa = @NroExpensa
+            WHERE nroExpensa = @NroExpensa
         )
         BEGIN
-            PRINT('No existe una expensa con el tipo y número proporcionado.');
+            PRINT('No existe una expensa con el número proporcionado.');
             RETURN;
         END
 
-        IF @Vencimiento IS NOT NULL
-        BEGIN
-            DECLARE @FechaE DATE;
-            SELECT @FechaE = FechaEmision FROM expensas.Expensa WHERE NroExpensa = @NroExpensa;
-
-            IF @FechaE IS NULL SET @FechaE = ISNULL(@FechaEmision, GETDATE());
-
-            IF @Vencimiento < @FechaE
-            BEGIN
-                PRINT('La fecha de vencimiento no puede ser anterior a la fecha de emisión.');
-                RAISERROR('.', 16, 1);
-            END
-
-            UPDATE expensas.Expensa
-            SET Vencimiento = @Vencimiento
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Validar y modificar Total
-        IF @Total IS NOT NULL
-        BEGIN
-            IF @Total < 0
-            BEGIN
-                PRINT('El total no puede ser negativo.');
-                RAISERROR('.', 16, 1);
-            END
-            UPDATE expensas.Expensa
-            SET Total = @Total
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Modificar Estado de Envío
-        IF @EstadoEnvio IS NOT NULL AND @EstadoEnvio <> ''
-        BEGIN
-            UPDATE expensas.Expensa
-            SET EstadoEnvio = TRIM(@EstadoEnvio)
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Modificar Método de Envío
-        IF @MetodoEnvio IS NOT NULL AND @MetodoEnvio <> ''
-        BEGIN
-            UPDATE expensas.Expensa
-            SET MetodoEnvio = TRIM(@MetodoEnvio)
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Modificar Destino de Envío
-        IF @DestinoEnvio IS NOT NULL AND @DestinoEnvio <> ''
-        BEGIN
-            UPDATE expensas.Expensa
-            SET DestinoEnvio = TRIM(@DestinoEnvio)
-            WHERE NroExpensa = @NroExpensa;
-        END
-
-        -- Modificar IdConsorcio
         IF @IdConsorcio IS NOT NULL
         BEGIN
             IF NOT EXISTS (SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
             BEGIN
                 PRINT('El IdConsorcio ingresado no existe.');
-                RAISERROR('.', 16, 1);
+                RAISERROR('Error: IdConsorcio inexistente.', 16, 1);
             END
-            UPDATE expensas.Expensa
-            SET IdConsorcio = @IdConsorcio
-            WHERE NroExpensa = @NroExpensa;
         END
+
+        IF @MontoTotal IS NOT NULL AND @MontoTotal < 0
+        BEGIN
+            PRINT('El Monto Total no puede ser negativo.');
+            RAISERROR('Error: Monto total negativo.', 16, 1);
+        END
+
+        DECLARE @FechaG DATE;
+        SELECT @FechaG = ISNULL(@FechaGeneracion, FechaGeneracion) FROM expensas.Expensa WHERE nroExpensa = @NroExpensa;
+
+        IF @FechaVto1 IS NOT NULL AND @FechaVto1 < @FechaG
+        BEGIN
+            PRINT('La fecha de Vencimiento 1 no puede ser anterior a la fecha de Generación.');
+            RAISERROR('Error: Vencimiento 1 anterior a Generación.', 16, 1);
+        END
+
+        IF @FechaVto2 IS NOT NULL AND @FechaVto2 < @FechaG
+        BEGIN
+            PRINT('La fecha de Vencimiento 2 no puede ser anterior a la fecha de Generación.');
+            RAISERROR('Error: Vencimiento 2 anterior a Generación.', 16, 1);
+        END
+        
+        UPDATE expensas.Expensa
+        SET 
+            idConsorcio = ISNULL(@IdConsorcio, idConsorcio),
+            fechaGeneracion = ISNULL(@FechaGeneracion, fechaGeneracion),
+            fechaVto1 = ISNULL(@FechaVto1, fechaVto1),
+            fechaVto2 = ISNULL(@FechaVto2, fechaVto2),
+            montoTotal = ISNULL(@MontoTotal, montoTotal)
+        WHERE 
+            nroExpensa = @NroExpensa;
 
         PRINT('Expensa actualizada correctamente.');
     END TRY
