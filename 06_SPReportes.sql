@@ -376,7 +376,34 @@ EXEC report.sp_ReporteTopMeses @IdConsorcio = 2, @Anio = 2025;
 USE Com5600G07;
 GO
 
--- Calcular e insertar los TOP 3 morosos
+CREATE OR ALTER PROCEDURE report.sp_ReporteTopMorosos
+    @IdConsorcio INT,
+    @FormatoXML BIT = 0, -- 0 = Output normal, 1 = Formato XML
+    @XmlSalida XML = NULL OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validamos Consorcio
+    IF NOT EXISTS (SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
+    BEGIN
+        PRINT 'El Consorcio no existe';
+        RETURN;
+    END
+
+    -- Creamos una tabla temporal para guardar el ranking
+    CREATE TABLE #RankingMorosos (
+        DNI VARCHAR(10),
+        Nombre VARCHAR(30),
+        Apellido VARCHAR(30),
+        Email VARCHAR(40),
+        Telefono VARCHAR(15),
+        UnidadFuncional NVARCHAR(25),
+        DeudaTotal DECIMAL(12,2),
+        CantidadExpensasAdeudadas INT
+    );
+
+    -- Calcular e insertar los TOP 3 morosos
     INSERT INTO #RankingMorosos (DNI, Nombre, Apellido, Email, Telefono, UnidadFuncional, DeudaTotal, CantidadExpensasAdeudadas)
     SELECT TOP 3
         p.DNI,
@@ -441,11 +468,11 @@ GO
     DROP TABLE #RankingMorosos;
 END
 
-
 -- Para probarlo
 
 -- Como output normal
 EXEC report.sp_ReporteTopMorosos @IdConsorcio = 5, @FormatoXML = 0;
+
 
 -- Formato XML
 EXEC report.sp_ReporteTopMorosos @IdConsorcio = 2, @FormatoXML = 1;
@@ -516,15 +543,16 @@ GO
 --Probamos
 
 -- Ver el historial completo
-EXEC report.sp_ReporteDiasEntrePagos @IdConsorcio = 6; 
+EXEC report.sp_ReporteDiasEntrePagos @IdConsorcio = 4; 
 
 -- ver solo un periodo especifico
 EXEC report.sp_ReporteDiasEntrePagos 
-    @IdConsorcio = 7, 
+    @IdConsorcio = 3, 
     @FechaInicio = '2025-01-01', 
     @FechaFin = '2025-12-31';
 
 
+select * from Pago.Pago p  order  by  p.Fecha desc
 -------------------------------------------------
 --											   --
 --		    REPORTES VIA MAIL (API)            --

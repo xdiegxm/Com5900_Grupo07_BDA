@@ -253,7 +253,7 @@ SELECT name as Nombre_rol from sys.database_principals where type='R' order by n
 -- de recreación del entorno de desarrollo.
 -------------------------------------------------
 
-IF DATABASE_PRINCIPAL_ID('administrativo_general') IS NOT NULL
+/*IF DATABASE_PRINCIPAL_ID('administrativo_general') IS NOT NULL
 BEGIN
     ALTER ROLE administrativo_general DROP MEMBER usuario_administrador_general;
     DROP ROLE administrativo_general;
@@ -276,7 +276,7 @@ BEGIN
     ALTER ROLE sistemas DROP MEMBER usuario_sistemas;
     DROP ROLE sistemas;
 END
-GO
+GO*/
 
 -------------------------------------------------
 --                                               --
@@ -293,7 +293,7 @@ GO
 /***********************************************
  *  PRUEBA 1 — ADMINISTRATIVO GENERAL
  ***********************************************/
-PRINT '===== PRUEBA: ADMINISTRATIVO GENERAL =====';
+/*PRINT '===== PRUEBA: ADMINISTRATIVO GENERAL =====';
 EXECUTE AS USER = 'usuario_administrador_general';
 
 --  Debe Poder: Actualizar datos de UF
@@ -462,4 +462,4 @@ BEGIN CATCH
 END CATCH;
 
 REVERT;
-PRINT '===== FIN PRUEBA SISTEMAS =====';
+PRINT '===== FIN PRUEBA SISTEMAS =====';*/

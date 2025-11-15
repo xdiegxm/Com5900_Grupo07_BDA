@@ -1,3 +1,19 @@
+-------------------------------------------------
+--											   --
+--			BASES DE DATOS APLICADA		       --
+--											   --
+-------------------------------------------------
+-- GRUPO: 07                                  --
+-- INTEGRANTES:								   --
+-- Mendoza, Diego Emanuel			           --
+-- Vazquez, Isaac Benjamin                     --
+-- Pizarro Dorgan, Fabricio Alejandro          --
+-- Piñero, Agustín                             --
+-- Nardelli Rosales, Cecilia Anahi             --
+-- Comerci Salcedo, Francisco Ivan             --
+-------------------------------------------------
+USE Com5600G07
+
 /*REPORTES*/
 CREATE OR ALTER PROCEDURE report.sp_ReporteTopMorosos
     @IdConsorcio INT,
@@ -100,8 +116,8 @@ BEGIN
     DROP TABLE #RankingMorosos;
 END
 
-/*EXEC report.sp_ReporteTopMorosos @IdConsorcio = 4, @FormatoXML = 0;*/
-
+/*EXEC report.sp_ReporteTopMorosos @IdConsorcio = 1, @FormatoXML = 0;*/
+select * from expensas.Prorrateo
 
 /* API MAIL*/
 
@@ -250,3 +266,4 @@ GO
     @IdConsorcio = 5, 
     @EmailDestino = 'agustinpe45@gmail.com';*/ --aca ponemos el mail al que queremos mandar el reporte (se puede usar cualquiera)
                                              --simulando el contacto con el estudio juridico
+; 
