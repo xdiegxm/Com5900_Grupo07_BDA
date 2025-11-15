@@ -188,7 +188,7 @@ BEGIN CATCH
     EXEC report.Sp_LogReporte @SP='consorcio.importarPersonas',@Tipo='ERROR',@Mensaje=@MensajeError,@RutaArchivo=@rutaArchPersonas;
 
     IF OBJECT_ID('tempdb..#tempPersonas') IS NOT NULL DROP TABLE #tempPersonas;
-    IF OBJECT_ID('tempdb..#tempUF') IS NOT... DROP TABLE #tempUF;
+    IF OBJECT_ID('tempdb..#tempUF') IS NOT null DROP TABLE #tempUF;
     IF OBJECT_ID('tempdb..#personasSinDuplicados') IS NOT NULL DROP TABLE #personasSinDuplicados;
 
     THROW;
@@ -338,6 +338,9 @@ Ahora debemos insertar
     la versión hasheada (HASHBYTES) en las columnas 
         CuentaOrigen 
         CuentaOrigen_Hash.*/
+USE Com5600G07;
+GO
+
 CREATE OR ALTER PROCEDURE Pago.sp_importarPagosDesdeCSV
     @rutaArchivo NVARCHAR(255)
 AS
@@ -379,15 +382,8 @@ BEGIN
         SET @PagosCargadosCSV = @@ROWCOUNT;
         PRINT 'Pagos cargados desde el CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10));
 
-        -- Log de carga desde CSV
         SET @MensajeLog = 'Pagos cargados desde CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10)) + ' registros';
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeLog,
-            @RutaArchivo = @rutaArchivo;
-
-        -- ... (El resto de la limpieza de datos no cambia) ...
+        EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'INFO', @Mensaje = @MensajeLog, @RutaArchivo = @rutaArchivo;
 
         ALTER TABLE #PagosTemp 
         ADD ID INT IDENTITY(1,1),
@@ -396,17 +392,25 @@ BEGIN
             FechaProcesada DATE NULL,
             ValorLimpio NVARCHAR(100) NULL,
             NroExpensa INT NULL,
-            Procesado BIT DEFAULT 0;
+            Procesado BIT DEFAULT 0,
+            -- ==== INICIO CORRECCIÓN 1: Añadir columna para CVU limpio ====
+            CVU_Limpio CHAR(22) NULL;
 
+        -- Limpiar y convertir valores (AHORA INCLUYE EL CVU)
         UPDATE #PagosTemp 
-        SET ValorLimpio = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Valor, 
+        SET 
+            ValorLimpio = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Valor, 
                 '$', ''),   
                 ' ', ''),   
                 '''', ''),   
                 '.', ''),   
-                ',', '.')
-        WHERE Valor IS NOT NULL AND Valor != '';
-        PRINT 'Valores limpiados: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+                ',', '.'),
+            -- Limpiamos el CVU de cualquier espacio extra del CSV
+            CVU_Limpio = LTRIM(RTRIM(CVU_CBU))
+        WHERE Valor IS NOT NULL OR CVU_CBU IS NOT NULL;
+        -- ==== FIN CORRECCIÓN 1 ====
+
+        PRINT 'Valores limpiados (incl. CVU): ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
         UPDATE #PagosTemp 
         SET Importe = TRY_CAST(ValorLimpio AS DECIMAL(12,2))
@@ -417,18 +421,17 @@ BEGIN
         SET FechaProcesada = TRY_CONVERT(DATE, Fecha, 103)
         WHERE Fecha IS NOT NULL;
 
-        -- ------ INICIO DE LA CORRECCIÓN 1 ------
-        -- Asignar IdUF basado en el HASH del CVU_CBU
+        -- ==== INICIO CORRECCIÓN 2: Usar el CVU limpio para el HASH ====
         PRINT 'Asignando Unidades Funcionales por HASH de CVU...';
         UPDATE #PagosTemp
         SET IdUF = p.idUF
         FROM #PagosTemp pt
         INNER JOIN consorcio.Persona p 
-            -- Comparamos el HASH del CVU del CSV con el HASH de la tabla Persona
-            ON p.CVU_Hash = HASHBYTES('SHA2_256', pt.CVU_CBU)
+            -- Comparamos el HASH del CVU *limpio* con el HASH de la tabla Persona
+            ON p.CVU_Hash = HASHBYTES('SHA2_256', pt.CVU_Limpio)
         WHERE pt.IdUF IS NULL
-          AND pt.CVU_CBU IS NOT NULL; -- Solo si el CSV trae un CVU
-        -- ------ FIN DE LA CORRECCIÓN 1 ------
+          AND pt.CVU_Limpio IS NOT NULL;
+        -- ==== FIN CORRECCIÓN 2 ====
 
         PRINT 'Unidades funcionales asignadas: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
@@ -477,7 +480,7 @@ BEGIN
             @IdPago INT,
             @Fecha DATE,
             @Importe DECIMAL(12,2),
-            @CuentaOrigen NVARCHAR(50), -- Ajustado a NVARCHAR para coincidir con #PagosTemp
+            @CuentaOrigen CHAR(22), -- <-- Usamos CHAR(22) para el CVU limpio
             @IdUF INT,
             @NroExpensa INT,
             @IdPagoInsertado INT;
@@ -491,7 +494,9 @@ BEGIN
                 @IdPago = IdPago,
                 @Fecha = FechaProcesada,
                 @Importe = Importe,
-                @CuentaOrigen = CVU_CBU, -- Leemos el CVU en texto plano
+                -- ==== INICIO CORRECCIÓN 3: Usar el CVU limpio ====
+                @CuentaOrigen = CVU_Limpio, -- Leemos el CVU limpio
+                -- ==== FIN CORRECCIÓN 3 ====
                 @IdUF = IdUF,
                 @NroExpensa = NroExpensa
             FROM #PagosTemp WHERE ID = @id;
@@ -526,8 +531,7 @@ BEGIN
                     FROM expensas.Prorrateo 
                     WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
 
-                    -- ------ INICIO DE LA CORRECCIÓN 2 ------
-                    -- Insertar el pago con ENCRIPTACIÓN y HASH
+                    -- Insertar el pago con ENCRIPTACIÓN y HASH (usando la variable @CuentaOrigen limpia)
                     INSERT INTO Pago.Pago (
                         Fecha, Importe, IdUF, NroExpensa,
                         CuentaOrigen,       -- Columna Encriptada
@@ -538,7 +542,6 @@ BEGIN
                         seguridad.EncryptData(@CuentaOrigen), -- Encriptamos
                         HASHBYTES('SHA2_256', @CuentaOrigen)  -- Hasheamos
                     );
-                    -- ------ FIN DE LA CORRECCIÓN 2 ------
 
                     SET @IdPagoInsertado = SCOPE_IDENTITY();
                     SET @PagosProcesadosExitosos = @PagosProcesadosExitosos + 1;
@@ -579,10 +582,10 @@ BEGIN
                     
                     SET @ErroresProcesamiento = @ErroresProcesamiento + 1;
                     
-                    PRINT 'Error al procesar el id de pago ' + CAST(@IdPago AS VARCHAR(10)) + ': ' + ERROR_MESSAGE();
+                    PRINT 'Error al procesar el id de pago ' + ISNULL(CAST(@IdPago AS VARCHAR(10)), 'N/A') + ': ' + ERROR_MESSAGE();
                     
                     DECLARE @MensajeErrorDetalle NVARCHAR(1000);
-                    SET @MensajeErrorDetalle = 'Error procesando pago ID ' + CAST(@IdPago AS VARCHAR(10)) + 
+                    SET @MensajeErrorDetalle = 'Error procesando pago ID ' + ISNULL(CAST(@IdPago AS VARCHAR(10)), 'N/A') + 
                                                ': ' + ERROR_MESSAGE();
                     EXEC report.Sp_LogReporte
                         @SP = 'Pago.sp_importarPagosDesdeCSV',
@@ -645,21 +648,13 @@ BEGIN
         IF @ErroresProcesamiento > 0
         BEGIN
             SET @MensajeLog = 'Se produjeron ' + CAST(@ErroresProcesamiento AS VARCHAR(10)) + ' errores durante el procesamiento de pagos';
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'ERROR',
-                @Mensaje = @MensajeLog,
-                @RutaArchivo = @rutaArchivo;
+            EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'ERROR', @Mensaje = @MensajeLog, @RutaArchivo = @rutaArchivo;
         END
 
         IF @PagosOmitidos > 0
         BEGIN
             SET @MensajeLog = 'Se omitieron ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ' pagos por datos incompletos o inválidos';
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'WARN',
-                @Mensaje = @MensajeLog,
-                @RutaArchivo = @rutaArchivo;
+            EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'WARN', @Mensaje = @MensajeLog, @RutaArchivo = @rutaArchivo;
         END
 
         PRINT 'Proceso completado.';
@@ -668,11 +663,7 @@ BEGIN
     BEGIN CATCH
         DECLARE @MensajeError NVARCHAR(4000) = 'Error durante la importación: ' + ERROR_MESSAGE();
         
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'ERROR',
-            @Mensaje = @MensajeError,
-            @RutaArchivo = @rutaArchivo;
+        EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'ERROR', @Mensaje = @MensajeError, @RutaArchivo = @rutaArchivo;
         
         PRINT @MensajeError;
         
