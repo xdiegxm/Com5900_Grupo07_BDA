@@ -9,7 +9,6 @@
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
 -- Piñero, Agustín                             --
--- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -451,7 +450,6 @@ GO
 --			    TABLA PERSONAS      	       --
 --											   --
 -------------------------------------------------
-
 CREATE OR ALTER PROCEDURE consorcio.importarPersonas
     @rutaArchPersonas NVARCHAR(255),
     @rutaArchUF NVARCHAR(255)
@@ -578,8 +576,6 @@ BEGIN CATCH
 END CATCH
 END
 GO
-
-
 -------------------------------------------------
 --											   --
 --			    TABLA OCUPACION      	       --
@@ -1429,9 +1425,7 @@ BEGIN
     END CATCH
 END
 GO
-
 ------------------------------------------------------------------
-
 CREATE OR ALTER PROCEDURE expensas.Sp_ActualizarSaldosAnteriores
     @NroExpensa INT = NULL,
     @CalcularIntereses BIT = 1
@@ -1503,8 +1497,6 @@ BEGIN
     END CATCH
 END
 GO
-
-
 CREATE OR ALTER PROCEDURE Pago.sp_importarPagosDesdeCSV
     @rutaArchivo NVARCHAR(255)
 AS

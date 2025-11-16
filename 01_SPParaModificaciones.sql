@@ -9,7 +9,6 @@
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
 -- Piñero, Agustín                             --
--- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -96,7 +95,6 @@ BEGIN
     END CATCH
 END
 GO
-
 ---------------------------------------- Para Tabla Prorrateo ----------------------------------------
 CREATE OR ALTER PROCEDURE expensas.sp_ModifProrrateo
     @Tipo CHAR(1),
@@ -250,7 +248,6 @@ BEGIN
     END CATCH
 END
 GO
-
 ------------------------------------------ SCHEMA PAGO -------------------------------------------
 ---------------------------------------- Para Tabla Pago ----------------------------------------
 CREATE OR ALTER PROCEDURE Pago.sp_ModifPago
@@ -350,14 +347,12 @@ BEGIN
     END CATCH
 END
 GO
-
 ------------------------------------------ SCHEMA CONSORCIO -------------------------------------------
 -------------------------------------------------
 --											   --
 --			       CONSORCIO		           --
 --											   --
 -------------------------------------------------
-
 create or alter procedure consorcio.sp_ModifConsorcio
     @IdConsorcio int,
     @NombreConsorcio varchar(40) = NULL,
@@ -414,8 +409,7 @@ create or alter procedure consorcio.sp_ModifUnidadFuncional
     @Depto nvarchar(10) = NULL,
     @Superficie decimal(6,2) = NULL,
     @Coeficiente decimal(5,2) = NULL,
-    @IdConsorcio int = NULL,
-    @PersonaDNI varchar(10) = NULL -- Nombre del campo es 'persona'
+    @IdConsorcio int = NULL
 as
 begin
     set nocount on;
@@ -435,11 +429,18 @@ begin
             return;
         end
 
-        if @PersonaDNI is not null and not exists (select 1 from consorcio.Persona where DNI = @PersonaDNI)
+        -- Validaciones adicionales para los campos
+        if @Superficie is not null and @Superficie <= 0
         begin
-            print 'Error: ese dni no existe. No se puede actualizar la Unidad Funcional';
+            print 'Error: La superficie debe ser mayor a 0';
             return;
-        END
+        end
+
+        if @Coeficiente is not null and (@Coeficiente <= 0 OR @Coeficiente > 100)
+        begin
+            print 'Error: El coeficiente debe ser mayor a 0 y menor o igual a 100';
+            return;
+        end
 
         -- COALESCE: Mantiene el valor anterior si el parámetro es NULL.
         UPDATE consorcio.UnidadFuncional
@@ -448,10 +449,9 @@ begin
             Depto = COALESCE(@Depto, Depto),
             Superficie = COALESCE(@Superficie, Superficie),
             Coeficiente = COALESCE(@Coeficiente, Coeficiente),
-            IdConsorcio = COALESCE(@IdConsorcio, IdConsorcio),
-            persona = COALESCE(@PersonaDNI, persona)
+            IdConsorcio = COALESCE(@IdConsorcio, IdConsorcio)
         where 
-            IdUF = @IdUF;
+            IdUF = @IdUF;   
             
         -- Mensaje de resultado
         if @@ROWCOUNT = 0 
@@ -465,11 +465,11 @@ begin
 
     end try
     begin catch
-        print ' ERROR no se pudo modificar consorcio.UnidadFuncional';
+        print 'ERROR: no se pudo modificar consorcio.UnidadFuncional';
+        print ERROR_MESSAGE();
     end catch
 end 
 go
-
 -------------------------------------------------
 --											   --
 --			       OCUPACION                   --
@@ -478,8 +478,6 @@ go
 create or alter procedure consorcio.sp_ModifOcupacion
     @Id_Ocupacion int,
     @Rol char(11) = NULL,
-    @FechaInicio date = NULL,
-    @FechaFin date = NULL,
     @IdUF int = NULL,
     @DNI varchar(10) = NULL
 as
@@ -500,17 +498,23 @@ begin
             print 'Error: El IdUF especificado no existe';
             return;
         end
+        
         if @DNI is not null and not exists (SELECT 1 FROM consorcio.Persona WHERE DNI = @DNI)
         begin
             print 'Error: El DNI de la Persona especificada no existe';
             return;
         end
 
+        -- Valida que el Rol sea válido si se proporciona
+        if @Rol is not null and @Rol NOT IN ('Propietario', 'Inquilino')
+        begin
+            print 'Error: El Rol debe ser "Propietario" o "Inquilino"';
+            return;
+        end
+
         update consorcio.Ocupacion
         set 
             Rol = COALESCE(@Rol, Rol),
-            FechaInicio = COALESCE(@FechaInicio, FechaInicio),
-            FechaFin = COALESCE(@FechaFin, FechaFin),
             IdUF = COALESCE(@IdUF, IdUF),
             DNI = COALESCE(@DNI, DNI)
         where 
@@ -522,13 +526,13 @@ begin
         end
         else
         begin
-            print 'Ocupación con ID ' + CAST(@Id_Ocupacion AS VARCHAR) + 'actualizada correctamente';
+            print 'Ocupación con ID ' + CAST(@Id_Ocupacion AS VARCHAR) + ' actualizada correctamente';
         end
 
     end try
     begin catch
-
-            PRINT 'ERROR al modificar la Ocupación';
+        PRINT 'ERROR al modificar la Ocupación';
+        PRINT ERROR_MESSAGE();
     end catch
 end
 go
@@ -580,7 +584,7 @@ begin
 	begin catch
 		print 'error al modificar la baulera';
 	end catch
-end
+end--falta
 go
 -------------------------------------------------
 --											   --
@@ -633,7 +637,6 @@ begin
 	end catch
 end
 go
-
 ------------------------------------------ SCHEMA GASTOS -------------------------------------------
 -------------------------------------------------
 --											   --
@@ -642,18 +645,11 @@ go
 -------------------------------------------------
 create or alter procedure gastos.sp_modifgastoextraordinario
     @idge int,
-    @nroexpensa int = NULL,
-    @detalle nvarchar(100) = NULL,
-    @importetotal decimal(12,2) = NULL,
-    @cuotas bit = NULL,
-    @importecuota decimal(12,2) = NULL,
     @cuotaactual tinyint = NULL,
-    @totalcuotas tinyint = NULL
+    @cantcuotas tinyint = NULL
 as
 begin
     set nocount on;
-
-    declare @tipo char(1) = 'E'; -- el tipo siempre es E
     
     begin try
         --valido pk
@@ -663,17 +659,22 @@ begin
             return;
         end
 
-        --valido fk
-        if @nroexpensa is not null and not exists (select 1 from expensas.expensa where nroExpensa = @nroexpensa)
+        --valido que el gasto exista en la tabla principal y sea de tipo Extraordinario
+        if not exists (
+            select 1 
+            from gastos.Gasto g 
+            where g.idGasto = @idge 
+            and g.tipo = 'Extraordinario'
+        )
         begin
-            raiserror('Error: El nroExpensa proporcionado no existe como Expensa Extraordinaria (Tipo E).', 16, 1);
+            raiserror('Error: El ID proporcionado no corresponde a un Gasto Extraordinario válido.', 16, 1);
             return;
         end
 
         update gastos.Gasto_Extraordinario
         set
-            cuotaactual = coalesce(@cuotaactual, cuotaactual),
-            totalcuotas = coalesce(@totalcuotas, totalcuotas)
+            cuotaActual = coalesce(@cuotaactual, cuotaActual),
+            cantCuotas = coalesce(@cantcuotas, cantCuotas)
         where
             idGasto = @idge;
 
@@ -688,7 +689,8 @@ begin
 
     end try
     begin catch
-        print 'error no se pudo modificar la tabla de gastos extraordinarios'
+        print 'Error: no se pudo modificar la tabla de gastos extraordinarios';
+        print ERROR_MESSAGE();
     end catch
 end
 go
@@ -699,42 +701,41 @@ go
 -------------------------------------------------
 create or alter procedure gastos.sp_modifgastoordinario
     @idgo int,
-    @descripcion varchar(50) = null,
-    @importe decimal(12,2) = null,
-    @nrofactura varchar(15) = null,
-    @nroexpensa int = null
+    @nombreProveedor varchar(100) = null,
+    @categoria varchar(35) = null,
+    @nrofactura varchar(50) = null
 as
 begin
     set nocount on;
-
-    declare @tipo char(1) = 'O'; -- constante, el tipo siempre es 'O'
 
     begin try
         --valido pk
         if not exists (select 1 from gastos.Gasto_Ordinario where idGasto = @idgo)
         begin
-            print'Error: No existe un Gasto Ordinario con el ID proporcionado'
+            print 'Error: No existe un Gasto Ordinario con el ID proporcionado';
             return;
         end
 
-        --valido fk
-        if @nroexpensa is not null and not exists (select 1 from expensas.expensa where nroexpensa = @nroexpensa)
+        --valido que el gasto exista en la tabla principal y sea de tipo Ordinario
+        if not exists (
+            select 1 
+            from gastos.Gasto g 
+            where g.idGasto = @idgo 
+            and g.tipo = 'Ordinario'
+        )
         begin
-            print 'Error: El nroExpensa proporcionado no existe como Expensa Ordinaria (Tipo O)'
+            print 'Error: El ID proporcionado no corresponde a un Gasto Ordinario válido';
             return;
         end
-
 
         update gastos.Gasto_Ordinario
         set
-            descripcion = coalesce(@descripcion, descripcion),
-            importe = coalesce(@importe, importe),
-            nrofactura = coalesce(@nrofactura, nrofactura),
-            nroexpensa = coalesce(@nroexpensa, nroexpensa)
+            nombreProveedor = coalesce(@nombreProveedor, nombreProveedor),
+            categoria = coalesce(@categoria, categoria),
+            nroFactura = coalesce(@nrofactura, nroFactura)
         where
             idGasto = @idgo;
             
-
         if @@rowcount > 0
         begin
             print 'Gasto Ordinario con ID ' + cast(@idgo as varchar) + ' actualizado correctamente.';
@@ -746,7 +747,8 @@ begin
 
     end try
     begin catch
-        print 'error no se pudo modificar la tabla de gastos ordinarios'
+        print 'Error: no se pudo modificar la tabla de gastos ordinarios';
+        print ERROR_MESSAGE();
     end catch
 end
 go

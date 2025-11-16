@@ -9,7 +9,6 @@
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
 -- Piñero, Agustín                             --
--- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------

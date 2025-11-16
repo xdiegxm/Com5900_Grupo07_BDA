@@ -8,8 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- Piñero, Agustín                             --
--- Nardelli Rosales, Cecilia Anahi             --
+-- Piñero, Agustín                             --             
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 USE Com5600G07

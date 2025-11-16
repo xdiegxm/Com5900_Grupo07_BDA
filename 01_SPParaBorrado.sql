@@ -284,7 +284,6 @@ GO
 --				  ORDINARIO				       --
 --											   --
 -------------------------------------------------
-
 CREATE OR ALTER PROCEDURE gastos.sp_BorrarGastoOrdinario
 	@IdGO INT
 AS
@@ -335,7 +334,6 @@ GO
 --		        BORRAR PAGO                    --
 --											   --
 -------------------------------------------------
-
 CREATE OR ALTER PROCEDURE Pago.sp_BorrarPago
 	@IdPago INT
 AS

@@ -243,7 +243,6 @@ BEGIN
 END
 
 
-
 IF OBJECT_ID('report.logsReportes','U') IS NULL
 BEGIN
     CREATE TABLE report.logsReportes(
