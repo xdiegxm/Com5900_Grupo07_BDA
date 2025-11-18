@@ -1,4 +1,4 @@
-﻿-------------------------------------------------
+-------------------------------------------------
 --											   --
 --			BASES DE DATOS APLICADA		       --
 --											   --
@@ -9,6 +9,7 @@
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
 -- Piñero, Agustín                             --
+-- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -450,6 +451,7 @@ GO
 --			    TABLA PERSONAS      	       --
 --											   --
 -------------------------------------------------
+
 CREATE OR ALTER PROCEDURE consorcio.importarPersonas
     @rutaArchPersonas NVARCHAR(255),
     @rutaArchUF NVARCHAR(255)
@@ -576,6 +578,8 @@ BEGIN CATCH
 END CATCH
 END
 GO
+
+
 -------------------------------------------------
 --											   --
 --			    TABLA OCUPACION      	       --
@@ -724,6 +728,182 @@ GO
 --		   TABLA GASTOS Y EXPENSA       	   --
 --											   --
 -------------------------------------------------
+CREATE OR ALTER PROCEDURE expensas.Sp_CalcularInteresMora
+    @NroExpensa INT = NULL,
+    @FechaCalculo DATE = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    IF @FechaCalculo IS NULL
+        SET @FechaCalculo = GETDATE();
+    
+    BEGIN TRY
+        PRINT '=== CALCULANDO INTERESES POR MORA ===';
+        PRINT 'Fecha de cálculo: ' + CONVERT(VARCHAR(10), @FechaCalculo, 103);
+        
+        BEGIN TRANSACTION;
+        
+        WITH InteresesCalculados AS (
+            SELECT 
+                p.IdProrrateo,
+                p.NroExpensa,
+                p.IdUF,
+                p.SaldoAnterior,
+                e.fechaVto1,
+                e.fechaVto2,
+                -- Calcular días de mora
+                DATEDIFF(DAY, e.fechaVto1, @FechaCalculo) as DiasMora,
+                -- Calcular interés progresivo
+                CASE 
+                    WHEN p.SaldoAnterior > 0 THEN
+                        CASE 
+                            WHEN @FechaCalculo > e.fechaVto2 THEN
+                                p.SaldoAnterior * (0.02 + 
+                                    (0.005 * DATEDIFF(MONTH, e.fechaVto2, @FechaCalculo)))
+                            WHEN @FechaCalculo > e.fechaVto1 THEN
+                      
+                                p.SaldoAnterior * 0.02
+                            ELSE 
+                                0
+                        END
+                    ELSE 0 
+                END as InteresMoraCalc,
+              
+                p.SaldoAnterior * 0.50 as InteresMaximo
+            FROM expensas.Prorrateo p
+            INNER JOIN expensas.Expensa e ON p.NroExpensa = e.nroExpensa
+            WHERE (@NroExpensa IS NULL OR p.NroExpensa = @NroExpensa)
+                AND p.SaldoAnterior > 0
+                AND @FechaCalculo > e.fechaVto1
+        )
+        UPDATE p
+        SET 
+            InteresMora = 
+                CASE 
+                    WHEN ic.InteresMoraCalc > ic.InteresMaximo THEN ic.InteresMaximo
+                    ELSE ROUND(ic.InteresMoraCalc, 2)
+                END,
+            Total = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + 
+                   p.SaldoAnterior + 
+                   CASE 
+                        WHEN ic.InteresMoraCalc > ic.InteresMaximo THEN ic.InteresMaximo
+                        ELSE ROUND(ic.InteresMoraCalc, 2)
+                   END,
+            Deuda = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + 
+                   p.SaldoAnterior + 
+                   CASE 
+                        WHEN ic.InteresMoraCalc > ic.InteresMaximo THEN ic.InteresMaximo
+                        ELSE ROUND(ic.InteresMoraCalc, 2)
+                   END - p.PagosRecibidos
+        FROM expensas.Prorrateo p
+        INNER JOIN InteresesCalculados ic ON p.IdProrrateo = ic.IdProrrateo;
+        
+        COMMIT TRANSACTION;
+        
+        DECLARE @FilasActualizadas INT = @@ROWCOUNT;
+        PRINT 'Intereses calculados. Filas afectadas: ' + CAST(@FilasActualizadas AS VARCHAR);
+        
+        -- Mostrar resumen
+        IF @FilasActualizadas > 0
+        BEGIN
+            SELECT 
+                'INTERESES CALCULADOS' as Info,
+                COUNT(*) as TotalRegistros,
+                SUM(InteresMora) as TotalIntereses,
+                AVG(InteresMora) as PromedioInteres,
+                MIN(InteresMora) as MinimoInteres,
+                MAX(InteresMora) as MaximoInteres
+            FROM expensas.Prorrateo
+            WHERE (@NroExpensa IS NULL OR NroExpensa = @NroExpensa)
+                AND InteresMora > 0;
+        END
+        
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+            
+        DECLARE @ErrorMsg NVARCHAR(4000) = 'Error calculando intereses: ' + ERROR_MESSAGE();
+        PRINT @ErrorMsg;
+        THROW;
+    END CATCH
+END
+GO
+
+CREATE OR ALTER PROCEDURE expensas.Sp_ActualizarSaldosAnteriores
+    @NroExpensa INT = NULL,
+    @CalcularIntereses BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRY
+        PRINT '=== ACTUALIZANDO SALDOS ANTERIORES ===';
+        
+        BEGIN TRANSACTION;
+        
+        -- Actualizar saldos anteriores
+        WITH SaldosAnteriores AS (
+            SELECT 
+                p.IdProrrateo,
+                p.NroExpensa,
+                p.IdUF,
+                -- Calcular saldo anterior (deuda del período anterior)
+                ISNULL((
+                    SELECT TOP 1 p_ant.Deuda 
+                    FROM expensas.Prorrateo p_ant
+                    INNER JOIN expensas.Expensa e_ant ON p_ant.NroExpensa = e_ant.nroExpensa
+                    WHERE p_ant.IdUF = p.IdUF
+                      AND e_ant.fechaGeneracion < e.fechaGeneracion
+                      AND p_ant.Deuda > 0
+                    ORDER BY e_ant.fechaGeneracion DESC
+                ), 0) as SaldoAnteriorCalc
+            FROM expensas.Prorrateo p
+            INNER JOIN expensas.Expensa e ON p.NroExpensa = e.nroExpensa
+            WHERE (@NroExpensa IS NULL OR p.NroExpensa = @NroExpensa)
+        )
+        UPDATE p
+        SET 
+            SaldoAnterior = sa.SaldoAnteriorCalc,
+            InteresMora = 0,  -- Resetear, se calculará después
+            Total = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + sa.SaldoAnteriorCalc,
+            Deuda = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + sa.SaldoAnteriorCalc - p.PagosRecibidos
+        FROM expensas.Prorrateo p
+        INNER JOIN SaldosAnteriores sa ON p.IdProrrateo = sa.IdProrrateo;
+        
+        COMMIT TRANSACTION;
+        
+        PRINT 'Saldos anteriores actualizados. Filas afectadas: ' + CAST(@@ROWCOUNT AS VARCHAR);
+        
+        -- Calcular intereses si se solicita
+        IF @CalcularIntereses = 1
+        BEGIN
+            EXEC expensas.Sp_CalcularInteresMora @NroExpensa = @NroExpensa;
+        END
+        
+        -- Resumen final
+        SELECT 
+            'RESUMEN ACTUALIZACIÓN' as Info,
+            COUNT(*) as TotalRegistros,
+            SUM(SaldoAnterior) as TotalSaldoAnterior,
+            SUM(InteresMora) as TotalInteresMora,
+            SUM(Deuda) as TotalDeudaActual
+        FROM expensas.Prorrateo
+        WHERE (@NroExpensa IS NULL OR NroExpensa = @NroExpensa);
+        
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+            
+        PRINT 'ERROR: ' + ERROR_MESSAGE();
+        THROW;
+    END CATCH
+END
+GO
+
+
 CREATE OR ALTER PROCEDURE gastos.Sp_CargarGastosDesdeJson
     @JsonContent NVARCHAR(MAX),
     @Anio INT,
@@ -1006,34 +1186,57 @@ BEGIN
 
         PRINT 'Calculando saldos anteriores e intereses para expensas creadas...';
         
-        DECLARE @ExpensasRecienCreadas TABLE (NroExpensa INT, IdConsorcio INT, Mes TINYINT);
-        
-        INSERT INTO @ExpensasRecienCreadas (NroExpensa, IdConsorcio, Mes)
+        -- Tabla temporal para expensas recién creadas
+        IF OBJECT_ID('tempdb..#ExpensasRecienCreadas') IS NOT NULL DROP TABLE #ExpensasRecienCreadas;
         SELECT e.nroExpensa, e.idConsorcio, t.mes
+        INTO #ExpensasRecienCreadas
         FROM expensas.Expensa e
         INNER JOIN #totales t ON e.idConsorcio = t.IdConsorcio 
             AND YEAR(e.fechaGeneracion) = @Anio 
             AND MONTH(e.fechaGeneracion) = t.mes;
         
-        DECLARE @ExpensaActual INT;
-        DECLARE cursorExpensas CURSOR FOR SELECT NroExpensa FROM @ExpensasRecienCreadas;
-        OPEN cursorExpensas;
-        FETCH NEXT FROM cursorExpensas INTO @ExpensaActual;
-        
-        WHILE @@FETCH_STATUS = 0
-        BEGIN
-            PRINT 'Calculando saldos e intereses para expensa: ' + CAST(@ExpensaActual AS VARCHAR(10));
-            
-            -- Actualizar saldos anteriores Y calcular intereses automáticamente
-            EXEC expensas.Sp_ActualizarSaldosAnteriores 
-                @NroExpensa = @ExpensaActual,
-                @CalcularIntereses = 1;
-            
-            FETCH NEXT FROM cursorExpensas INTO @ExpensaActual;
-        END
-        
-        CLOSE cursorExpensas;
-        DEALLOCATE cursorExpensas;
+        -- Actualizar saldos anteriores Y calcular intereses automáticamente para todas las expensas
+        UPDATE expensas.Prorrateo
+        SET 
+            SaldoAnterior = calc.SaldoAnterior,
+            InteresMora = calc.InteresMora,
+            Total = calc.NuevoTotal,
+            Deuda = calc.NuevaDeuda
+        FROM expensas.Prorrateo p
+        INNER JOIN (
+            SELECT 
+                p.NroExpensa,
+                p.IdUF,
+                ISNULL(prev.Deuda, 0) as SaldoAnterior,
+                CASE 
+                    WHEN ISNULL(prev.Deuda, 0) > 0 
+                    THEN ISNULL(prev.Deuda, 0) * 0.05 -- 5% de interés
+                    ELSE 0 
+                END as InteresMora,
+                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
+                    CASE 
+                        WHEN ISNULL(prev.Deuda, 0) > 0 
+                        THEN ISNULL(prev.Deuda, 0) * 0.05 
+                        ELSE 0 
+                    END as NuevoTotal,
+                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
+                    CASE 
+                        WHEN ISNULL(prev.Deuda, 0) > 0 
+                        THEN ISNULL(prev.Deuda, 0) * 0.05 
+                        ELSE 0 
+                    END as NuevaDeuda
+            FROM expensas.Prorrateo p
+            LEFT JOIN expensas.Prorrateo prev ON prev.IdUF = p.IdUF 
+                AND prev.NroExpensa = (
+                    SELECT MAX(NroExpensa) 
+                    FROM expensas.Expensa e2 
+                    WHERE e2.idConsorcio = (SELECT idConsorcio FROM expensas.Expensa WHERE nroExpensa = p.NroExpensa)
+                    AND e2.nroExpensa < p.NroExpensa
+                )
+            WHERE p.NroExpensa IN (SELECT nroExpensa FROM #ExpensasRecienCreadas)
+        ) calc ON p.NroExpensa = calc.NroExpensa AND p.IdUF = calc.IdUF;
+
+        PRINT 'Saldos anteriores e intereses calculados para todas las expensas';
 
         -- Limpiar temporales
         DROP TABLE #SuperficieConsorcio;
@@ -1200,26 +1403,48 @@ BEGIN
 
         PRINT 'Prorrateos actualizados con gastos reales: ' + CAST(@ProrrateosActualizados AS VARCHAR(10));
 
-        PRINT 'Recalculando saldos e intereses después de actualizar gastos...';
-        
-        DECLARE cursorExpensas2 CURSOR FOR SELECT NroExpensa FROM @ExpensasRecienCreadas;
-        OPEN cursorExpensas2;
-        FETCH NEXT FROM cursorExpensas2 INTO @ExpensaActual;
-        
-        WHILE @@FETCH_STATUS = 0
-        BEGIN
-            PRINT 'Recalculando saldos e intereses para expensa: ' + CAST(@ExpensaActual AS VARCHAR(10));
-            
-            -- Recalcular saldos anteriores e intereses con los gastos actualizados
-            EXEC expensas.Sp_ActualizarSaldosAnteriores 
-                @NroExpensa = @ExpensaActual,
-                @CalcularIntereses = 1;
-            
-            FETCH NEXT FROM cursorExpensas2 INTO @ExpensaActual;
-        END
-        
-        CLOSE cursorExpensas2;
-        DEALLOCATE cursorExpensas2;
+        -- Recalcular saldos anteriores e intereses con los gastos actualizados
+        UPDATE expensas.Prorrateo
+        SET 
+            SaldoAnterior = calc.SaldoAnterior,
+            InteresMora = calc.InteresMora,
+            Total = calc.NuevoTotal,
+            Deuda = calc.NuevaDeuda
+        FROM expensas.Prorrateo p
+        INNER JOIN (
+            SELECT 
+                p.NroExpensa,
+                p.IdUF,
+                ISNULL(prev.Deuda, 0) as SaldoAnterior,
+                CASE 
+                    WHEN ISNULL(prev.Deuda, 0) > 0 
+                    THEN ISNULL(prev.Deuda, 0) * 0.05 -- 5% de interés
+                    ELSE 0 
+                END as InteresMora,
+                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
+                    CASE 
+                        WHEN ISNULL(prev.Deuda, 0) > 0 
+                        THEN ISNULL(prev.Deuda, 0) * 0.05 
+                        ELSE 0 
+                    END as NuevoTotal,
+                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
+                    CASE 
+                        WHEN ISNULL(prev.Deuda, 0) > 0 
+                        THEN ISNULL(prev.Deuda, 0) * 0.05 
+                        ELSE 0 
+                    END as NuevaDeuda
+            FROM expensas.Prorrateo p
+            LEFT JOIN expensas.Prorrateo prev ON prev.IdUF = p.IdUF 
+                AND prev.NroExpensa = (
+                    SELECT MAX(NroExpensa) 
+                    FROM expensas.Expensa e2 
+                    WHERE e2.idConsorcio = (SELECT idConsorcio FROM expensas.Expensa WHERE nroExpensa = p.NroExpensa)
+                    AND e2.nroExpensa < p.NroExpensa
+                )
+            WHERE p.NroExpensa IN (SELECT nroExpensa FROM #ExpensasRecienCreadas)
+        ) calc ON p.NroExpensa = calc.NroExpensa AND p.IdUF = calc.IdUF;
+
+        PRINT 'Saldos e intereses recalculados después de actualizar gastos';
 
         -- Log de prorrateos actualizados
         IF @ProrrateosActualizados > 0
@@ -1256,6 +1481,7 @@ BEGIN
         DROP TABLE #cons;
         DROP TABLE #stg_gasto;
         DROP TABLE #ProveedoresTemp;
+        DROP TABLE #ExpensasRecienCreadas;
         
     END TRY
     BEGIN CATCH
@@ -1323,180 +1549,10 @@ GO
 --		    TABLA PAGO Y PRORRATEO        	   --
 --											   --
 -------------------------------------------------
-CREATE OR ALTER PROCEDURE expensas.Sp_CalcularInteresMora
-    @NroExpensa INT = NULL,
-    @FechaCalculo DATE = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    IF @FechaCalculo IS NULL
-        SET @FechaCalculo = GETDATE();
-    
-    BEGIN TRY
-        PRINT '=== CALCULANDO INTERESES POR MORA ===';
-        PRINT 'Fecha de cálculo: ' + CONVERT(VARCHAR(10), @FechaCalculo, 103);
-        
-        BEGIN TRANSACTION;
-        
-        WITH InteresesCalculados AS (
-            SELECT 
-                p.IdProrrateo,
-                p.NroExpensa,
-                p.IdUF,
-                p.SaldoAnterior,
-                e.fechaVto1,
-                e.fechaVto2,
-                -- Calcular días de mora
-                DATEDIFF(DAY, e.fechaVto1, @FechaCalculo) as DiasMora,
-                -- Calcular interés progresivo
-                CASE 
-                    WHEN p.SaldoAnterior > 0 THEN
-                        CASE 
-                            WHEN @FechaCalculo > e.fechaVto2 THEN
-                                p.SaldoAnterior * (0.02 + 
-                                    (0.005 * DATEDIFF(MONTH, e.fechaVto2, @FechaCalculo)))
-                            WHEN @FechaCalculo > e.fechaVto1 THEN
-                      
-                                p.SaldoAnterior * 0.02
-                            ELSE 
-                                0
-                        END
-                    ELSE 0 
-                END as InteresMoraCalc,
-              
-                p.SaldoAnterior * 0.50 as InteresMaximo
-            FROM expensas.Prorrateo p
-            INNER JOIN expensas.Expensa e ON p.NroExpensa = e.nroExpensa
-            WHERE (@NroExpensa IS NULL OR p.NroExpensa = @NroExpensa)
-                AND p.SaldoAnterior > 0
-                AND @FechaCalculo > e.fechaVto1
-        )
-        UPDATE p
-        SET 
-            InteresMora = 
-                CASE 
-                    WHEN ic.InteresMoraCalc > ic.InteresMaximo THEN ic.InteresMaximo
-                    ELSE ROUND(ic.InteresMoraCalc, 2)
-                END,
-            Total = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + 
-                   p.SaldoAnterior + 
-                   CASE 
-                        WHEN ic.InteresMoraCalc > ic.InteresMaximo THEN ic.InteresMaximo
-                        ELSE ROUND(ic.InteresMoraCalc, 2)
-                   END,
-            Deuda = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + 
-                   p.SaldoAnterior + 
-                   CASE 
-                        WHEN ic.InteresMoraCalc > ic.InteresMaximo THEN ic.InteresMaximo
-                        ELSE ROUND(ic.InteresMoraCalc, 2)
-                   END - p.PagosRecibidos
-        FROM expensas.Prorrateo p
-        INNER JOIN InteresesCalculados ic ON p.IdProrrateo = ic.IdProrrateo;
-        
-        COMMIT TRANSACTION;
-        
-        DECLARE @FilasActualizadas INT = @@ROWCOUNT;
-        PRINT 'Intereses calculados. Filas afectadas: ' + CAST(@FilasActualizadas AS VARCHAR);
-        
-        -- Mostrar resumen
-        IF @FilasActualizadas > 0
-        BEGIN
-            SELECT 
-                'INTERESES CALCULADOS' as Info,
-                COUNT(*) as TotalRegistros,
-                SUM(InteresMora) as TotalIntereses,
-                AVG(InteresMora) as PromedioInteres,
-                MIN(InteresMora) as MinimoInteres,
-                MAX(InteresMora) as MaximoInteres
-            FROM expensas.Prorrateo
-            WHERE (@NroExpensa IS NULL OR NroExpensa = @NroExpensa)
-                AND InteresMora > 0;
-        END
-        
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-            
-        DECLARE @ErrorMsg NVARCHAR(4000) = 'Error calculando intereses: ' + ERROR_MESSAGE();
-        PRINT @ErrorMsg;
-        THROW;
-    END CATCH
-END
-GO
-------------------------------------------------------------------
-CREATE OR ALTER PROCEDURE expensas.Sp_ActualizarSaldosAnteriores
-    @NroExpensa INT = NULL,
-    @CalcularIntereses BIT = 1
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    BEGIN TRY
-        PRINT '=== ACTUALIZANDO SALDOS ANTERIORES ===';
-        
-        BEGIN TRANSACTION;
-        
-        -- Actualizar saldos anteriores
-        WITH SaldosAnteriores AS (
-            SELECT 
-                p.IdProrrateo,
-                p.NroExpensa,
-                p.IdUF,
-                -- Calcular saldo anterior (deuda del período anterior)
-                ISNULL((
-                    SELECT TOP 1 p_ant.Deuda 
-                    FROM expensas.Prorrateo p_ant
-                    INNER JOIN expensas.Expensa e_ant ON p_ant.NroExpensa = e_ant.nroExpensa
-                    WHERE p_ant.IdUF = p.IdUF
-                      AND e_ant.fechaGeneracion < e.fechaGeneracion
-                      AND p_ant.Deuda > 0
-                    ORDER BY e_ant.fechaGeneracion DESC
-                ), 0) as SaldoAnteriorCalc
-            FROM expensas.Prorrateo p
-            INNER JOIN expensas.Expensa e ON p.NroExpensa = e.nroExpensa
-            WHERE (@NroExpensa IS NULL OR p.NroExpensa = @NroExpensa)
-        )
-        UPDATE p
-        SET 
-            SaldoAnterior = sa.SaldoAnteriorCalc,
-            InteresMora = 0,  -- Resetear, se calculará después
-            Total = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + sa.SaldoAnteriorCalc,
-            Deuda = p.ExpensaOrdinaria + p.ExpensaExtraordinaria + sa.SaldoAnteriorCalc - p.PagosRecibidos
-        FROM expensas.Prorrateo p
-        INNER JOIN SaldosAnteriores sa ON p.IdProrrateo = sa.IdProrrateo;
-        
-        COMMIT TRANSACTION;
-        
-        PRINT 'Saldos anteriores actualizados. Filas afectadas: ' + CAST(@@ROWCOUNT AS VARCHAR);
-        
-        -- Calcular intereses si se solicita
-        IF @CalcularIntereses = 1
-        BEGIN
-            EXEC expensas.Sp_CalcularInteresMora @NroExpensa = @NroExpensa;
-        END
-        
-        -- Resumen final
-        SELECT 
-            'RESUMEN ACTUALIZACIÓN' as Info,
-            COUNT(*) as TotalRegistros,
-            SUM(SaldoAnterior) as TotalSaldoAnterior,
-            SUM(InteresMora) as TotalInteresMora,
-            SUM(Deuda) as TotalDeudaActual
-        FROM expensas.Prorrateo
-        WHERE (@NroExpensa IS NULL OR NroExpensa = @NroExpensa);
-        
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-            
-        PRINT 'ERROR: ' + ERROR_MESSAGE();
-        THROW;
-    END CATCH
-END
-GO
+
+
+
+
 CREATE OR ALTER PROCEDURE Pago.sp_importarPagosDesdeCSV
     @rutaArchivo NVARCHAR(255)
 AS
@@ -1554,6 +1610,7 @@ BEGIN
             ValorLimpio NVARCHAR(100) NULL,
             NroExpensa INT NULL,
             Procesado BIT DEFAULT 0;
+
 
         -- Limpiar y convertir valores
         UPDATE #PagosTemp 
@@ -1628,165 +1685,122 @@ BEGIN
                 AND IdUF = #PagosTemp.IdUF
             );
 
-        -- Variables para recorrer la tabla temporal
-        DECLARE @id INT = 1, @maxId INT;
-        DECLARE 
-            @IdPago INT,
-            @Fecha DATE,
-            @Importe DECIMAL(12,2),
-            @CuentaOrigen CHAR(22),
-            @IdUF INT,
-            @NroExpensa INT,
-            @IdPagoInsertado INT;
+        -- Procesar pagos válidos en una sola operación
+        PRINT 'Procesando pagos válidos...';
 
-        SELECT @maxId = MAX(ID) FROM #PagosTemp;
+        BEGIN TRANSACTION;
 
-        PRINT 'Procesando ' + CAST(@maxId AS VARCHAR(10)) + ' registros';
+        -- Insertar pagos válidos
+        INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, IdUF, NroExpensa)
+        SELECT 
+            FechaProcesada,
+            Importe,
+            CVU_CBU,
+            IdUF,
+            NroExpensa
+        FROM #PagosTemp
+        WHERE IdPago IS NOT NULL 
+            AND FechaProcesada IS NOT NULL 
+            AND Importe IS NOT NULL 
+            AND Importe > 0 
+            AND IdUF IS NOT NULL 
+            AND NroExpensa IS NOT NULL
+            AND EXISTS (
+                SELECT 1 FROM expensas.Prorrateo 
+                WHERE NroExpensa = #PagosTemp.NroExpensa 
+                AND IdUF = #PagosTemp.IdUF
+            );
 
-        WHILE @id <= @maxId
-        BEGIN
-            SELECT
-                @IdPago = IdPago,
-                @Fecha = FechaProcesada,
-                @Importe = Importe,
-                @CuentaOrigen = CVU_CBU,
-                @IdUF = IdUF,
-                @NroExpensa = NroExpensa
-            FROM #PagosTemp WHERE ID = @id;
+        SET @PagosProcesadosExitosos = @@ROWCOUNT;
 
-            -- Verificar que existe el prorrateo antes de procesar
-            IF @IdPago IS NOT NULL AND @Fecha IS NOT NULL AND @Importe IS NOT NULL 
-               AND @Importe > 0 AND @IdUF IS NOT NULL AND @NroExpensa IS NOT NULL
-               AND EXISTS (SELECT 1 FROM expensas.Prorrateo 
-                          WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF)
-            BEGIN
-                BEGIN TRY
-                    BEGIN TRANSACTION;
-
-                    -- OBTENER VALORES ACTUALES DEL PRORRATEO
-                    DECLARE @DeudaActual DECIMAL(12,2);
-                    DECLARE @PagosActuales DECIMAL(12,2);
-                    DECLARE @TotalExpensa DECIMAL(12,2);
-                    DECLARE @SaldoAnterior DECIMAL(12,2);
-                    DECLARE @InteresMora DECIMAL(12,2);
-                    DECLARE @ExpensaOrdinaria DECIMAL(12,2);
-                    DECLARE @ExpensaExtraordinaria DECIMAL(12,2);
-
-                    -- Obtener los valores actuales del prorrateo
-                    SELECT 
-                        @PagosActuales = ISNULL(PagosRecibidos, 0),
-                        @TotalExpensa = ISNULL(Total, 0),
-                        @DeudaActual = ISNULL(Deuda, 0),
-                        @SaldoAnterior = ISNULL(SaldoAnterior, 0),
-                        @InteresMora = ISNULL(InteresMora, 0),
-                        @ExpensaOrdinaria = ISNULL(ExpensaOrdinaria, 0),
-                        @ExpensaExtraordinaria = ISNULL(ExpensaExtraordinaria, 0)
-                    FROM expensas.Prorrateo 
-                    WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
-
-                    -- Insertar el pago
-                    INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, IdUF, NroExpensa)
-                    VALUES (@Fecha, @Importe, @CuentaOrigen, @IdUF, @NroExpensa);
-
-                    SET @IdPagoInsertado = SCOPE_IDENTITY();
-                    SET @PagosProcesadosExitosos = @PagosProcesadosExitosos + 1;
-
-                    -- CALCULAR NUEVOS VALORES MANTENIENDO LA ESTRUCTURA CORRECTA
-                    DECLARE @NuevosPagosRecibidos DECIMAL(12,2) = @PagosActuales + @Importe;
-                    
-                    -- El total real debe ser: Expensas + Saldo Anterior + Intereses
-                    DECLARE @TotalReal DECIMAL(12,2) = @ExpensaOrdinaria + @ExpensaExtraordinaria + 
-                                                      @SaldoAnterior + @InteresMora;
-                    
-                    -- Asegurar que los pagos recibidos no superen el total real
-                    IF @NuevosPagosRecibidos > @TotalReal
-                    BEGIN
-                        SET @NuevosPagosRecibidos = @TotalReal;
-                    END
-                    
-                    -- Calcular nueva deuda (nunca menor a 0)
-                    DECLARE @NuevaDeuda DECIMAL(12,2) = @TotalReal - @NuevosPagosRecibidos;
-                    IF @NuevaDeuda < 0
-                    BEGIN
-                        SET @NuevaDeuda = 0;
-                    END
-
-                    -- Actualizar el prorrateo con los valores calculados
-                    UPDATE expensas.Prorrateo 
-                    SET 
-                        PagosRecibidos = @NuevosPagosRecibidos,
-                        Deuda = @NuevaDeuda
-                    WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
-
-                    -- Marcar como procesado
-                    UPDATE #PagosTemp SET Procesado = 1 WHERE ID = @id;
-
-                    PRINT 'Pago procesado - ID: ' + CAST(@IdPagoInsertado AS VARCHAR(10)) + 
-                          ' - Importe: $' + CAST(@Importe AS VARCHAR(20)) +
-                          ' - Pagos anteriores: $' + CAST(@PagosActuales AS VARCHAR(20)) +
-                          ' - Pagos nuevos: $' + CAST(@NuevosPagosRecibidos AS VARCHAR(20)) +
-                          ' - Deuda nueva: $' + CAST(@NuevaDeuda AS VARCHAR(20)) +
-                          ' - IdUF: ' + CAST(@IdUF AS VARCHAR(10)) +
-                          ' - Expensa: ' + CAST(@NroExpensa AS VARCHAR(10));
-
-                    COMMIT TRANSACTION;
-                END TRY
-                BEGIN CATCH
-                    IF @@TRANCOUNT > 0 
-                        ROLLBACK TRANSACTION;
-                    
-                    SET @ErroresProcesamiento = @ErroresProcesamiento + 1;
-                    
-                    PRINT 'Error al procesar el id de pago ' + CAST(@IdPago AS VARCHAR(10)) + ': ' + ERROR_MESSAGE();
-                    
-                    -- Log del error específico
-                    DECLARE @MensajeErrorDetalle NVARCHAR(1000);
-                    SET @MensajeErrorDetalle = 'Error procesando pago ID ' + CAST(@IdPago AS VARCHAR(10)) + 
-                                              ': ' + ERROR_MESSAGE();
-                    EXEC report.Sp_LogReporte
-                        @SP = 'Pago.sp_importarPagosDesdeCSV',
-                        @Tipo = 'ERROR',
-                        @Mensaje = @MensajeErrorDetalle,
-                        @RutaArchivo = @rutaArchivo;
-                END CATCH;
+        -- Actualizar prorrateos con los nuevos pagos
+        UPDATE pr
+        SET 
+            PagosRecibidos = ISNULL(pr.PagosRecibidos, 0) + pagos.TotalPagado,
+            Deuda = CASE 
+                WHEN (pr.Total - (ISNULL(pr.PagosRecibidos, 0) + pagos.TotalPagado)) < 0 THEN 0
+                ELSE pr.Total - (ISNULL(pr.PagosRecibidos, 0) + pagos.TotalPagado)
             END
-            ELSE
-            BEGIN
-                SET @PagosOmitidos = @PagosOmitidos + 1;                
-            END
+        FROM expensas.Prorrateo pr
+        INNER JOIN (
+            SELECT 
+                p.NroExpensa,
+                p.IdUF,
+                SUM(p.Importe) as TotalPagado
+            FROM Pago.Pago p
+            INNER JOIN #PagosTemp pt ON p.Fecha = pt.FechaProcesada 
+                AND p.Importe = pt.Importe 
+                AND p.IdUF = pt.IdUF
+            WHERE pt.Procesado = 0  -- Solo los recién insertados
+            GROUP BY p.NroExpensa, p.IdUF
+        ) pagos ON pr.NroExpensa = pagos.NroExpensa AND pr.IdUF = pagos.IdUF;
 
-            SET @id += 1;
-        END;
+        -- Marcar como procesados
+        UPDATE #PagosTemp
+        SET Procesado = 1
+        WHERE ID IN (
+            SELECT pt.ID
+            FROM #PagosTemp pt
+            INNER JOIN Pago.Pago p ON p.Fecha = pt.FechaProcesada 
+                AND p.Importe = pt.Importe 
+                AND p.IdUF = pt.IdUF
+            WHERE pt.Procesado = 0
+        );
 
-        -- NUEVA SECCIÓN: Actualizar saldos anteriores después de procesar pagos
+        COMMIT TRANSACTION;
+
+        PRINT 'Pagos procesados exitosamente: ' + CAST(@PagosProcesadosExitosos AS VARCHAR(10));
+
+        -- Calcular pagos omitidos
+        SELECT @PagosOmitidos = COUNT(*)
+        FROM #PagosTemp
+        WHERE Procesado = 0;
+
+        -- Actualizar saldos anteriores después de procesar pagos usando enfoque basado en conjuntos
         PRINT 'Actualizando saldos anteriores después de procesar pagos...';
 
-        DECLARE @ExpensasAfectadas TABLE (NroExpensa INT);
+        -- Actualizar saldos anteriores e intereses para todas las expensas afectadas
+        UPDATE expensas.Prorrateo
+        SET 
+            SaldoAnterior = calc.SaldoAnterior,
+            InteresMora = calc.InteresMora,
+            Total = calc.NuevoTotal,
+            Deuda = calc.NuevaDeuda
+        FROM expensas.Prorrateo p
+        INNER JOIN (
+            SELECT 
+                p.NroExpensa,
+                p.IdUF,
+                ISNULL(prev.Deuda, 0) as SaldoAnterior,
+                CASE 
+                    WHEN ISNULL(prev.Deuda, 0) > 0 
+                    THEN ISNULL(prev.Deuda, 0) * 0.05 -- 5% de interés
+                    ELSE 0 
+                END as InteresMora,
+                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
+                    CASE 
+                        WHEN ISNULL(prev.Deuda, 0) > 0 
+                        THEN ISNULL(prev.Deuda, 0) * 0.05 
+                        ELSE 0 
+                    END as NuevoTotal,
+                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
+                    CASE 
+                        WHEN ISNULL(prev.Deuda, 0) > 0 
+                        THEN ISNULL(prev.Deuda, 0) * 0.05 
+                        ELSE 0 
+                    END - ISNULL(p.PagosRecibidos, 0) as NuevaDeuda
+            FROM expensas.Prorrateo p
+            LEFT JOIN expensas.Prorrateo prev ON prev.IdUF = p.IdUF 
+                AND prev.NroExpensa = (
+                    SELECT MAX(NroExpensa) 
+                    FROM expensas.Expensa e2 
+                    WHERE e2.idConsorcio = (SELECT idConsorcio FROM expensas.Expensa WHERE nroExpensa = p.NroExpensa)
+                    AND e2.nroExpensa < p.NroExpensa
+                )
+            WHERE p.NroExpensa IN (SELECT DISTINCT NroExpensa FROM #PagosTemp WHERE Procesado = 1)
+        ) calc ON p.NroExpensa = calc.NroExpensa AND p.IdUF = calc.IdUF;
 
-        INSERT INTO @ExpensasAfectadas (NroExpensa)
-        SELECT DISTINCT NroExpensa 
-        FROM #PagosTemp 
-        WHERE Procesado = 1 AND NroExpensa IS NOT NULL;
-
-        DECLARE @ExpensaActual INT;
-        DECLARE cursorExpensas CURSOR FOR SELECT NroExpensa FROM @ExpensasAfectadas;
-        OPEN cursorExpensas;
-        FETCH NEXT FROM cursorExpensas INTO @ExpensaActual;
-
-        WHILE @@FETCH_STATUS = 0
-        BEGIN
-            PRINT 'Actualizando saldos e intereses para expensa: ' + CAST(@ExpensaActual AS VARCHAR(10));
-            
-            -- Actualizar saldos anteriores Y calcular intereses
-            EXEC expensas.Sp_ActualizarSaldosAnteriores 
-                @NroExpensa = @ExpensaActual,
-                @CalcularIntereses = 1;
-            
-            FETCH NEXT FROM cursorExpensas INTO @ExpensaActual;
-        END
-
-        CLOSE cursorExpensas;
-        DEALLOCATE cursorExpensas;
+        PRINT 'Saldos anteriores e intereses actualizados para todas las expensas afectadas';
 
         DROP TABLE #PagosTemp;
         
@@ -1803,17 +1817,6 @@ BEGIN
             @Mensaje = @MensajeLog,
             @RutaArchivo = @rutaArchivo;
 
-        -- Log de errores si los hay
-        IF @ErroresProcesamiento > 0
-        BEGIN
-            SET @MensajeLog = 'Se produjeron ' + CAST(@ErroresProcesamiento AS VARCHAR(10)) + ' errores durante el procesamiento de pagos';
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'ERROR',
-                @Mensaje = @MensajeLog,
-                @RutaArchivo = @rutaArchivo;
-        END
-
         -- Log de pagos omitidos si los hay
         IF @PagosOmitidos > 0
         BEGIN
@@ -1829,6 +1832,9 @@ BEGIN
 
     END TRY
     BEGIN CATCH
+        IF @@TRANCOUNT > 0 
+            ROLLBACK TRANSACTION;
+            
         DECLARE @MensajeError NVARCHAR(4000) = 'Error durante la importación: ' + ERROR_MESSAGE();
         
         -- Log de error general
@@ -1845,4 +1851,3 @@ BEGIN
     END CATCH;
 END;
 GO
-
