@@ -8,7 +8,7 @@
 -- Mendoza, Diego Emanuel			           --
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
--- PiÒero, AgustÌn                             --
+-- Pi√±ero, Agust√≠n                             --
 -- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
@@ -66,7 +66,7 @@ BEGIN
 
 BEGIN TRY
 
-    SET @MensajeAuxiliar = 'Iniciando importaciÛn desde CSV.';
+    SET @MensajeAuxiliar = 'Iniciando importaci√≥n desde CSV.';
     EXEC report.Sp_LogReporte @SP='consorcio.importarPersonas',@Tipo='INFO',@Mensaje=@MensajeAuxiliar,@RutaArchivo=@rutaArchPersonas;
 
     -- 1. Cargar Personas (CSV) a #tempPersonas
@@ -112,7 +112,7 @@ BEGIN TRY
     SET @UFCargadas = @@ROWCOUNT;
 
     -- 3. Limpiar duplicados de #tempPersonas
-    -- (Esto no cambia. La lÛgica de NULLIF es excelente)
+    -- (Esto no cambia. La l√≥gica de NULLIF es excelente)
     IF OBJECT_ID('tempdb..#personasSinDuplicados') IS NOT NULL DROP TABLE #personasSinDuplicados;
 
     SELECT
@@ -132,9 +132,9 @@ BEGIN TRY
 
 
     -- 4. INSERTAR en la tabla final consorcio.Persona
-    -- ------ INICIO DE LA CORRECCI”N ------
+    -- ------ INICIO DE LA CORRECCI√ìN ------
     INSERT INTO consorcio.Persona (
-        DNI, Nombre, Apellido, idUF, -- Columnas est·ndar
+        DNI, Nombre, Apellido, idUF, -- Columnas est√°ndar
         Email, Telefono, CVU,         -- Columnas ENCRIPTADAS
         Email_Hash, CVU_Hash          -- Columnas HASH
     )
@@ -145,12 +145,12 @@ BEGIN TRY
         uf.IdUF,
 
         -- Insertamos los datos ENCRIPTADOS
-        -- (La funciÛn NULLIF anterior ya se encargÛ de los vacÌos)
+        -- (La funci√≥n NULLIF anterior ya se encarg√≥ de los vac√≠os)
         seguridad.EncryptData(p.Email),
         seguridad.EncryptData(p.Telefono),
         seguridad.EncryptData(p.CVU_CBU),
 
-        -- Insertamos los HASHES para b˙squeda
+        -- Insertamos los HASHES para b√∫squeda
         HASHBYTES('SHA2_256', p.Email),
         HASHBYTES('SHA2_256', p.CVU_CBU)
         
@@ -163,10 +163,10 @@ BEGIN TRY
         AND uf.Piso = t.Piso
         AND uf.Depto = t.Departamento
     WHERE NOT EXISTS (
-        -- Esta validaciÛn sigue siendo correcta, DNI es texto
+        -- Esta validaci√≥n sigue siendo correcta, DNI es texto
         SELECT 1 FROM consorcio.Persona per WHERE per.DNI = p.DNI
     );
-    -- ------ FIN DE LA CORRECCI”N ------
+    -- ------ FIN DE LA CORRECCI√ìN ------
 
     SET @PersonasInsertadas = @@ROWCOUNT;
 
@@ -175,7 +175,7 @@ BEGIN TRY
     DROP TABLE #personasSinDuplicados;
 
     SET @MensajeResumen =
-        'ImportaciÛn completa. Personas cargadas=' + CAST(@PersonasCargadas AS VARCHAR(10)) +
+        'Importaci√≥n completa. Personas cargadas=' + CAST(@PersonasCargadas AS VARCHAR(10)) +
         ', UF cargadas=' + CAST(@UFCargadas AS VARCHAR(10)) +
         ', Duplicados eliminados=' + CAST(@DuplicadosEliminados AS VARCHAR(10)) +
         ', Personas insertadas=' + CAST(@PersonasInsertadas AS VARCHAR(10));
@@ -217,7 +217,7 @@ BEGIN
 
     BEGIN TRY
         -- Log inicio
-        SET @MensajeAuxiliar = 'Iniciando importaciÛn de ocupaciones desde archivos CSV: ' + @rutaarchpersonas + ' y ' + @rutaarchuf;
+        SET @MensajeAuxiliar = 'Iniciando importaci√≥n de ocupaciones desde archivos CSV: ' + @rutaarchpersonas + ' y ' + @rutaarchuf;
         EXEC report.Sp_LogReporte
             @SP = 'consorcio.importarocupaciones',
             @Tipo = 'INFO',
@@ -244,12 +244,12 @@ BEGIN
         SET @sql = N'BULK INSERT #tempuf FROM ''' + @rutaarchuf + ''' WITH (FIRSTROW = 2, FIELDTERMINATOR = ''|'', ROWTERMINATOR = ''\n'', CODEPAGE = ''65001'')';
         EXEC sp_executesql @sql;
 
-        SET @MensajeAuxiliar = 'Datos CSV cargados en tablas temporales. Procesando inserciÛn...';
+        SET @MensajeAuxiliar = 'Datos CSV cargados en tablas temporales. Procesando inserci√≥n...';
         EXEC report.Sp_LogReporte @SP='consorcio.importarocupaciones',@Tipo='INFO',@Mensaje=@MensajeAuxiliar;
 
         -- -----------------------------------------------------------------
-        -- INICIO DE LA CORRECCI”N
-        -- Se reemplaza el loop (WHILE) por una sola inserciÛn (set-based)
+        -- INICIO DE LA CORRECCI√ìN
+        -- Se reemplaza el loop (WHILE) por una sola inserci√≥n (set-based)
         -- Se busca la IdUF real en lugar de usar u.nrouf
         -- -----------------------------------------------------------------
 
@@ -288,11 +288,11 @@ BEGIN
 
         SET @RegistrosInsertados = @@ROWCOUNT;
         -- -----------------------------------------------------------------
-        -- FIN DE LA CORRECCI”N
+        -- FIN DE LA CORRECCI√ìN
         -- -----------------------------------------------------------------
 
         -- Log resumen final
-        SET @MensajeResumen = 'ImportaciÛn de ocupaciones completada. ' +
+        SET @MensajeResumen = 'Importaci√≥n de ocupaciones completada. ' +
                       'Ocupaciones insertadas: ' + CAST(@RegistrosInsertados AS VARCHAR(10));
 
         EXEC report.Sp_LogReporte
@@ -307,7 +307,7 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        SET @MensajeError = 'Error durante la importaciÛn: ' + ERROR_MESSAGE();
+        SET @MensajeError = 'Error durante la importaci√≥n: ' + ERROR_MESSAGE();
         
         EXEC report.Sp_LogReporte
             @SP = 'consorcio.importarocupaciones',
@@ -331,11 +331,11 @@ GO
 --			    TABLA DE PAGOS         	       --
 --											   --
 -------------------------------------------------
-/*B˙squeda de IdUF: El script original busca la IdUF en consorcio.Persona uniendo por CVU. Ahora debemos comparar el hash del CVU del CSV con la columna CVU_Hash de la tabla Persona.
-InserciÛn en Pago.Pago: El script inserta el CVU como texto plano en la columna CuentaOrigen. 
+/*B√∫squeda de IdUF: El script original busca la IdUF en consorcio.Persona uniendo por CVU. Ahora debemos comparar el hash del CVU del CSV con la columna CVU_Hash de la tabla Persona.
+Inserci√≥n en Pago.Pago: El script inserta el CVU como texto plano en la columna CuentaOrigen. 
 Ahora debemos insertar 
-    la versiÛn encriptada (seguridad.EncryptData)  
-    la versiÛn hasheada (HASHBYTES) en las columnas 
+    la versi√≥n encriptada (seguridad.EncryptData)  
+    la versi√≥n hasheada (HASHBYTES) en las columnas 
         CuentaOrigen 
         CuentaOrigen_Hash.*/
 USE Com5600G07;
@@ -361,7 +361,7 @@ BEGIN
         CREATE TABLE #PagosTemp (
             IdPago INT,
             Fecha NVARCHAR(50),
-            CVU_CBU NVARCHAR(50) NULL, -- CVU como texto desde el CSV
+            CVU_CBU NVARCHAR(50) NULL,
             Valor NVARCHAR(100)
         );
 
@@ -393,10 +393,10 @@ BEGIN
             ValorLimpio NVARCHAR(100) NULL,
             NroExpensa INT NULL,
             Procesado BIT DEFAULT 0,
-            -- ==== INICIO CORRECCI”N 1: AÒadir columna para CVU limpio ====
-            CVU_Limpio CHAR(22) NULL;
+            CVU_Limpio VARCHAR(22) NULL, -- CAMBIADO A VARCHAR PARA HASHBYTES
+            EsValido BIT DEFAULT 0;
 
-        -- Limpiar y convertir valores (AHORA INCLUYE EL CVU)
+        -- Limpieza y conversi√≥n
         UPDATE #PagosTemp 
         SET 
             ValorLimpio = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Valor, 
@@ -405,10 +405,8 @@ BEGIN
                 '''', ''),   
                 '.', ''),   
                 ',', '.'),
-            -- Limpiamos el CVU de cualquier espacio extra del CSV
-            CVU_Limpio = LTRIM(RTRIM(CVU_CBU))
+            CVU_Limpio = LTRIM(RTRIM(CONVERT(VARCHAR(22), CVU_CBU))) -- CONVERTIR A VARCHAR
         WHERE Valor IS NOT NULL OR CVU_CBU IS NOT NULL;
-        -- ==== FIN CORRECCI”N 1 ====
 
         PRINT 'Valores limpiados (incl. CVU): ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
@@ -421,239 +419,196 @@ BEGIN
         SET FechaProcesada = TRY_CONVERT(DATE, Fecha, 103)
         WHERE Fecha IS NOT NULL;
 
-        -- ==== INICIO CORRECCI”N 2: Usar el CVU limpio para el HASH ====
+        -- **DEBUG: Ver qu√© datos tenemos**
+        PRINT '=== VERIFICANDO DATOS ===';
+        
+        -- Ver cu√°ntos tienen CVU limpio
+        SELECT 
+            'CVU Status' as Tipo,
+            COUNT(*) as Total,
+            SUM(CASE WHEN CVU_Limpio IS NOT NULL THEN 1 ELSE 0 END) as ConCVULimpio,
+            SUM(CASE WHEN CVU_Limpio IS NULL THEN 1 ELSE 0 END) as SinCVULimpio
+        FROM #PagosTemp;
+
+        -- Ver algunos ejemplos de CVUs
+        SELECT TOP 5 ID, CVU_CBU, CVU_Limpio
+        FROM #PagosTemp 
+        WHERE CVU_Limpio IS NOT NULL;
+
+        -- Asignar IdUF usando HASH (CON CONVERT)
         PRINT 'Asignando Unidades Funcionales por HASH de CVU...';
         UPDATE #PagosTemp
         SET IdUF = p.idUF
         FROM #PagosTemp pt
         INNER JOIN consorcio.Persona p 
-            -- Comparamos el HASH del CVU *limpio* con el HASH de la tabla Persona
             ON p.CVU_Hash = HASHBYTES('SHA2_256', pt.CVU_Limpio)
         WHERE pt.IdUF IS NULL
           AND pt.CVU_Limpio IS NOT NULL;
-        -- ==== FIN CORRECCI”N 2 ====
 
         PRINT 'Unidades funcionales asignadas: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
-        -- ... (La lÛgica para buscar NroExpensa no cambia) ...
-        UPDATE #PagosTemp
-        SET NroExpensa = (
-            SELECT TOP 1 pr.NroExpensa
-            FROM expensas.Prorrateo pr
-            INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
-            WHERE pr.IdUF = pt.IdUF
-                AND pr.Deuda > 0 
-                AND e.fechaGeneracion <= pt.FechaProcesada 
-            ORDER BY e.fechaGeneracion ASC 
-        )
-        FROM #PagosTemp pt
-        WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
-        PRINT 'N˙meros de expensa asignados por deuda pendiente: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+        -- **DEBUG: Ver si se asignaron IdUF**
+        SELECT 
+            'IdUF Status' as Tipo,
+            COUNT(*) as Total,
+            SUM(CASE WHEN IdUF IS NOT NULL THEN 1 ELSE 0 END) as ConIdUF,
+            SUM(CASE WHEN IdUF IS NULL THEN 1 ELSE 0 END) as SinIdUF
+        FROM #PagosTemp;
 
-        UPDATE #PagosTemp
-        SET NroExpensa = (
-            SELECT TOP 1 pr.NroExpensa
-            FROM expensas.Prorrateo pr
-            INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
-            WHERE pr.IdUF = pt.IdUF
-                AND pt.FechaProcesada BETWEEN e.fechaGeneracion AND 
-                    COALESCE(e.fechaVto2, DATEADD(DAY, 30, e.fechaGeneracion))
-            ORDER BY e.fechaGeneracion DESC
-        )
-        FROM #PagosTemp pt
-        WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
-        PRINT 'N˙meros de expensa asignados por fecha: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
-
-        -- ... (La lÛgica de marcar no procesados no cambia) ...
-        UPDATE #PagosTemp
-        SET Procesado = 0
-        WHERE NroExpensa IS NOT NULL AND IdUF IS NOT NULL
-            AND NOT EXISTS (
-                SELECT 1 FROM expensas.Prorrateo 
-                WHERE NroExpensa = #PagosTemp.NroExpensa 
-                AND IdUF = #PagosTemp.IdUF
-            );
-
-        -- Variables para recorrer la tabla temporal
-        DECLARE @id INT = 1, @maxId INT;
-        DECLARE 
-            @IdPago INT,
-            @Fecha DATE,
-            @Importe DECIMAL(12,2),
-            @CuentaOrigen CHAR(22), -- <-- Usamos CHAR(22) para el CVU limpio
-            @IdUF INT,
-            @NroExpensa INT,
-            @IdPagoInsertado INT;
-
-        SELECT @maxId = MAX(ID) FROM #PagosTemp;
-        PRINT 'Procesando ' + CAST(ISNULL(@maxId, 0) AS VARCHAR(10)) + ' registros';
-
-        WHILE @id <= @maxId
+        -- Si no se asignaron IdUF, mostrar por qu√©
+        IF NOT EXISTS (SELECT 1 FROM #PagosTemp WHERE IdUF IS NOT NULL)
         BEGIN
-            SELECT
-                @IdPago = IdPago,
-                @Fecha = FechaProcesada,
-                @Importe = Importe,
-                -- ==== INICIO CORRECCI”N 3: Usar el CVU limpio ====
-                @CuentaOrigen = CVU_Limpio, -- Leemos el CVU limpio
-                -- ==== FIN CORRECCI”N 3 ====
-                @IdUF = IdUF,
-                @NroExpensa = NroExpensa
-            FROM #PagosTemp WHERE ID = @id;
-
-            -- Verificar que existe el prorrateo Y el CVU no es nulo
-            IF @IdPago IS NOT NULL AND @Fecha IS NOT NULL AND @Importe IS NOT NULL 
-               AND @Importe > 0 AND @IdUF IS NOT NULL AND @NroExpensa IS NOT NULL
-               AND @CuentaOrigen IS NOT NULL -- VerificaciÛn agregada
-               AND EXISTS (SELECT 1 FROM expensas.Prorrateo 
-                           WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF)
-            BEGIN
-                BEGIN TRY
-                    BEGIN TRANSACTION;
-
-                    -- ... (La lÛgica de obtener valores de Prorrateo no cambia) ...
-                    DECLARE @DeudaActual DECIMAL(12,2);
-                    DECLARE @PagosActuales DECIMAL(12,2);
-                    DECLARE @TotalExpensa DECIMAL(12,2);
-                    DECLARE @SaldoAnterior DECIMAL(12,2);
-                    DECLARE @InteresMora DECIMAL(12,2);
-                    DECLARE @ExpensaOrdinaria DECIMAL(12,2);
-                    DECLARE @ExpensaExtraordinaria DECIMAL(12,2);
-
-                    SELECT 
-                        @PagosActuales = ISNULL(PagosRecibidos, 0),
-                        @TotalExpensa = ISNULL(Total, 0),
-                        @DeudaActual = ISNULL(Deuda, 0),
-                        @SaldoAnterior = ISNULL(SaldoAnterior, 0),
-                        @InteresMora = ISNULL(InteresMora, 0),
-                        @ExpensaOrdinaria = ISNULL(ExpensaOrdinaria, 0),
-                        @ExpensaExtraordinaria = ISNULL(ExpensaExtraordinaria, 0)
-                    FROM expensas.Prorrateo 
-                    WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
-
-                    -- Insertar el pago con ENCRIPTACI”N y HASH (usando la variable @CuentaOrigen limpia)
-                    INSERT INTO Pago.Pago (
-                        Fecha, Importe, IdUF, NroExpensa,
-                        CuentaOrigen,       -- Columna Encriptada
-                        CuentaOrigen_Hash   -- Columna Hash
-                    )
-                    VALUES (
-                        @Fecha, @Importe, @IdUF, @NroExpensa,
-                        seguridad.EncryptData(@CuentaOrigen), -- Encriptamos
-                        HASHBYTES('SHA2_256', @CuentaOrigen)  -- Hasheamos
-                    );
-
-                    SET @IdPagoInsertado = SCOPE_IDENTITY();
-                    SET @PagosProcesadosExitosos = @PagosProcesadosExitosos + 1;
-
-                    -- ... (La lÛgica de c·lculo y actualizaciÛn de Prorrateo no cambia) ...
-                    DECLARE @NuevosPagosRecibidos DECIMAL(12,2) = @PagosActuales + @Importe;
-                    DECLARE @TotalReal DECIMAL(12,2) = @ExpensaOrdinaria + @ExpensaExtraordinaria + 
-                                                       @SaldoAnterior + @InteresMora;
-                    IF @NuevosPagosRecibidos > @TotalReal
-                    BEGIN
-                        SET @NuevosPagosRecibidos = @TotalReal;
-                    END
-                    
-                    DECLARE @NuevaDeuda DECIMAL(12,2) = @TotalReal - @NuevosPagosRecibidos;
-                    IF @NuevaDeuda < 0
-                    BEGIN
-                        SET @NuevaDeuda = 0;
-                    END
-
-                    UPDATE expensas.Prorrateo 
-                    SET 
-                        PagosRecibidos = @NuevosPagosRecibidos,
-                        Deuda = @NuevaDeuda
-                    WHERE NroExpensa = @NroExpensa AND IdUF = @IdUF;
-
-                    UPDATE #PagosTemp SET Procesado = 1 WHERE ID = @id;
-
-                    PRINT 'Pago procesado - ID: ' + CAST(@IdPagoInsertado AS VARCHAR(10)) + 
-                          ' - Importe: $' + CAST(@Importe AS VARCHAR(20)) +
-                          ' - IdUF: ' + CAST(@IdUF AS VARCHAR(10)) +
-                          ' - Expensa: ' + CAST(@NroExpensa AS VARCHAR(10));
-
-                    COMMIT TRANSACTION;
-                END TRY
-                BEGIN CATCH
-                    IF @@TRANCOUNT > 0 
-                        ROLLBACK TRANSACTION;
-                    
-                    SET @ErroresProcesamiento = @ErroresProcesamiento + 1;
-                    
-                    PRINT 'Error al procesar el id de pago ' + ISNULL(CAST(@IdPago AS VARCHAR(10)), 'N/A') + ': ' + ERROR_MESSAGE();
-                    
-                    DECLARE @MensajeErrorDetalle NVARCHAR(1000);
-                    SET @MensajeErrorDetalle = 'Error procesando pago ID ' + ISNULL(CAST(@IdPago AS VARCHAR(10)), 'N/A') + 
-                                               ': ' + ERROR_MESSAGE();
-                    EXEC report.Sp_LogReporte
-                        @SP = 'Pago.sp_importarPagosDesdeCSV',
-                        @Tipo = 'ERROR',
-                        @Mensaje = @MensajeErrorDetalle,
-                        @RutaArchivo = @rutaArchivo;
-                END CATCH;
-            END
-            ELSE
-            BEGIN
-                SET @PagosOmitidos = @PagosOmitidos + 1;             
-            END
-
-            SET @id += 1;
-        END;
-
-        -- ... (La lÛgica de actualizar saldos posteriores no cambia) ...
-        PRINT 'Actualizando saldos anteriores despuÈs de procesar pagos...';
-        DECLARE @ExpensasAfectadas TABLE (NroExpensa INT);
-
-        INSERT INTO @ExpensasAfectadas (NroExpensa)
-        SELECT DISTINCT NroExpensa 
-        FROM #PagosTemp 
-        WHERE Procesado = 1 AND NroExpensa IS NOT NULL;
-
-        DECLARE @ExpensaActual INT;
-        DECLARE cursorExpensas CURSOR FOR SELECT NroExpensa FROM @ExpensasAfectadas;
-        OPEN cursorExpensas;
-        FETCH NEXT FROM cursorExpensas INTO @ExpensaActual;
-
-        WHILE @@FETCH_STATUS = 0
-        BEGIN
-            PRINT 'Actualizando saldos e intereses para expensa: ' + CAST(@ExpensaActual AS VARCHAR(10));
+            PRINT '=== PROBLEMA: No se asignaron IdUF ===';
             
-            EXEC expensas.Sp_ActualizarSaldosAnteriores 
-                @NroExpensa = @ExpensaActual,
-                @CalcularIntereses = 1;
+            -- Verificar si hay personas en la tabla
+            SELECT 'Personas en BD' as Tipo, COUNT(*) as TotalPersonas FROM consorcio.Persona;
             
-            FETCH NEXT FROM cursorExpensas INTO @ExpensaActual;
+            -- Verificar si los CVUs del CSV existen en Persona
+            SELECT 
+                'CVU Match Status' as Tipo,
+                COUNT(*) as TotalCVUs,
+                SUM(CASE WHEN EXISTS (
+                    SELECT 1 FROM consorcio.Persona p 
+                    WHERE p.CVU_Hash = HASHBYTES('SHA2_256', pt.CVU_Limpio)
+                ) THEN 1 ELSE 0 END) as CVUsEncontrados,
+                SUM(CASE WHEN NOT EXISTS (
+                    SELECT 1 FROM consorcio.Persona p 
+                    WHERE p.CVU_Hash = HASHBYTES('SHA2_256', pt.CVU_Limpio)
+                ) THEN 1 ELSE 0 END) as CVUsNoEncontrados
+            FROM #PagosTemp pt
+            WHERE pt.CVU_Limpio IS NOT NULL;
         END
 
-        CLOSE cursorExpensas;
-        DEALLOCATE cursorExpensas;
+        -- Solo continuar si hay registros v√°lidos
+        IF EXISTS (SELECT 1 FROM #PagosTemp WHERE IdUF IS NOT NULL)
+        BEGIN
+            -- Asignar NroExpensa
+            UPDATE #PagosTemp
+            SET NroExpensa = (
+                SELECT TOP 1 pr.NroExpensa
+                FROM expensas.Prorrateo pr
+                INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
+                WHERE pr.IdUF = pt.IdUF
+                    AND pr.Deuda > 0 
+                    AND e.fechaGeneracion <= pt.FechaProcesada 
+                ORDER BY e.fechaGeneracion ASC 
+            )
+            FROM #PagosTemp pt
+            WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
+            PRINT 'N√∫meros de expensa asignados por deuda pendiente: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
+            UPDATE #PagosTemp
+            SET NroExpensa = (
+                SELECT TOP 1 pr.NroExpensa
+                FROM expensas.Prorrateo pr
+                INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
+                WHERE pr.IdUF = pt.IdUF
+                    AND pt.FechaProcesada BETWEEN e.fechaGeneracion AND 
+                        COALESCE(e.fechaVto2, DATEADD(DAY, 30, e.fechaGeneracion))
+                ORDER BY e.fechaGeneracion DESC
+            )
+            FROM #PagosTemp pt
+            WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
+            PRINT 'N√∫meros de expensa asignados por fecha: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+
+            -- Marcar registros v√°lidos
+            UPDATE #PagosTemp
+            SET EsValido = 1
+            WHERE IdPago IS NOT NULL 
+                AND FechaProcesada IS NOT NULL 
+                AND Importe IS NOT NULL 
+                AND Importe > 0 
+                AND IdUF IS NOT NULL 
+                AND NroExpensa IS NOT NULL
+                AND CVU_Limpio IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM expensas.Prorrateo 
+                    WHERE NroExpensa = #PagosTemp.NroExpensa 
+                    AND IdUF = #PagosTemp.IdUF
+                );
+
+            -- **PROCESAR PAGOS EN CONJUNTO**
+            PRINT 'Procesando pagos v√°lidos...';
+
+            BEGIN TRANSACTION;
+
+            -- Insertar pagos v√°lidos (SOLO CON HASH)
+            INSERT INTO Pago.Pago (
+                Fecha, 
+                Importe, 
+                IdUF, 
+                NroExpensa,
+                CuentaOrigen_Hash
+            )
+            SELECT 
+                FechaProcesada,
+                Importe,
+                IdUF,
+                NroExpensa,
+                HASHBYTES('SHA2_256', CVU_Limpio)
+            FROM #PagosTemp
+            WHERE EsValido = 1;
+
+            SET @PagosProcesadosExitosos = @@ROWCOUNT;
+            PRINT 'Pagos insertados: ' + CAST(@PagosProcesadosExitosos AS VARCHAR(10));
+
+            -- **ACTUALIZAR PRORRATEOS EN CONJUNTO**
+            IF @PagosProcesadosExitosos > 0
+            BEGIN
+                PRINT 'Actualizando prorrateos...';
+
+                -- Crear tabla temporal con los pagos agrupados
+                IF OBJECT_ID('tempdb..#PagosAgrupados') IS NOT NULL DROP TABLE #PagosAgrupados;
+                SELECT 
+                    pt.NroExpensa,
+                    pt.IdUF,
+                    SUM(pt.Importe) as TotalPagado
+                INTO #PagosAgrupados
+                FROM #PagosTemp pt
+                WHERE pt.EsValido = 1
+                GROUP BY pt.NroExpensa, pt.IdUF;
+
+                -- Actualizar prorrateos
+                UPDATE pr
+                SET 
+                    PagosRecibidos = ISNULL(pr.PagosRecibidos, 0) + pa.TotalPagado,
+                    Deuda = CASE 
+                        WHEN (pr.Total - (ISNULL(pr.PagosRecibidos, 0) + pa.TotalPagado)) < 0 THEN 0
+                        ELSE pr.Total - (ISNULL(pr.PagosRecibidos, 0) + pa.TotalPagado)
+                    END
+                FROM expensas.Prorrateo pr
+                INNER JOIN #PagosAgrupados pa ON pr.NroExpensa = pa.NroExpensa AND pr.IdUF = pa.IdUF;
+
+                PRINT 'Prorrateos actualizados: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+            END
+
+            COMMIT TRANSACTION;
+        END
+        ELSE
+        BEGIN
+            PRINT '=== NO SE PROCESARON PAGOS: No hay unidades funcionales asignadas ===';
+        END
+
+        -- Calcular estad√≠sticas finales
+        SELECT @PagosOmitidos = COUNT(*)
+        FROM #PagosTemp
+        WHERE EsValido = 0;
+
+        -- Limpiar tablas temporales
+        IF OBJECT_ID('tempdb..#PagosAgrupados') IS NOT NULL DROP TABLE #PagosAgrupados;
         DROP TABLE #PagosTemp;
-        
-        -- ... (La lÛgica de logs finales no cambia) ...
-        SET @MensajeLog = 'ImportaciÛn de pagos completada. ' +
+
+        -- Logs finales
+        SET @MensajeLog = 'Importaci√≥n de pagos completada. ' +
             'Total CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10)) + ', ' +
             'Procesados exitosos: ' + CAST(@PagosProcesadosExitosos AS VARCHAR(10)) + ', ' +
-            'Pagos omitidos: ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ', ' +
-            'Errores procesamiento: ' + CAST(@ErroresProcesamiento AS VARCHAR(10));
+            'Pagos omitidos: ' + CAST(@PagosOmitidos AS VARCHAR(10));
         
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeLog,
-            @RutaArchivo = @rutaArchivo;
-
-        IF @ErroresProcesamiento > 0
-        BEGIN
-            SET @MensajeLog = 'Se produjeron ' + CAST(@ErroresProcesamiento AS VARCHAR(10)) + ' errores durante el procesamiento de pagos';
-            EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'ERROR', @Mensaje = @MensajeLog, @RutaArchivo = @rutaArchivo;
-        END
+        EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'INFO', @Mensaje = @MensajeLog, @RutaArchivo = @rutaArchivo;
 
         IF @PagosOmitidos > 0
         BEGIN
-            SET @MensajeLog = 'Se omitieron ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ' pagos por datos incompletos o inv·lidos';
+            SET @MensajeLog = 'Se omitieron ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ' pagos por datos incompletos o inv√°lidos';
             EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'WARN', @Mensaje = @MensajeLog, @RutaArchivo = @rutaArchivo;
         END
 
@@ -661,14 +616,15 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        DECLARE @MensajeError NVARCHAR(4000) = 'Error durante la importaciÛn: ' + ERROR_MESSAGE();
-        
+        IF @@TRANCOUNT > 0 
+            ROLLBACK TRANSACTION;
+            
+        DECLARE @MensajeError NVARCHAR(4000) = 'Error durante la importaci√≥n: ' + ERROR_MESSAGE();
         EXEC report.Sp_LogReporte @SP = 'Pago.sp_importarPagosDesdeCSV', @Tipo = 'ERROR', @Mensaje = @MensajeError, @RutaArchivo = @rutaArchivo;
-        
         PRINT @MensajeError;
         
-        IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL 
-            DROP TABLE #PagosTemp;
+        IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL DROP TABLE #PagosTemp;
+        IF OBJECT_ID('tempdb..#PagosAgrupados') IS NOT NULL DROP TABLE #PagosAgrupados;
     END CATCH;
 END;
-GO
+Go
