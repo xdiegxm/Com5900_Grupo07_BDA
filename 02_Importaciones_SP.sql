@@ -1559,22 +1559,16 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Variables para logs
-    DECLARE @PagosCargadosCSV INT = 0;
-    DECLARE @PagosProcesadosExitosos INT = 0;
-    DECLARE @PagosOmitidos INT = 0;
-    DECLARE @ErroresProcesamiento INT = 0;
-    DECLARE @MensajeLog NVARCHAR(1000);
-
     BEGIN TRY
         IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL
             DROP TABLE #PagosTemp;
 
+        -- Estructura que coincide con el archivo CSV
         CREATE TABLE #PagosTemp (
-            IdPago INT,
-            Fecha NVARCHAR(50),
+            IdPagoExt VARCHAR(50),
+            FechaStr NVARCHAR(50),
             CVU_CBU NVARCHAR(50) NULL,
-            Valor NVARCHAR(100)
+            ValorStr NVARCHAR(100)
         );
 
         DECLARE @sql NVARCHAR(MAX);
@@ -1591,48 +1585,29 @@ BEGIN
         
         EXEC sp_executesql @sql;
 
-        SET @PagosCargadosCSV = @@ROWCOUNT;
-        PRINT 'Pagos cargados desde el CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10));
-
-        -- Log de carga desde CSV
-        SET @MensajeLog = 'Pagos cargados desde CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10)) + ' registros';
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeLog,
-            @RutaArchivo = @rutaArchivo;
+        PRINT 'Pagos cargados desde el CSV: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
         ALTER TABLE #PagosTemp 
         ADD ID INT IDENTITY(1,1),
             IdUF INT NULL,
             Importe DECIMAL(12,2) NULL,
             FechaProcesada DATE NULL,
-            ValorLimpio NVARCHAR(100) NULL,
-            NroExpensa INT NULL,
-            Procesado BIT DEFAULT 0;
+            NroExpensa INT NULL;
 
-
-        -- Limpiar y convertir valores
+        -- Conversión de fecha (formato d/m/aaaa)
         UPDATE #PagosTemp 
-        SET ValorLimpio = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Valor, 
+        SET FechaProcesada = TRY_CONVERT(DATE, FechaStr, 103)
+        WHERE FechaStr IS NOT NULL;
+
+        -- Conversión de valores con formato $
+        UPDATE #PagosTemp 
+        SET Importe = TRY_CAST(
+            REPLACE(REPLACE(REPLACE(ValorStr, 
                 '$', ''),        
-                ' ', ''),        
-                '''', ''),       
                 '.', ''),        
-                ',', '.')
-        WHERE Valor IS NOT NULL AND Valor != '';
-
-        PRINT 'Valores limpiados: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
-
-        UPDATE #PagosTemp 
-        SET Importe = TRY_CAST(ValorLimpio AS DECIMAL(12,2))
-        WHERE ValorLimpio IS NOT NULL AND ValorLimpio != '';
-
-        PRINT 'Importes convertidos: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
-
-        UPDATE #PagosTemp 
-        SET FechaProcesada = TRY_CONVERT(DATE, Fecha, 103)
-        WHERE Fecha IS NOT NULL;
+                ',', '.')        
+            AS DECIMAL(12,2))
+        WHERE ValorStr IS NOT NULL;
 
         -- Asignar IdUF basado en CVU_CBU
         UPDATE #PagosTemp
@@ -1643,77 +1618,85 @@ BEGIN
 
         PRINT 'Unidades funcionales asignadas: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
-        -- Buscar expensas pendientes de pago para la UF
-        UPDATE #PagosTemp
-        SET NroExpensa = (
-            SELECT TOP 1 pr.NroExpensa
-            FROM expensas.Prorrateo pr
-            INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
-            WHERE pr.IdUF = pt.IdUF
-                AND pr.Deuda > 0  -- Solo expensas con deuda pendiente
-                AND e.fechaGeneracion <= pt.FechaProcesada  -- Expensas generadas antes del pago
-            ORDER BY e.fechaGeneracion ASC  -- Pagar la más antigua primero
-        )
+        -- Asignar expensas por mes del pago
+        UPDATE pt
+        SET NroExpensa = e.nroExpensa
         FROM #PagosTemp pt
-        WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
+        INNER JOIN expensas.Expensa e ON YEAR(e.fechaGeneracion) = YEAR(pt.FechaProcesada)
+                                      AND MONTH(e.fechaGeneracion) = MONTH(pt.FechaProcesada)
+        INNER JOIN expensas.Prorrateo pr ON e.nroExpensa = pr.NroExpensa AND pr.IdUF = pt.IdUF
+        WHERE pt.NroExpensa IS NULL 
+            AND pt.IdUF IS NOT NULL 
+            AND pt.FechaProcesada IS NOT NULL;
 
-        PRINT 'Números de expensa asignados por deuda pendiente: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
+        PRINT 'Números de expensa asignados por mes: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
-        -- Si no se encontró por deuda, buscar por fecha
-        UPDATE #PagosTemp
-        SET NroExpensa = (
-            SELECT TOP 1 pr.NroExpensa
-            FROM expensas.Prorrateo pr
-            INNER JOIN expensas.Expensa e ON pr.NroExpensa = e.nroExpensa
-            WHERE pr.IdUF = pt.IdUF
-                AND pt.FechaProcesada BETWEEN e.fechaGeneracion AND 
-                    COALESCE(e.fechaVto2, DATEADD(DAY, 30, e.fechaGeneracion))
-            ORDER BY e.fechaGeneracion DESC
-        )
+        -- **DEBUG: Ver qué está pasando**
+        PRINT '=== DEBUG INFORMACIÓN ===';
+        
+        -- Verificar cuántos registros tienen todos los datos necesarios
+        SELECT 
+            'Estadísticas' as Tipo,
+            COUNT(*) as TotalRegistros,
+            SUM(CASE WHEN FechaProcesada IS NOT NULL THEN 1 ELSE 0 END) as ConFecha,
+            SUM(CASE WHEN Importe IS NOT NULL AND Importe > 0 THEN 1 ELSE 0 END) as ConImporteValido,
+            SUM(CASE WHEN IdUF IS NOT NULL THEN 1 ELSE 0 END) as ConIdUF,
+            SUM(CASE WHEN NroExpensa IS NOT NULL THEN 1 ELSE 0 END) as ConNroExpensa,
+            SUM(CASE WHEN FechaProcesada IS NOT NULL 
+                      AND Importe IS NOT NULL AND Importe > 0 
+                      AND IdUF IS NOT NULL 
+                      AND NroExpensa IS NOT NULL THEN 1 ELSE 0 END) as RegistrosCompletos
+        FROM #PagosTemp;
+
+        -- Verificar si ya existen pagos en la base de datos para estos registros
+        SELECT 
+            'Duplicados en BD' as Tipo,
+            COUNT(*) as DuplicadosExistentes
         FROM #PagosTemp pt
-        WHERE pt.NroExpensa IS NULL AND pt.IdUF IS NOT NULL;
+        WHERE EXISTS (
+            SELECT 1 
+            FROM Pago.Pago p
+            WHERE p.Fecha = pt.FechaProcesada
+                AND p.Importe = pt.Importe
+                AND p.CuentaOrigen = pt.CVU_CBU
+                AND p.IdUF = pt.IdUF
+        );
 
-        PRINT 'Números de expensa asignados por fecha: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
-
-        -- Marcar como no procesados los registros sin prorrateo existente
-        UPDATE #PagosTemp
-        SET Procesado = 0
-        WHERE NroExpensa IS NOT NULL AND IdUF IS NOT NULL
-            AND NOT EXISTS (
-                SELECT 1 FROM expensas.Prorrateo 
-                WHERE NroExpensa = #PagosTemp.NroExpensa 
-                AND IdUF = #PagosTemp.IdUF
-            );
-
-        -- Procesar pagos válidos en una sola operación
-        PRINT 'Procesando pagos válidos...';
-
+        -- **INSERT CON VERIFICACIÓN DE DUPLICADOS**
+        PRINT '=== INSERTANDO PAGOS ===';
+        
         BEGIN TRANSACTION;
 
-        -- Insertar pagos válidos
+        -- Insertar SOLO si no existe ya en Pago.Pago
         INSERT INTO Pago.Pago (Fecha, Importe, CuentaOrigen, IdUF, NroExpensa)
         SELECT 
-            FechaProcesada,
-            Importe,
-            CVU_CBU,
-            IdUF,
-            NroExpensa
-        FROM #PagosTemp
-        WHERE IdPago IS NOT NULL 
-            AND FechaProcesada IS NOT NULL 
-            AND Importe IS NOT NULL 
-            AND Importe > 0 
-            AND IdUF IS NOT NULL 
-            AND NroExpensa IS NOT NULL
-            AND EXISTS (
-                SELECT 1 FROM expensas.Prorrateo 
-                WHERE NroExpensa = #PagosTemp.NroExpensa 
-                AND IdUF = #PagosTemp.IdUF
+            pt.FechaProcesada,
+            pt.Importe,
+            pt.CVU_CBU,
+            pt.IdUF,
+            pt.NroExpensa
+        FROM #PagosTemp pt
+        WHERE pt.FechaProcesada IS NOT NULL 
+            AND pt.Importe IS NOT NULL 
+            AND pt.Importe > 0 
+            AND pt.IdUF IS NOT NULL 
+            AND pt.NroExpensa IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1 
+                FROM Pago.Pago p
+                WHERE p.Fecha = pt.FechaProcesada
+                    AND p.Importe = pt.Importe
+                    AND p.CuentaOrigen = pt.CVU_CBU
+                    AND p.IdUF = pt.IdUF
             );
 
-        SET @PagosProcesadosExitosos = @@ROWCOUNT;
+        DECLARE @PagosInsertados INT = @@ROWCOUNT;
+        PRINT 'Pagos insertados: ' + CAST(@PagosInsertados AS VARCHAR(10));
 
-        -- Actualizar prorrateos con los nuevos pagos
+        -- **ACTUALIZAR PRORRATEOS CON LOS PAGOS RECIBIDOS**
+        PRINT '=== ACTUALIZANDO PRORRATEOS ===';
+        
+        -- Calcular total de pagos por expensa y UF
         UPDATE pr
         SET 
             PagosRecibidos = ISNULL(pr.PagosRecibidos, 0) + pagos.TotalPagado,
@@ -1730,103 +1713,28 @@ BEGIN
             FROM Pago.Pago p
             INNER JOIN #PagosTemp pt ON p.Fecha = pt.FechaProcesada 
                 AND p.Importe = pt.Importe 
+                AND p.CuentaOrigen = pt.CVU_CBU
                 AND p.IdUF = pt.IdUF
-            WHERE pt.Procesado = 0  -- Solo los recién insertados
+                AND p.NroExpensa = pt.NroExpensa
+            WHERE pt.FechaProcesada IS NOT NULL 
+                AND pt.Importe IS NOT NULL 
+                AND pt.Importe > 0 
+                AND pt.IdUF IS NOT NULL 
+                AND pt.NroExpensa IS NOT NULL
             GROUP BY p.NroExpensa, p.IdUF
         ) pagos ON pr.NroExpensa = pagos.NroExpensa AND pr.IdUF = pagos.IdUF;
 
-        -- Marcar como procesados
-        UPDATE #PagosTemp
-        SET Procesado = 1
-        WHERE ID IN (
-            SELECT pt.ID
-            FROM #PagosTemp pt
-            INNER JOIN Pago.Pago p ON p.Fecha = pt.FechaProcesada 
-                AND p.Importe = pt.Importe 
-                AND p.IdUF = pt.IdUF
-            WHERE pt.Procesado = 0
-        );
+        PRINT 'Prorrateos actualizados con pagos recibidos: ' + CAST(@@ROWCOUNT AS VARCHAR(10));
 
         COMMIT TRANSACTION;
 
-        PRINT 'Pagos procesados exitosamente: ' + CAST(@PagosProcesadosExitosos AS VARCHAR(10));
-
-        -- Calcular pagos omitidos
-        SELECT @PagosOmitidos = COUNT(*)
-        FROM #PagosTemp
-        WHERE Procesado = 0;
-
-        -- Actualizar saldos anteriores después de procesar pagos usando enfoque basado en conjuntos
-        PRINT 'Actualizando saldos anteriores después de procesar pagos...';
-
-        -- Actualizar saldos anteriores e intereses para todas las expensas afectadas
-        UPDATE expensas.Prorrateo
-        SET 
-            SaldoAnterior = calc.SaldoAnterior,
-            InteresMora = calc.InteresMora,
-            Total = calc.NuevoTotal,
-            Deuda = calc.NuevaDeuda
-        FROM expensas.Prorrateo p
-        INNER JOIN (
-            SELECT 
-                p.NroExpensa,
-                p.IdUF,
-                ISNULL(prev.Deuda, 0) as SaldoAnterior,
-                CASE 
-                    WHEN ISNULL(prev.Deuda, 0) > 0 
-                    THEN ISNULL(prev.Deuda, 0) * 0.05 -- 5% de interés
-                    ELSE 0 
-                END as InteresMora,
-                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
-                    CASE 
-                        WHEN ISNULL(prev.Deuda, 0) > 0 
-                        THEN ISNULL(prev.Deuda, 0) * 0.05 
-                        ELSE 0 
-                    END as NuevoTotal,
-                p.ExpensaOrdinaria + p.ExpensaExtraordinaria + ISNULL(prev.Deuda, 0) + 
-                    CASE 
-                        WHEN ISNULL(prev.Deuda, 0) > 0 
-                        THEN ISNULL(prev.Deuda, 0) * 0.05 
-                        ELSE 0 
-                    END - ISNULL(p.PagosRecibidos, 0) as NuevaDeuda
-            FROM expensas.Prorrateo p
-            LEFT JOIN expensas.Prorrateo prev ON prev.IdUF = p.IdUF 
-                AND prev.NroExpensa = (
-                    SELECT MAX(NroExpensa) 
-                    FROM expensas.Expensa e2 
-                    WHERE e2.idConsorcio = (SELECT idConsorcio FROM expensas.Expensa WHERE nroExpensa = p.NroExpensa)
-                    AND e2.nroExpensa < p.NroExpensa
-                )
-            WHERE p.NroExpensa IN (SELECT DISTINCT NroExpensa FROM #PagosTemp WHERE Procesado = 1)
-        ) calc ON p.NroExpensa = calc.NroExpensa AND p.IdUF = calc.IdUF;
-
-        PRINT 'Saldos anteriores e intereses actualizados para todas las expensas afectadas';
+        -- Verificar el resultado final
+        SELECT 'Resumen final' as Tipo, 
+               @PagosInsertados as PagosInsertados,
+               (SELECT COUNT(*) FROM Pago.Pago) as TotalEnTablaPago,
+               (SELECT COUNT(*) FROM expensas.Prorrateo WHERE PagosRecibidos > 0) as ProrrateosConPagos;
 
         DROP TABLE #PagosTemp;
-        
-        -- Log de resumen final
-        SET @MensajeLog = 'Importación de pagos completada. ' +
-            'Total CSV: ' + CAST(@PagosCargadosCSV AS VARCHAR(10)) + ', ' +
-            'Procesados exitosos: ' + CAST(@PagosProcesadosExitosos AS VARCHAR(10)) + ', ' +
-            'Pagos omitidos: ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ', ' +
-            'Errores procesamiento: ' + CAST(@ErroresProcesamiento AS VARCHAR(10));
-        
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'INFO',
-            @Mensaje = @MensajeLog,
-            @RutaArchivo = @rutaArchivo;
-
-        -- Log de pagos omitidos si los hay
-        IF @PagosOmitidos > 0
-        BEGIN
-            SET @MensajeLog = 'Se omitieron ' + CAST(@PagosOmitidos AS VARCHAR(10)) + ' pagos por datos incompletos o inválidos';
-            EXEC report.Sp_LogReporte
-                @SP = 'Pago.sp_importarPagosDesdeCSV',
-                @Tipo = 'WARN',
-                @Mensaje = @MensajeLog,
-                @RutaArchivo = @rutaArchivo;
-        END
 
         PRINT 'Proceso completado.';
 
@@ -1835,16 +1743,7 @@ BEGIN
         IF @@TRANCOUNT > 0 
             ROLLBACK TRANSACTION;
             
-        DECLARE @MensajeError NVARCHAR(4000) = 'Error durante la importación: ' + ERROR_MESSAGE();
-        
-        -- Log de error general
-        EXEC report.Sp_LogReporte
-            @SP = 'Pago.sp_importarPagosDesdeCSV',
-            @Tipo = 'ERROR',
-            @Mensaje = @MensajeError,
-            @RutaArchivo = @rutaArchivo;
-        
-        PRINT @MensajeError;
+        PRINT 'ERROR: ' + ERROR_MESSAGE();
         
         IF OBJECT_ID('tempdb..#PagosTemp') IS NOT NULL 
             DROP TABLE #PagosTemp;
