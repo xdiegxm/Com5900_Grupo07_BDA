@@ -24,84 +24,6 @@ GO
 
 -------------------------------------------------
 --											   --
---		        BORRAR CONSORCIO               --
---											   --
--------------------------------------------------
-CREATE OR ALTER PROCEDURE consorcio.sp_BorrarConsorcio
-	@IdConsorcio INT
-AS
-BEGIN
-	SET NOCOUNT ON;
-	BEGIN TRY
-		BEGIN TRANSACTION;
-
-		IF EXISTS(SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
-		BEGIN
-
-			WHILE EXISTS(SELECT 1 FROM expensas.Expensa WHERE IdConsorcio = @IdConsorcio)
-			BEGIN
-				DECLARE @TmpNro INT;
-
-				SELECT TOP 1 @TmpNro = NroExpensa
-				FROM expensas.Expensa
-				WHERE IdConsorcio = @IdConsorcio;
-
-				PRINT('Borrando Expensa ' + CAST(@TmpNro AS VARCHAR));
-				EXEC expensas.sp_BorrarExpensa
-					@NroExpensa = @TmpNro;
-
-			END
-
-			WHILE EXISTS(SELECT 1 FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio)
-			BEGIN
-				DECLARE @TmpIdUF INT;
-
-				SELECT TOP 1 @TmpIdUF = IdUF
-				FROM consorcio.UnidadFuncional
-				WHERE IdConsorcio = @IdConsorcio;
-
-				PRINT('Borrando UF: ' + CAST(@TmpIdUF AS VARCHAR));
-				EXEC consorcio.sp_BorrarUnidadFuncional
-					@IdUF = @TmpIdUF;
-
-			END
-
-			DELETE FROM consorcio.Consorcio
-			WHERE IdConsorcio = @IdConsorcio;
-
-			PRINT('Consorcio ' + CAST(@IdConsorcio AS VARCHAR) + ' borrado exitosamente.');
-
-		END
-
-		ELSE
-		BEGIN
-			PRINT('NO existe el Consorcio');
-			RAISERROR('NO existe el Consorcio', 10, 1);
-
-		END
-
-		COMMIT TRANSACTION;
-	END TRY
-	BEGIN CATCH
-		IF ERROR_SEVERITY() = 10
-		BEGIN
-			PRINT('Error en SP consorcio.sp_BorrarConsorcio: ' + ERROR_MESSAGE());
-			IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-			RAISERROR('ERROR en el borrado de consorcio', 16, 1);
-
-		END
-
-		IF ERROR_SEVERITY() = 10
-		BEGIN
-			PRINT('Advertencia en SP consorcio.sp_BorrarConsorcio: ' + ERROR_MESSAGE());
-			COMMIT TRANSACTION;
-
-		END
-	END CATCH
-END
-GO
--------------------------------------------------
---											   --
 --		        BORRAR UNIDAD				   --
 --				  FUNCIONAL					   --
 --											   --			
@@ -380,7 +302,84 @@ BEGIN
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR CONSORCIO               --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE consorcio.sp_BorrarConsorcio
+	@IdConsorcio INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN TRANSACTION;
 
+		IF EXISTS(SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
+		BEGIN
+
+			WHILE EXISTS(SELECT 1 FROM expensas.Expensa WHERE IdConsorcio = @IdConsorcio)
+			BEGIN
+				DECLARE @TmpNro INT;
+
+				SELECT TOP 1 @TmpNro = NroExpensa
+				FROM expensas.Expensa
+				WHERE IdConsorcio = @IdConsorcio;
+
+				PRINT('Borrando Expensa ' + CAST(@TmpNro AS VARCHAR));
+				EXEC expensas.sp_BorrarExpensa
+					@NroExpensa = @TmpNro;
+
+			END
+
+			WHILE EXISTS(SELECT 1 FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio)
+			BEGIN
+				DECLARE @TmpIdUF INT;
+
+				SELECT TOP 1 @TmpIdUF = IdUF
+				FROM consorcio.UnidadFuncional
+				WHERE IdConsorcio = @IdConsorcio;
+
+				PRINT('Borrando UF: ' + CAST(@TmpIdUF AS VARCHAR));
+				EXEC consorcio.sp_BorrarUnidadFuncional
+					@IdUF = @TmpIdUF;
+
+			END
+
+			DELETE FROM consorcio.Consorcio
+			WHERE IdConsorcio = @IdConsorcio;
+
+			PRINT('Consorcio ' + CAST(@IdConsorcio AS VARCHAR) + ' borrado exitosamente.');
+
+		END
+
+		ELSE
+		BEGIN
+			PRINT('NO existe el Consorcio');
+			RAISERROR('NO existe el Consorcio', 10, 1);
+
+		END
+
+		COMMIT TRANSACTION;
+	END TRY
+	BEGIN CATCH
+		IF ERROR_SEVERITY() = 10
+		BEGIN
+			PRINT('Error en SP consorcio.sp_BorrarConsorcio: ' + ERROR_MESSAGE());
+			IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+			RAISERROR('ERROR en el borrado de consorcio', 16, 1);
+
+		END
+
+		IF ERROR_SEVERITY() = 10
+		BEGIN
+			PRINT('Advertencia en SP consorcio.sp_BorrarConsorcio: ' + ERROR_MESSAGE());
+			COMMIT TRANSACTION;
+
+		END
+	END CATCH
+END
+GO
 
 
 

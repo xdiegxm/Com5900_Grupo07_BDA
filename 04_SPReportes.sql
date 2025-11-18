@@ -111,12 +111,6 @@ BEGIN
 END
 GO
 
---PARA PROBARLO
-EXEC report.sp_ReporteFlujoCajaSemanal
-    @FechaInicio = '2025-01-01', 
-    @FechaFin = '2025-12-31', 
-    @IdConsorcio = 4; -- Poner num de consorcio para realizar el reporte
-
 
 -------------------------------------------------
 --											   --
@@ -186,12 +180,6 @@ BEGIN
         uf.IdUF; -- Ordenamos por ID para mantener el orden de los departamentos
 END
 GO
-
---PARA PROBARLO
-
-EXEC report.sp_ReporteRecaudacionMensual
-    @IdConsorcio = 4, 
-    @Anio = 2025;
 
 
 -------------------------------------------------
@@ -283,20 +271,13 @@ BEGIN
 END
 GO
 
--- Para probarlo
-
--- Como output normal
-EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 4, @Anio = 2025, @FormatoXML = 0;
-
--- Formato XML
-EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 4, @Anio = 2025, @FormatoXML = 1;
-
 
 -------------------------------------------------
 --											   --
 --		    TOP 5 INGRESOS Y GASTOS            --
 --                                             --
 -------------------------------------------------
+
 CREATE OR ALTER PROCEDURE report.sp_ReporteTopMeses
     @IdConsorcio INT,
     @Anio INT
@@ -358,10 +339,6 @@ BEGIN
         SUM(g.importe) DESC;
 END
 GO
-
---Probamos
-EXEC report.sp_ReporteTopMeses @IdConsorcio = 2, @Anio = 2025;
-
 
 -------------------------------------------------
 --											   --
@@ -464,15 +441,6 @@ BEGIN
     DROP TABLE #RankingMorosos;
 END
 
--- Para probarlo
-
--- Como output normal
-EXEC report.sp_ReporteTopMorosos @IdConsorcio = 5, @FormatoXML = 0;
-
-
--- Formato XML
-EXEC report.sp_ReporteTopMorosos @IdConsorcio = 2, @FormatoXML = 1;
-
 
 -------------------------------------------------
 --											   --
@@ -536,19 +504,6 @@ BEGIN
 END
 GO
 
---Probamos
-
--- Ver el historial completo
-EXEC report.sp_ReporteDiasEntrePagos @IdConsorcio = 4; 
-
--- ver solo un periodo especifico
-EXEC report.sp_ReporteDiasEntrePagos 
-    @IdConsorcio = 3, 
-    @FechaInicio = '2025-01-01', 
-    @FechaFin = '2025-12-31';
-
-
-select * from Pago.Pago p  order  by  p.Fecha desc
 -------------------------------------------------
 --											   --
 --		    REPORTES VIA MAIL (API)            --
@@ -572,7 +527,7 @@ BEGIN
     DECLARE @Object INT, @Status INT, @HRESULT INT;
     DECLARE @ResponseText VARCHAR(8000);
     DECLARE @UrlAPI VARCHAR(200) = 'https://api.brevo.com/v3/smtp/email';
-    DECLARE @ApiKey VARCHAR(200) = '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';
+    DECLARE @ApiKey VARCHAR(200) = 'PONER API KEY ACA';
                                 --Aca ponemos nuestra API key de brevo, en caso de necesitar levantarla nuevamente
                                 --esta backupeada en el archivo apikey.txt
                             --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
@@ -672,7 +627,7 @@ SET @HtmlBody =
     --en el payload esta cargado el mail con el que se creo la cuenta en brevo
      --no se puede enviar desde cualquier mail, la pagina solo reconoce el mail del usuario
     SET @JsonPayload = '{
-        "sender": { "name": "Sistema Consorcio", "email": "grupo07bda@gmail.com" }, 
+        "sender": { "name": "Sistema Consorcio", "email": "agus_1871@hotmail.com" }, 
         "to": [ { "email": "' + @EmailDestino + '", "name": "Estudio Juridico" } ],
         "subject": "Derivación a Legales: Morosos ' + @NombreConsorcio + '",
         "htmlContent": "' + @HtmlBody + '"
@@ -699,9 +654,3 @@ SET @HtmlBody =
 END
 GO
 
---Probamos
-
-EXEC report.sp_EnviarReportePorEmail 
-    @IdConsorcio = 5, 
-    @EmailDestino = 'diegoemanuelmendoza04@gmail.com'; --aca ponemos el mail al que queremos mandar el reporte (se puede usar cualquiera)
-                                             --simulando el contacto con el estudio juridico
