@@ -202,31 +202,41 @@ END
 GO
 -------------------------------------------------
 --											   --
---		        BORRAR GASTO                   --
---				  ORDINARIO				       --
+--		        BORRAR GASTO                   --			      
 --											   --
 -------------------------------------------------
-CREATE OR ALTER PROCEDURE gastos.sp_BorrarGastoOrdinario
-	@IdGO INT
+CREATE OR ALTER PROCEDURE gastos.sp_BorrarGasto
+	@IdGasto INT
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
 		BEGIN TRANSACTION;
 
-		IF EXISTS(SELECT 1 FROM gastos.Gasto_Ordinario WHERE idGasto = @IdGO)
-		
-		begin
-			DELETE FROM gastos.Gasto_Ordinario
-			WHERE idGasto = @IdGO;
+		IF EXISTS(SELECT 1 FROM gastos.Gasto WHERE idGasto = @IdGasto)
+		BEGIN
+			-- Borrar de la tabla específica (Ordinario o Extraordinario)
+			IF EXISTS(SELECT 1 FROM gastos.Gasto_Ordinario WHERE idGasto = @IdGasto)
+			BEGIN
+				DELETE FROM gastos.Gasto_Ordinario WHERE idGasto = @IdGasto;
+				PRINT('Gasto Ordinario eliminado de tabla específica.');
+			END
+			
+			IF EXISTS(SELECT 1 FROM gastos.Gasto_Extraordinario WHERE idGasto = @IdGasto)
+			BEGIN
+				DELETE FROM gastos.Gasto_Extraordinario WHERE idGasto = @IdGasto;
+				PRINT('Gasto Extraordinario eliminado de tabla específica.');
+			END
+
+			-- Borrar de la tabla principal
+			DELETE FROM gastos.Gasto WHERE idGasto = @IdGasto;
+			PRINT('Gasto ' + CAST(@IdGasto AS VARCHAR) + ' borrado completamente.');
 
 		END
-
 		ELSE
 		BEGIN
-			PRINT('No existe el Gasto Ordinario');
-			RAISERROR('No existe el Gasto Ordinario', 10, 1);
-
+			PRINT('No existe el Gasto con ID: ' + CAST(@IdGasto AS VARCHAR));
+			RAISERROR('No existe el Gasto', 10, 1);
 		END
 
 		COMMIT TRANSACTION;
@@ -235,20 +245,16 @@ BEGIN
 	BEGIN CATCH
 		IF ERROR_SEVERITY() > 10
 		BEGIN
-			PRINT('Error en SP gastos.sp_BorrarGastoOrdinario: ' + ERROR_MESSAGE());
+			PRINT('Error en SP gastos.sp_BorrarGastoCompleto: ' + ERROR_MESSAGE());
 			IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-			RAISERROR('ERROR en el borrado de Gasto Ordinario', 16, 1);
-
+			RAISERROR('ERROR en el borrado completo de Gasto', 16, 1);
 		END
 		IF ERROR_SEVERITY() = 10
 		BEGIN
-			PRINT('Advertencia en SP gastos.sp_BorrarGastoOrdinario: ' + ERROR_MESSAGE());
+			PRINT('Advertencia en SP gastos.sp_BorrarGastoCompleto: ' + ERROR_MESSAGE());
 			COMMIT TRANSACTION;
-
 		END
-
 	END CATCH
-
 END
 GO
 -------------------------------------------------
@@ -317,69 +323,156 @@ BEGIN
 
 		IF EXISTS(SELECT 1 FROM consorcio.Consorcio WHERE IdConsorcio = @IdConsorcio)
 		BEGIN
+			-- Eliminar gastos asociados al consorcio
+			DELETE FROM gastos.Gasto WHERE idConsorcio = @IdConsorcio;
 
-			WHILE EXISTS(SELECT 1 FROM expensas.Expensa WHERE IdConsorcio = @IdConsorcio)
-			BEGIN
-				DECLARE @TmpNro INT;
+			-- Eliminar expensas y sus dependencias
+			DELETE FROM expensas.Prorrateo 
+			WHERE NroExpensa IN (SELECT nroExpensa FROM expensas.Expensa WHERE idConsorcio = @IdConsorcio);
+			
+			DELETE FROM Pago.Pago 
+			WHERE NroExpensa IN (SELECT nroExpensa FROM expensas.Expensa WHERE idConsorcio = @IdConsorcio);
+			
+			DELETE FROM gastos.Gasto 
+			WHERE nroExpensa IN (SELECT nroExpensa FROM expensas.Expensa WHERE idConsorcio = @IdConsorcio);
+			
+			DELETE FROM expensas.Expensa WHERE idConsorcio = @IdConsorcio;
 
-				SELECT TOP 1 @TmpNro = NroExpensa
-				FROM expensas.Expensa
-				WHERE IdConsorcio = @IdConsorcio;
+			-- Eliminar unidades funcionales y sus dependencias
+			DELETE FROM consorcio.Baulera 
+			WHERE IdUF IN (SELECT IdUF FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio);
+			
+			DELETE FROM consorcio.Cochera 
+			WHERE IdUF IN (SELECT IdUF FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio);
+			
+			DELETE FROM consorcio.Ocupacion 
+			WHERE IdUF IN (SELECT IdUF FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio);
+			
+			-- Actualizar personas que referencian UFs que van a ser eliminadas
+			UPDATE consorcio.Persona 
+			SET idUF = NULL 
+			WHERE idUF IN (SELECT IdUF FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio);
+			
+			DELETE FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio;
 
-				PRINT('Borrando Expensa ' + CAST(@TmpNro AS VARCHAR));
-				EXEC expensas.sp_BorrarExpensa
-					@NroExpensa = @TmpNro;
-
-			END
-
-			WHILE EXISTS(SELECT 1 FROM consorcio.UnidadFuncional WHERE IdConsorcio = @IdConsorcio)
-			BEGIN
-				DECLARE @TmpIdUF INT;
-
-				SELECT TOP 1 @TmpIdUF = IdUF
-				FROM consorcio.UnidadFuncional
-				WHERE IdConsorcio = @IdConsorcio;
-
-				PRINT('Borrando UF: ' + CAST(@TmpIdUF AS VARCHAR));
-				EXEC consorcio.sp_BorrarUnidadFuncional
-					@IdUF = @TmpIdUF;
-
-			END
-
+			-- Finalmente eliminar el consorcio
 			DELETE FROM consorcio.Consorcio
 			WHERE IdConsorcio = @IdConsorcio;
 
 			PRINT('Consorcio ' + CAST(@IdConsorcio AS VARCHAR) + ' borrado exitosamente.');
 
 		END
-
 		ELSE
 		BEGIN
-			PRINT('NO existe el Consorcio');
-			RAISERROR('NO existe el Consorcio', 10, 1);
-
+			PRINT('No existe el Consorcio');
+			RAISERROR('No existe el Consorcio', 10, 1);
 		END
 
 		COMMIT TRANSACTION;
 	END TRY
 	BEGIN CATCH
-		IF ERROR_SEVERITY() = 10
+		IF ERROR_SEVERITY() > 10
 		BEGIN
 			PRINT('Error en SP consorcio.sp_BorrarConsorcio: ' + ERROR_MESSAGE());
 			IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 			RAISERROR('ERROR en el borrado de consorcio', 16, 1);
-
 		END
-
 		IF ERROR_SEVERITY() = 10
 		BEGIN
 			PRINT('Advertencia en SP consorcio.sp_BorrarConsorcio: ' + ERROR_MESSAGE());
 			COMMIT TRANSACTION;
+		END
+	END CATCH
+END
+GO
+-------------------------------------------------
+--											   --
+--		        BORRAR PRORRATEO               --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE expensas.sp_BorrarProrrateo
+    @IdProrrateo INT,
+    @IdUF INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN TRANSACTION;
 
+		IF EXISTS(SELECT 1 FROM expensas.Prorrateo WHERE IdProrrateo = @IdProrrateo AND IdUF = @IdUF)
+		BEGIN
+			DELETE FROM expensas.Prorrateo
+			WHERE IdProrrateo = @IdProrrateo AND IdUF = @IdUF;
+
+            PRINT('Prorrateo ' + CAST(@IdProrrateo AS VARCHAR) + ' para UF ' + CAST(@IdUF AS VARCHAR) + ' borrado exitosamente.');
+
+		END
+		ELSE
+		BEGIN
+			PRINT('No existe el Prorrateo especificado');
+			RAISERROR('No existe el Prorrateo', 10, 1);
+		END
+
+		COMMIT TRANSACTION;
+
+	END TRY
+	BEGIN CATCH
+		IF ERROR_SEVERITY() > 10
+		BEGIN
+			PRINT('Error en SP expensas.sp_BorrarProrrateo: ' + ERROR_MESSAGE());
+			IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+			RAISERROR('ERROR en el borrado de Prorrateo', 16, 1);
+		END
+		IF ERROR_SEVERITY() = 10
+		BEGIN
+			PRINT('Advertencia en SP expensas.sp_BorrarProrrateo: ' + ERROR_MESSAGE());
+			COMMIT TRANSACTION;
 		END
 	END CATCH
 END
 GO
 
+-------------------------------------------------
+--											   --
+--		        BORRAR OCUPACION               --
+--											   --
+-------------------------------------------------
+CREATE OR ALTER PROCEDURE consorcio.sp_BorrarOcupacion
+	@IdOcupacion INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN TRANSACTION;
 
+		IF EXISTS(SELECT 1 FROM consorcio.Ocupacion WHERE Id_Ocupacion = @IdOcupacion)
+		BEGIN
+			DELETE FROM consorcio.Ocupacion
+			WHERE Id_Ocupacion = @IdOcupacion;
 
+			PRINT('Ocupación ' + CAST(@IdOcupacion AS VARCHAR) + ' borrada exitosamente.');
+		END
+		ELSE
+		BEGIN
+			PRINT('No existe la Ocupación');
+			RAISERROR('No existe la Ocupación', 10, 1);
+		END
+
+		COMMIT TRANSACTION;
+
+	END TRY
+	BEGIN CATCH
+		IF ERROR_SEVERITY() > 10
+		BEGIN
+			PRINT('Error en SP consorcio.sp_BorrarOcupacion: ' + ERROR_MESSAGE());
+			IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+			RAISERROR('ERROR en el borrado de Ocupación', 16, 1);
+		END
+		IF ERROR_SEVERITY() = 10
+		BEGIN
+			PRINT('Advertencia en SP consorcio.sp_BorrarOcupacion: ' + ERROR_MESSAGE());
+			COMMIT TRANSACTION;
+		END
+	END CATCH
+END
+GO

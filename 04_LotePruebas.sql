@@ -95,6 +95,7 @@ EXEC gastos.Sp_CargarGastosDesdeArchivo
 EXEC Pago.sp_importarPagosDesdeCSV 
     @rutaArchivo = 'C:\Archivos_para_el_TP\pagos_consorcios.csv'
 
+    select * from consorcio.Persona
 
 ---------------------------------REPORTES-----------------------------------
 

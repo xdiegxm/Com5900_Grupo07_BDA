@@ -1,12 +1,183 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\",
-  "Documents": [],
+  "WorkspaceRootPath": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_SPParaModificaciones.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:01_SPParaModificaciones.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_SPParaBorrado.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:01_SPParaBorrado.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_AgregadoSP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:01_AgregadoSP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\03_SPReportes.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:03_SPReportes.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\00_EliminacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:00_EliminacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\02_Importaciones_SP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:02_Importaciones_SP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\06_PoliticaDeRespaldo.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:06_PoliticaDeRespaldo.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\00_CreacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:00_CreacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Com5900_Grupo07_BDA\\04_LotePruebas.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:04_LotePruebas.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\AppData\\Local\\Temp\\085d1e12-8f57-494a-a27e-c8b12ecaa508_Trabajo_Practico_BDA_1ero_2025.zip.508\\BBDDA_Grupo_12-main\\Com5600_G12\\01_PruebasSPABM.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d114938f-591c-46cf-a785-500a82d97410}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "06_PoliticaDeRespaldo.sql - master (PC\\Admin (77))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\06_PoliticaDeRespaldo.sql",
+              "RelativeDocumentMoniker": "06_PoliticaDeRespaldo.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\06_PoliticaDeRespaldo.sql - master (PC\\Admin (77))",
+              "RelativeToolTip": "06_PoliticaDeRespaldo.sql - master (PC\\Admin (77))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-20T05:24:25.26Z",
+              "EditorCaption": " - master (PC\\Admin (77))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "01_PruebasSPABM.sql - not connected",
+              "DocumentMoniker": "C:\\Users\\Admin\\AppData\\Local\\Temp\\085d1e12-8f57-494a-a27e-c8b12ecaa508_Trabajo_Practico_BDA_1ero_2025.zip.508\\BBDDA_Grupo_12-main\\Com5600_G12\\01_PruebasSPABM.sql",
+              "RelativeDocumentMoniker": "..\\AppData\\Local\\Temp\\085d1e12-8f57-494a-a27e-c8b12ecaa508_Trabajo_Practico_BDA_1ero_2025.zip.508\\BBDDA_Grupo_12-main\\Com5600_G12\\01_PruebasSPABM.sql",
+              "ToolTip": "C:\\Users\\Admin\\AppData\\Local\\Temp\\085d1e12-8f57-494a-a27e-c8b12ecaa508_Trabajo_Practico_BDA_1ero_2025.zip.508\\BBDDA_Grupo_12-main\\Com5600_G12\\01_PruebasSPABM.sql - not connected",
+              "RelativeToolTip": "..\\AppData\\Local\\Temp\\085d1e12-8f57-494a-a27e-c8b12ecaa508_Trabajo_Practico_BDA_1ero_2025.zip.508\\BBDDA_Grupo_12-main\\Com5600_G12\\01_PruebasSPABM.sql - not connected",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-20T04:54:14.025Z",
+              "EditorCaption": " - not connected"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "04_LotePruebas.sql - master (PC\\Admin (74))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\04_LotePruebas.sql",
+              "RelativeDocumentMoniker": "04_LotePruebas.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\04_LotePruebas.sql - master (PC\\Admin (74))",
+              "RelativeToolTip": "04_LotePruebas.sql - master (PC\\Admin (74))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-20T04:10:05Z",
+              "EditorCaption": " - master (PC\\Admin (74))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "03_SPReportes.sql - Com5600G07 (PC\\Admin (79))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\03_SPReportes.sql",
+              "RelativeDocumentMoniker": "03_SPReportes.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\03_SPReportes.sql - Com5600G07 (PC\\Admin (79))",
+              "RelativeToolTip": "03_SPReportes.sql - Com5600G07 (PC\\Admin (79))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-20T03:19:32.948Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (79))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "01_SPParaModificaciones.sql - Com5600G07 (PC\\Admin (68))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_SPParaModificaciones.sql",
+              "RelativeDocumentMoniker": "01_SPParaModificaciones.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_SPParaModificaciones.sql - Com5600G07 (PC\\Admin (68))",
+              "RelativeToolTip": "01_SPParaModificaciones.sql - Com5600G07 (PC\\Admin (68))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-18T22:21:10.886Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (68))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "01_SPParaBorrado.sql - Com5600G07 (PC\\Admin (69))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_SPParaBorrado.sql",
+              "RelativeDocumentMoniker": "01_SPParaBorrado.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_SPParaBorrado.sql - Com5600G07 (PC\\Admin (69))",
+              "RelativeToolTip": "01_SPParaBorrado.sql - Com5600G07 (PC\\Admin (69))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-18T22:22:27.421Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (69))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "01_AgregadoSP.sql - Com5600G07 (PC\\Admin (72))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_AgregadoSP.sql",
+              "RelativeDocumentMoniker": "01_AgregadoSP.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\01_AgregadoSP.sql - Com5600G07 (PC\\Admin (72))",
+              "RelativeToolTip": "01_AgregadoSP.sql - Com5600G07 (PC\\Admin (72))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-18T22:21:45.455Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (72))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "00_CreacionEstructuras.sql - Com5600G07 (PC\\Admin (75))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\00_CreacionEstructuras.sql",
+              "RelativeDocumentMoniker": "00_CreacionEstructuras.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\00_CreacionEstructuras.sql - Com5600G07 (PC\\Admin (75))",
+              "RelativeToolTip": "00_CreacionEstructuras.sql - Com5600G07 (PC\\Admin (75))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-18T22:21:09.34Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (75))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "02_Importaciones_SP.sql - Com5600G07 (PC\\Admin (80))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\02_Importaciones_SP.sql",
+              "RelativeDocumentMoniker": "02_Importaciones_SP.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\02_Importaciones_SP.sql - Com5600G07 (PC\\Admin (80))",
+              "RelativeToolTip": "02_Importaciones_SP.sql - Com5600G07 (PC\\Admin (80))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-18T22:14:57.691Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (80))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "00_EliminacionEstructuras.sql - Com5600G07 (PC\\Admin (78))",
+              "DocumentMoniker": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\00_EliminacionEstructuras.sql",
+              "RelativeDocumentMoniker": "00_EliminacionEstructuras.sql",
+              "ToolTip": "C:\\Users\\Admin\\Com5900_Grupo07_BDA\\00_EliminacionEstructuras.sql - Com5600G07 (PC\\Admin (78))",
+              "RelativeToolTip": "00_EliminacionEstructuras.sql - Com5600G07 (PC\\Admin (78))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-18T22:14:57.033Z",
+              "EditorCaption": " - Com5600G07 (PC\\Admin (78))"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
