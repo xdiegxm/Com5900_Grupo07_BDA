@@ -1,3 +1,16 @@
+-------------------------------------------------
+--											   --
+--			BASES DE DATOS APLICADA		       --
+--											   --
+-------------------------------------------------
+-- GRUPO: 07                                  --
+-- INTEGRANTES:								   --
+-- Mendoza, Diego Emanuel			           --
+-- Vazquez, Isaac Benjamin                     --
+-- Pizarro Dorgan, Fabricio Alejandro          --
+-- Piñero, Agustín                             --
+-- Comerci Salcedo, Francisco Ivan             --
+-------------------------------------------------
 USE Com5600G07
 GO
 

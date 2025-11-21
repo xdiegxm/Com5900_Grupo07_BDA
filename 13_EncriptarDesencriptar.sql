@@ -1,3 +1,16 @@
+-------------------------------------------------
+--											   --
+--			BASES DE DATOS APLICADA		       --
+--											   --
+-------------------------------------------------
+-- GRUPO: 07                                  --
+-- INTEGRANTES:								   --
+-- Mendoza, Diego Emanuel			           --
+-- Vazquez, Isaac Benjamin                     --
+-- Pizarro Dorgan, Fabricio Alejandro          --
+-- Piñero, Agustín                             --
+-- Comerci Salcedo, Francisco Ivan             --
+-------------------------------------------------
 USE Com5600G07
 GO
 /* -----------------------------------------------------------
@@ -62,8 +75,6 @@ BEGIN
 END;
 GO
 /*TESTING*/
-
-select p.DNI, p.Nombre, seguridad.EncryptData(p.Nombre) as encriptado,seguridad.DecryptData(seguridad.EncryptData(p.Nombre)) as desencriptado from consorcio.Persona p;
 
 
 /* -----------------------------------------------------------
@@ -190,5 +201,3 @@ GO
 
 PRINT 'Migración de Pago.Pago completada (Encriptación + Hash).';
  
-
- select * from consorcio.Persona

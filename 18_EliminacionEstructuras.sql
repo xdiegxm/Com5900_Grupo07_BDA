@@ -19,38 +19,6 @@
 
 USE Com5600G07
 GO
-
--------------------------------------------------
---											   --
---			    TRUNCATE TABLES                --
---											   --
--------------------------------------------------
-
--- Desactivar restricciones de clave foránea temporalmente
-EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
-
--- Truncar tablas en orden inverso a las dependencias (de más dependiente a menos dependiente)
-
-TRUNCATE TABLE gastos.Gasto_Extraordinario;
-TRUNCATE TABLE gastos.Gasto_Ordinario;
-TRUNCATE TABLE gastos.Gasto;
-TRUNCATE TABLE expensas.Prorrateo;
-TRUNCATE TABLE Pago.Pago;
-TRUNCATE TABLE expensas.EstadoFinanciero;
-TRUNCATE TABLE expensas.Expensa;
-TRUNCATE TABLE consorcio.Ocupacion;
-TRUNCATE TABLE consorcio.Baulera;
-TRUNCATE TABLE consorcio.Cochera;
-TRUNCATE TABLE consorcio.Persona;
-TRUNCATE TABLE consorcio.UnidadFuncional;
-TRUNCATE TABLE consorcio.Consorcio;
-TRUNCATE TABLE report.logsReportes;
-
--- Reactivar restricciones de clave foránea
-
-EXEC sp_MSforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL';
-
-
 -------------------------------------------------
 --											   --
 --		  ELIMINACIÓN DE LAS TABLAS            --

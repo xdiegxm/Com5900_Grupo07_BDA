@@ -292,7 +292,7 @@ GO*/
 /***********************************************
  *  PRUEBA 1 — ADMINISTRATIVO GENERAL
  ***********************************************/
-/*PRINT '===== PRUEBA: ADMINISTRATIVO GENERAL =====';
+PRINT '===== PRUEBA: ADMINISTRATIVO GENERAL =====';
 EXECUTE AS USER = 'usuario_administrador_general';
 
 --  Debe Poder: Actualizar datos de UF
@@ -321,7 +321,7 @@ END CATCH;
 --  Debe Poder: Generación de reportes
 PRINT 'Prueba: Ejecutar SP dentro de report (si existe alguno)';
 BEGIN TRY
-    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
     PRINT 'OK: Puede acceder a reportes';
 END TRY
 BEGIN CATCH
@@ -365,7 +365,7 @@ END CATCH;
 --  Puede generar reportes
 PRINT 'Prueba: Ejecución de SP de reportes';
 BEGIN TRY
-    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
     PRINT 'OK: Puede generar reportes';
 END TRY
 BEGIN CATCH
@@ -409,7 +409,7 @@ END CATCH;
 -- Puede generar reportes
 PRINT 'Prueba: Ejecutar reportes';
 BEGIN TRY
-    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
     PRINT 'OK: Puede acceder a reportes';
 END TRY
 BEGIN CATCH
@@ -453,7 +453,7 @@ END CATCH;
 --  Puede generar reportes
 PRINT 'Prueba: Ejecutar reportes';
 BEGIN TRY
-    EXEC EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
+    EXEC report.sp_ReporteTopMeses @IdConsorcio = 4, @Anio = 2025;
     PRINT 'OK: Puede generar reportes';
 END TRY
 BEGIN CATCH
@@ -461,4 +461,4 @@ BEGIN CATCH
 END CATCH;
 
 REVERT;
-PRINT '===== FIN PRUEBA SISTEMAS =====';*/
+PRINT '===== FIN PRUEBA SISTEMAS =====';

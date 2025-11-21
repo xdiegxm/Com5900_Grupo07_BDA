@@ -9,7 +9,6 @@
 -- Vazquez, Isaac Benjamin                     --
 -- Pizarro Dorgan, Fabricio Alejandro          --
 -- Piñero, Agustín                             --
--- Nardelli Rosales, Cecilia Anahi             --
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 -------------------------------------------------
@@ -18,6 +17,9 @@
 --											   --
 -------------------------------------------------
 --Los EXEC deben hacerse con las referencias que tenga cada uno a sus archivos.
+
+
+
 --EJECUTELOS EN ORDEN
 USE Com5600G07
 GO
@@ -26,6 +28,7 @@ GO
 --			    TABLA CONSORCIOS      	       --
 --											   --
 -------------------------------------------------
+
 EXEC ImportarConsorciosDesdeExcel 
     @RutaArchivo = 'D:\BDA 2C2025\archivostp\datos varios.xlsx',
     @NombreHoja = N'Consorcios';
@@ -83,6 +86,7 @@ EXEC gastos.Sp_CargarGastosDesdeArchivo
     @Anio = 2025,
     @DiaVto1 = 10,
     @DiaVto2 = 20;    
+
 -------------------------------------------------
 --											   --
 --		    TABLA PAGOS Y PRORRATEO     	   --
@@ -91,4 +95,99 @@ EXEC gastos.Sp_CargarGastosDesdeArchivo
 EXEC Pago.sp_importarPagosDesdeCSV 
     @rutaArchivo = 'D:\BDA 2C2025\archivostp\pagos_consorcios.csv'
 
-select * from Pago.Pago
+    select * from consorcio.Persona
+
+---------------------------------REPORTES-----------------------------------
+
+-------------------------------------------------
+--											   --
+--		       FLUJO CAJA SEMANAL              --
+--											   --
+-------------------------------------------------
+
+EXEC report.sp_ReporteFlujoCajaSemanal
+    @FechaInicio = '2025-01-01', 
+    @FechaFin = '2025-12-31', 
+    @IdConsorcio = 4; -- Poner num de consorcio para realizar el reporte
+
+
+-------------------------------------------------
+--											   --
+--		       RECAUDACION MENSUAL             --
+--					 CRUZADA				   --
+--                                             --
+-------------------------------------------------
+
+EXEC report.sp_ReporteRecaudacionMensual
+    @IdConsorcio = 4, 
+    @Anio = 2025;
+
+
+-------------------------------------------------
+--											   --
+--		       RECAUDACION POR                 --
+--				 PROCEDENCIA			       --
+--                                             --
+-------------------------------------------------
+
+--EN ESTE SP UTILIZAMOS FORMATOXML PARA DARLE OPCION DE DEVOLVER LA EJECUCION EN FORMATO XML TAL COMO SOLICITA LA CONSIGNA
+
+-- Como output normal
+EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 4, @Anio = 2025, @FormatoXML = 0;
+
+-- Formato XML
+EXEC report.sp_ReporteRecaudacionProcedencia @IdConsorcio = 4, @Anio = 2025, @FormatoXML = 1;
+
+-------------------------------------------------
+--											   --
+--		    TOP 5 INGRESOS Y GASTOS            --
+--                                             --
+-------------------------------------------------
+
+EXEC report.sp_ReporteTopMeses @IdConsorcio = 2, @Anio = 2025;
+
+-------------------------------------------------
+--											   --
+--		         TOP 3 MOROSOS                 --
+--                                             --
+-------------------------------------------------
+
+--EN ESTE SP UTILIZAMOS FORMATOXML PARA DARLE OPCION DE DEVOLVER LA EJECUCION EN FORMATO XML TAL COMO SOLICITA LA CONSIGNA
+
+-- Como output normal
+EXEC report.sp_ReporteTopMorosos @IdConsorcio = 5, @FormatoXML = 0;
+
+
+-- Formato XML
+EXEC report.sp_ReporteTopMorosos @IdConsorcio = 2, @FormatoXML = 1;
+
+-------------------------------------------------
+--											   --
+--		      DIF DIAS ENTRE PAGOS             --
+--                                             --
+-------------------------------------------------
+
+--Probamos
+
+-- Ver el historial completo
+EXEC report.sp_ReporteDiasEntrePagos @IdConsorcio = 4; 
+
+-- ver solo un periodo especifico
+EXEC report.sp_ReporteDiasEntrePagos 
+    @IdConsorcio = 3, 
+    @FechaInicio = '2025-01-01', 
+    @FechaFin = '2025-12-31';
+
+select * from Pago.Pago p  order  by  p.Fecha desc
+select* from expensas.Prorrateo
+-------------------------------------------------
+--											   --
+--		    REPORTES VIA MAIL (API)            --
+--                                             --
+-------------------------------------------------
+--Se utilizo el reporte generado en el reporte 5 con el objetivo de simular una comunicacion con el estudio juridico para informar morosos
+
+EXEC report.sp_EnviarReportePorEmail 
+    @IdConsorcio = 5, 
+    @EmailDestino = 'agustinpe45@gmail.com'; --aca ponemos el mail al que queremos mandar el reporte (se puede usar cualquiera)
+                                             --simulando el contacto con el estudio juridico
