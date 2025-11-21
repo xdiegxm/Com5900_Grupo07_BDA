@@ -1,0 +1,320 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\07_LotePruebas.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:07_LotePruebas.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\06_SPReportes.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:06_SPReportes.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\05_Importaciones_SP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:05_Importaciones_SP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\02_AgregadoSP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:02_AgregadoSP.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\04_SPParaModificaciones.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:04_SPParaModificaciones.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\03_SPParaBorrado.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:03_SPParaBorrado.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\00_CreacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:00_CreacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\18_EliminacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:18_EliminacionEstructuras.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\01_LotesPruebasManual.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:01_LotesPruebasManual.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\19_PoliticaDeRespaldo.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:19_PoliticaDeRespaldo.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\08_GeneracionReporteGeneral.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:08_GeneracionReporteGeneral.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\09_IndicesSPReportes.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:09_IndicesSPReportes.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\10_LotePruebas_SP_ABM.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:10_LotePruebas_SP_ABM.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\11_Vistas.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:11_Vistas.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\12_Roles.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:12_Roles.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\13_EncriptarDesencriptar.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:13_EncriptarDesencriptar.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\14_ImportacionesPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:14_ImportacionesPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\15_ReportesPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:15_ReportesPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\16_LotePruebasPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:16_LotePruebasPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\17_LotePruebaManualPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{F799EF9E-14E0-A640-D301-0213CE687153}|Com5900G07.ssmssqlproj|solutionrelative:17_LotePruebaManualPostEncriptacion.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 7,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "00_CreacionEstructuras.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (53))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\00_CreacionEstructuras.sql",
+              "RelativeDocumentMoniker": "00_CreacionEstructuras.sql",
+              "ToolTip": "00_CreacionEstructuras.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (53))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:10:40.655Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (53))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "01_LotesPruebasManual.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (61))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\01_LotesPruebasManual.sql",
+              "RelativeDocumentMoniker": "01_LotesPruebasManual.sql",
+              "ToolTip": "01_LotesPruebasManual.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (61))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:10:00.927Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (61))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "02_AgregadoSP.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (60))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\02_AgregadoSP.sql",
+              "RelativeDocumentMoniker": "02_AgregadoSP.sql",
+              "ToolTip": "02_AgregadoSP.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (60))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:11:08.153Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (60))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "03_SPParaBorrado.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (59))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\03_SPParaBorrado.sql",
+              "RelativeDocumentMoniker": "03_SPParaBorrado.sql",
+              "ToolTip": "03_SPParaBorrado.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (59))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:11:32.787Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (59))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "04_SPParaModificaciones.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (51))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\04_SPParaModificaciones.sql",
+              "RelativeDocumentMoniker": "04_SPParaModificaciones.sql",
+              "ToolTip": "04_SPParaModificaciones.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (51))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:12:51.607Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (51))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "05_Importaciones_SP.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (58))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\05_Importaciones_SP.sql",
+              "RelativeDocumentMoniker": "05_Importaciones_SP.sql",
+              "ToolTip": "05_Importaciones_SP.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (58))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:14:10.035Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (58))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "06_SPReportes.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (74))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\06_SPReportes.sql",
+              "RelativeDocumentMoniker": "06_SPReportes.sql",
+              "ToolTip": "06_SPReportes.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (74))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:21:48.448Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (74))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "07_LotePruebas.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (75))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\07_LotePruebas.sql",
+              "RelativeDocumentMoniker": "07_LotePruebas.sql",
+              "ToolTip": "07_LotePruebas.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (75))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:25.228Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (75))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "08_GeneracionReporteGeneral.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (76))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\08_GeneracionReporteGeneral.sql",
+              "RelativeDocumentMoniker": "08_GeneracionReporteGeneral.sql",
+              "ToolTip": "08_GeneracionReporteGeneral.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (76))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:29.051Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (76))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "09_IndicesSPReportes.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (78))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\09_IndicesSPReportes.sql",
+              "RelativeDocumentMoniker": "09_IndicesSPReportes.sql",
+              "ToolTip": "09_IndicesSPReportes.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (78))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:30.206Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (78))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "10_LotePruebas_SP_ABM.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (79))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\10_LotePruebas_SP_ABM.sql",
+              "RelativeDocumentMoniker": "10_LotePruebas_SP_ABM.sql",
+              "ToolTip": "10_LotePruebas_SP_ABM.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (79))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:31.217Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (79))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "11_Vistas.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (80))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\11_Vistas.sql",
+              "RelativeDocumentMoniker": "11_Vistas.sql",
+              "ToolTip": "11_Vistas.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (80))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:32.194Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (80))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "12_Roles.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (81))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\12_Roles.sql",
+              "RelativeDocumentMoniker": "12_Roles.sql",
+              "ToolTip": "12_Roles.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (81))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:33.421Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (81))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "13_EncriptarDesencriptar.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (77))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\13_EncriptarDesencriptar.sql",
+              "RelativeDocumentMoniker": "13_EncriptarDesencriptar.sql",
+              "ToolTip": "13_EncriptarDesencriptar.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (77))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:34.44Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (77))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "14_ImportacionesPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (83))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\14_ImportacionesPostEncriptacion.sql",
+              "RelativeDocumentMoniker": "14_ImportacionesPostEncriptacion.sql",
+              "ToolTip": "14_ImportacionesPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (83))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:35.386Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (83))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "15_ReportesPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (84))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\15_ReportesPostEncriptacion.sql",
+              "RelativeDocumentMoniker": "15_ReportesPostEncriptacion.sql",
+              "ToolTip": "15_ReportesPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (84))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:36.438Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (84))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "16_LotePruebasPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (85))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\16_LotePruebasPostEncriptacion.sql",
+              "RelativeDocumentMoniker": "16_LotePruebasPostEncriptacion.sql",
+              "ToolTip": "16_LotePruebasPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (85))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:37.573Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (85))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "17_LotePruebaManualPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (86))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\17_LotePruebaManualPostEncriptacion.sql",
+              "RelativeDocumentMoniker": "17_LotePruebaManualPostEncriptacion.sql",
+              "ToolTip": "17_LotePruebaManualPostEncriptacion.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (86))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:38.425Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (86))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "18_EliminacionEstructuras.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (87))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\18_EliminacionEstructuras.sql",
+              "RelativeDocumentMoniker": "18_EliminacionEstructuras.sql",
+              "ToolTip": "18_EliminacionEstructuras.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (87))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:40.576Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.Com5600G07 (IRIEL\\Iriel (87))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "19_PoliticaDeRespaldo.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (88))",
+              "DocumentMoniker": "C:\\Users\\Iriel\\OneDrive\\Documentos\\GitHub\\Com5900_Grupo07_BDA\\19_PoliticaDeRespaldo.sql",
+              "RelativeDocumentMoniker": "19_PoliticaDeRespaldo.sql",
+              "ToolTip": "19_PoliticaDeRespaldo.sql - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (88))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-11-21T11:22:41.929Z",
+              "EditorCaption": " - DESKTOP-QU0K76U\\SQLEXPRESS03.master (IRIEL\\Iriel (88))"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<SqlWorkbenchSqlProject xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="Com5900G07">
+  <Items>
+    <LogicalFolder Name="Conexiones" Type="2" Sorted="true">
+      <Items>
+        <ConnectionNode Name="AGUSTIN\SQLEXPRESS:IRIEL\Iriel">
+          <Created>2025-11-18T10:54:48.2104549-03:00</Created>
+          <Type>SQL</Type>
+          <Server>AGUSTIN\SQLEXPRESS</Server>
+          <UserName />
+          <Authentication>Autenticación de Windows</Authentication>
+          <InitialDB />
+          <LoginTimeout>30</LoginTimeout>
+          <TrustServerCertificate>True</TrustServerCertificate>
+          <HostNameInServerCertificate />
+          <EncryptionOption>False</EncryptionOption>
+          <ExecutionTimeout>0</ExecutionTimeout>
+          <ConnectionProtocol>NotSpecified</ConnectionProtocol>
+          <ApplicationName>Microsoft SQL Server Management Studio - Consulta</ApplicationName>
+        </ConnectionNode>
+        <ConnectionNode Name="FAWUI\SQLEXPRESS:">
+          <Created>2025-11-14T15:08:02.4645316-03:00</Created>
+          <Type>SQL</Type>
+          <Server>FAWUI\SQLEXPRESS</Server>
+          <UserName />
+          <Authentication>SQL</Authentication>
+          <InitialDB />
+          <LoginTimeout>30</LoginTimeout>
+          <TrustServerCertificate>True</TrustServerCertificate>
+          <HostNameInServerCertificate />
+          <EncryptionOption>True</EncryptionOption>
+          <ExecutionTimeout>0</ExecutionTimeout>
+          <ConnectionProtocol>NotSpecified</ConnectionProtocol>
+          <ApplicationName>Microsoft SQL Server Management Studio - Query</ApplicationName>
+        </ConnectionNode>
+        <ConnectionNode Name="IRIEL\SQLEXPRESS:IRIEL\Iriel">
+          <Created>2025-11-21T08:13:42.1295024-03:00</Created>
+          <Type>SQL</Type>
+          <Server>IRIEL\SQLEXPRESS</Server>
+          <UserName />
+          <Authentication>Autenticación de Windows</Authentication>
+          <InitialDB />
+          <LoginTimeout>15</LoginTimeout>
+          <TrustServerCertificate>False</TrustServerCertificate>
+          <EncryptionOption>False</EncryptionOption>
+          <ExecutionTimeout>0</ExecutionTimeout>
+          <ConnectionProtocol>NotSpecified</ConnectionProtocol>
+          <ApplicationName>SQL Server Management Studio</ApplicationName>
+        </ConnectionNode>
+      </Items>
+    </LogicalFolder>
+    <LogicalFolder Name="Consultas" Type="0" Sorted="true">
+      <Items>
+        <FileNode Name="00_CreacionEstructuras.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>00_CreacionEstructuras.sql</FullPath>
+        </FileNode>
+        <FileNode Name="01_LotesPruebasManual.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>01_LotesPruebasManual.sql</FullPath>
+        </FileNode>
+        <FileNode Name="02_AgregadoSP.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>02_AgregadoSP.sql</FullPath>
+        </FileNode>
+        <FileNode Name="03_SPParaBorrado.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>03_SPParaBorrado.sql</FullPath>
+        </FileNode>
+        <FileNode Name="04_SPParaModificaciones.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>04_SPParaModificaciones.sql</FullPath>
+        </FileNode>
+        <FileNode Name="05_Importaciones_SP.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>05_Importaciones_SP.sql</FullPath>
+        </FileNode>
+        <FileNode Name="06_SPReportes.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>06_SPReportes.sql</FullPath>
+        </FileNode>
+        <FileNode Name="07_LotePruebas.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>07_LotePruebas.sql</FullPath>
+        </FileNode>
+        <FileNode Name="08_GeneracionReporteGeneral.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>08_GeneracionReporteGeneral.sql</FullPath>
+        </FileNode>
+        <FileNode Name="09_IndicesSPReportes.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>09_IndicesSPReportes.sql</FullPath>
+        </FileNode>
+        <FileNode Name="10_LotePruebas_SP_ABM.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>10_LotePruebas_SP_ABM.sql</FullPath>
+        </FileNode>
+        <FileNode Name="11_Vistas.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>11_Vistas.sql</FullPath>
+        </FileNode>
+        <FileNode Name="12_Roles.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>12_Roles.sql</FullPath>
+        </FileNode>
+        <FileNode Name="13_EncriptarDesencriptar.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>13_EncriptarDesencriptar.sql</FullPath>
+        </FileNode>
+        <FileNode Name="14_ImportacionesPostEncriptacion.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>14_ImportacionesPostEncriptacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="15_ReportesPostEncriptacion.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>15_ReportesPostEncriptacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="16_LotePruebasPostEncriptacion.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>16_LotePruebasPostEncriptacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="17_LotePruebaManualPostEncriptacion.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>17_LotePruebaManualPostEncriptacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="18_EliminacionEstructuras.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>18_EliminacionEstructuras.sql</FullPath>
+        </FileNode>
+        <FileNode Name="19_PoliticaDeRespaldo.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:IRIEL\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>IRIEL\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>19_PoliticaDeRespaldo.sql</FullPath>
+        </FileNode>
+      </Items>
+    </LogicalFolder>
+    <LogicalFolder Name="Varios" Type="3" Sorted="true">
+      <Items />
+    </LogicalFolder>
+  </Items>
+</SqlWorkbenchSqlProject>

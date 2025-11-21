@@ -10,8 +10,13 @@ Global
 		Default|Default = Default|Default
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+<<<<<<< Updated upstream:Com3900G07.sln
 		{E7C2714A-B907-1389-FA78-D9C7A4E128AB}.Default|Default.ActiveCfg = Default
 		{C529497C-CDF0-403F-BD17-9794CEBE166C}.Default|Default.ActiveCfg = Default
+=======
+		{F799EF9E-14E0-A640-D301-0213CE687153}.Default|Default.ActiveCfg = Default
+		{76845639-8EDE-46C9-B242-97E390433321}.Default|Default.ActiveCfg = Default
+>>>>>>> Stashed changes:Com5900G07.sln
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
