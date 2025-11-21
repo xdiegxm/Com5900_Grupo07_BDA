@@ -1,5 +1,5 @@
 USE Com5600G07
-
+GO
 /* -----------------------------------------------------------
    FUNCIONES GENÉRICAS DE CIFRADO Y DESCRIPFADO
    Usan ENCRYPTBYPASSPHRASE y DECRYPTBYPASSPHRASE con una

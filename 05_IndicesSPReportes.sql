@@ -17,6 +17,8 @@
 --		          DE REPORTES                  --
 --											   --
 -------------------------------------------------
+USE Com5600G07
+GO
 --NO DECLARE TODOS LOS INDICES, SOLO CARGUE A SU BASE DE DATOS LOS QUE NECESITE Y USE FRECUENTEMENTE
 --TENER INDICES SIN USAR EMPEORA LA PERFORMANCE DE LA BDD
 -- =============================================

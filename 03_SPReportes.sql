@@ -440,7 +440,7 @@ BEGIN
 
     DROP TABLE #RankingMorosos;
 END
-
+GO
 
 -------------------------------------------------
 --											   --

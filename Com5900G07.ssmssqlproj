@@ -3,7 +3,7 @@
   <Items>
     <LogicalFolder Name="Conexiones" Type="2" Sorted="true">
       <Items>
-        <ConnectionNode Name="AGUSTIN\SQLEXPRESS:Agustin\Agustin Piñero">
+        <ConnectionNode Name="AGUSTIN\SQLEXPRESS:DESKTOP-QU0K76U\diego">
           <Created>2025-11-18T10:54:48.2104549-03:00</Created>
           <Type>SQL</Type>
           <Server>AGUSTIN\SQLEXPRESS</Server>
@@ -14,6 +14,20 @@
           <TrustServerCertificate>True</TrustServerCertificate>
           <HostNameInServerCertificate />
           <EncryptionOption>False</EncryptionOption>
+          <ExecutionTimeout>0</ExecutionTimeout>
+          <ConnectionProtocol>NotSpecified</ConnectionProtocol>
+          <ApplicationName>Microsoft SQL Server Management Studio - Consulta</ApplicationName>
+        </ConnectionNode>
+        <ConnectionNode Name="DESKTOP-QU0K76U\SQLEXPRESS03:DESKTOP-QU0K76U\diego">
+          <Created>2025-11-20T22:14:54.2155863-03:00</Created>
+          <Type>SQL</Type>
+          <Server>DESKTOP-QU0K76U\SQLEXPRESS03</Server>
+          <UserName />
+          <Authentication>Autenticación de Windows</Authentication>
+          <InitialDB>master</InitialDB>
+          <LoginTimeout>30</LoginTimeout>
+          <TrustServerCertificate>True</TrustServerCertificate>
+          <EncryptionOption>True</EncryptionOption>
           <ExecutionTimeout>0</ExecutionTimeout>
           <ConnectionProtocol>NotSpecified</ConnectionProtocol>
           <ApplicationName>Microsoft SQL Server Management Studio - Consulta</ApplicationName>
@@ -57,95 +71,107 @@
           <AssociatedConnUserName />
           <FullPath>00_CreacionEstructuras.sql</FullPath>
         </FileNode>
-        <FileNode Name="00_EliminacionEstructuras.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>00_EliminacionEstructuras.sql</FullPath>
-        </FileNode>
         <FileNode Name="01_AgregadoSP.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_AgregadoSP.sql</FullPath>
         </FileNode>
+        <FileNode Name="01_EliminacionEstructuras.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>01_EliminacionEstructuras.sql</FullPath>
+        </FileNode>
         <FileNode Name="01_SPParaBorrado.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_SPParaBorrado.sql</FullPath>
         </FileNode>
         <FileNode Name="01_SPParaModificaciones.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_SPParaModificaciones.sql</FullPath>
         </FileNode>
         <FileNode Name="02_Importaciones_SP.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>02_Importaciones_SP.sql</FullPath>
         </FileNode>
-        <FileNode Name="03_LotePruebas.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+        <FileNode Name="03_SPReportes.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>03_LotePruebas.sql</FullPath>
+          <FullPath>03_SPReportes.sql</FullPath>
         </FileNode>
-        <FileNode Name="03_Vistas.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+        <FileNode Name="04_LotePruebas.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>03_Vistas.sql</FullPath>
-        </FileNode>
-        <FileNode Name="04_SPReportes.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>04_SPReportes.sql</FullPath>
+          <FullPath>04_LotePruebas.sql</FullPath>
         </FileNode>
         <FileNode Name="05_IndicesSPReportes.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>05_IndicesSPReportes.sql</FullPath>
         </FileNode>
+        <FileNode Name="05_LotePruebas_SP_ABM.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>05_LotePruebas_SP_ABM.sql</FullPath>
+        </FileNode>
+        <FileNode Name="05_Vistas.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>05_Vistas.sql</FullPath>
+        </FileNode>
         <FileNode Name="06_PoliticaDeRespaldo.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>06_PoliticaDeRespaldo.sql</FullPath>
         </FileNode>
         <FileNode Name="07_Roles.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>07_Roles.sql</FullPath>
         </FileNode>
         <FileNode Name="08_EncriptarDesencriptar.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>08_EncriptarDesencriptar.sql</FullPath>
         </FileNode>
         <FileNode Name="09_ImportacionesPostEncriptacion.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>09_ImportacionesPostEncriptacion.sql</FullPath>
         </FileNode>
         <FileNode Name="10_LotePruebasPostEncriptacion.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>10_LotePruebasPostEncriptacion.sql</FullPath>
         </FileNode>
         <FileNode Name="11_ReportesPostEncriptacion.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:AGUSTIN\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>AGUSTIN\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>11_ReportesPostEncriptacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="12_LotesPruebasManual.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-QU0K76U\SQLEXPRESS03:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-QU0K76U\SQLEXPRESS03</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>12_LotesPruebasManual.sql</FullPath>
         </FileNode>
       </Items>
     </LogicalFolder>

@@ -12,7 +12,7 @@
 -- Comerci Salcedo, Francisco Ivan             --
 -------------------------------------------------
 USE Com5600G07
-
+go
 /*REPORTES*/
 CREATE OR ALTER PROCEDURE report.sp_ReporteTopMorosos
     @IdConsorcio INT,
@@ -119,7 +119,7 @@ END
 select * from expensas.Prorrateo
 
 /* API MAIL*/
-
+go
 CREATE OR ALTER PROCEDURE report.sp_EnviarReportePorEmail
     @IdConsorcio INT,
     @EmailDestino VARCHAR(100)
